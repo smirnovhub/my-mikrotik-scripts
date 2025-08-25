@@ -19,7 +19,7 @@
 # YOU NEED TO RUN THIS SCRIPT AT SYSTEM START!
 # OR IF YOU CHANGED SOMETHING IN THIS FILE!
 #
-# Add to startup script:
+# Add script named global_config and then add call to startup script:
 # /system script run global_config
 #
 # global variables

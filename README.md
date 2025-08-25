@@ -3,9 +3,9 @@ My collection of Mikrotik scripts
 
 Thanks for original scripts and ideas to its authors:
 
-https://github.com/eworm-de/routeros-scripts.git
-https://github.com/osamahfarhan/mikrotik.git
-https://forum.mikrotik.com/
+* https://github.com/eworm-de/routeros-scripts.git
+* https://github.com/osamahfarhan/mikrotik.git
+* https://forum.mikrotik.com/
 
 and many others...
 

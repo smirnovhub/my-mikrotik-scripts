@@ -23,5 +23,6 @@
 # /system script run global_config
 #
 # global variables
+:global warningSignEmoji "%E2%9A%A0%EF%B8%8F"
 :global telegramBotToken "YOUR TELEGRAM BOT TOKEN"
 :global telegramChatID "YOUR TELEGRAM CHAT ID"

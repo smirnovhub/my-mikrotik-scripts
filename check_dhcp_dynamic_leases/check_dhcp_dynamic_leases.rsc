@@ -24,7 +24,8 @@
 #     than warningSendPeriodSec seconds ago.
 #
 # Add this script to scheduler to run every N minutes
-#
+
+# Send repeated warnings every N seconds
 :local warningSendPeriodSec 900
 
 # Initialize a variable to track if any dynamic lease exists

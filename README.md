@@ -1,5 +1,5 @@
 # my-mikrotik-scripts
-My collection of Mikrotik scripts
+My collection of **Mikrotik** scripts. All scripts are tested on **RouterOS 6.49.17**
 
 Thanks for original scripts and ideas to its authors:
 

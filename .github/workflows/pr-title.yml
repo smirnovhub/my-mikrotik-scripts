@@ -20,7 +20,7 @@ jobs:
         run: echo "::set-output name=branch_name::${{ github.head_ref }}"
 
       - name: Update PR title
-        uses: peter-evans/create-pull-request@v5
+        uses: peter-evans/create-pull-request@v7
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           base: ${{ github.event.pull_request.base.ref }}

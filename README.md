@@ -67,10 +67,10 @@ This simple script notifies users that the system is going down for reboot. Afte
 # Global Functions List
 
 ## Files list
-* [`global_config.rsc`](global_config.rsc)
-* [`global_functions.rsc`](global_functions.rsc)
-* [`global_functions_encoding.rsc`](global_functions_encoding.rsc)
-* [`global_functions_hashes.rsc`](global_functions_hashes.rsc)
+* [`global_config.rsc`](global/global_config.rsc)
+* [`global_functions.rsc`](global/global_functions.rsc)
+* [`global_functions_encoding.rsc`](global/global_functions_encoding.rsc)
+* [`global_functions_hashes.rsc`](global/global_functions_hashes.rsc)
 
 ## Overview
 This scripts are a comprehensive collection of global functions and utilities for RouterOS. It provides reusable functions for string manipulation, date-time conversion, networking checks, random number generation, and more.  

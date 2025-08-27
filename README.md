@@ -167,10 +167,10 @@ The scripts are intended to be run at system startup or whenever modifications a
 
 ### Checksum calculation
 
-- **GetMd5Sum**: Generates an MD5 hash from a given input string using the MD5 Message-Digest Algorithm as specified in RFC 1321.  
-  - This function converts the input string into a series of 512-bit blocks, processes each block through 4 rounds of nonlinear functions, and produces a 128-bit hash value.  
-  - The output is represented as a lowercase hexadecimal string.  
-  - Note: MD5 is not collision-resistant and should not be used for cryptographic security purposes.  
+- **GetMd5Sum**: Generates an MD5 hash from a given input string using the MD5 Message-Digest Algorithm as specified in RFC 1321
+  - This function converts the input string into a series of 512-bit blocks, processes each block through 4 rounds of nonlinear functions, and produces a 128-bit hash value
+  - The output is represented as a lowercase hexadecimal string
+  - Note: MD5 is not collision-resistant and should not be used for cryptographic security purposes
 
   - **Parameters:**  
     1. Input string to hash  

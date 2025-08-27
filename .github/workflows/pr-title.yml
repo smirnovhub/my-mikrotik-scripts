@@ -1,0 +1,35 @@
+name: Set PR Title Automatically
+
+# Trigger the workflow when a pull request is opened
+on:
+  pull_request:
+    types: [opened]
+
+jobs:
+  set-pr-title:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Set PR title to "[YYYY-MM-DD] branch-name"
+        uses: actions/github-script@v6
+        with:
+          script: |
+            // Get the pull request number
+            const pr_number = context.payload.pull_request.number;
+
+            // Get the branch name from which the PR was created
+            const branch_name = context.payload.pull_request.head.ref;
+
+            // Get current date in YYYY-MM-DD format
+            const date = new Date().toISOString().split('T')[0];
+
+            // Build the new PR title in the format: [YYYY-MM-DD] branch-name
+            const new_title = `[${date}] ${branch_name}`;
+
+            // Update the pull request title via GitHub API
+            await github.rest.pulls.update({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: pr_number,
+              title: new_title
+            });

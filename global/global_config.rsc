@@ -24,5 +24,6 @@
 #
 # global variables
 :global warningSignEmoji "%E2%9A%A0%EF%B8%8F"
+:global squaredUpWithExclamationMark "%F0%9F%86%99"
 :global telegramBotToken "YOUR TELEGRAM BOT TOKEN"
 :global telegramChatID "YOUR TELEGRAM CHAT ID"

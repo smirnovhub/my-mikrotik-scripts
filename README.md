@@ -157,6 +157,19 @@ The script is intended to be run at system startup or whenever modifications are
 ### External Dependencies
 - **HexToNum**: Converts a hexadecimal string to a numeric value (used internally by UrlDecode).
 
+### Checksum calculation
+
+- **GetMd5Sum**: Generates an MD5 hash from a given input string using the MD5 Message-Digest Algorithm as specified in RFC 1321.  
+  - This function converts the input string into a series of 512-bit blocks, processes each block through 4 rounds of nonlinear functions, and produces a 128-bit hash value.  
+  - The output is represented as a lowercase hexadecimal string.  
+  - Note: MD5 is not collision-resistant and should not be used for cryptographic security purposes.  
+
+  - **Parameters:**  
+    1. Input string to hash  
+
+  - **Returns:**  
+    - MD5 hash as a lowercase hexadecimal string
+
 ## Installation
 1. Save the scripts as `global_config`, `global_functions`, `global_functions_encoding` and `global_functions_hashes`.  
 2. Add the following line to your startup script to execute it at system boot:

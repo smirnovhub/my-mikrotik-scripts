@@ -126,9 +126,12 @@ The script is intended to be run at system startup or whenever modifications are
 - **SendTelegramMessage**: Send messages via Telegram (requires bot token and chat ID).
 
 ## Installation
-1. Save the script as `global_functions`.  
+1. Save the scripts as `global_config`, `global_functions`, `global_functions_encoding` and `global_functions_hashes`.  
 2. Add the following line to your startup script to execute it at system boot:
 ```
+/system script run global_config
 /system script run global_functions
+/system script run global_functions_encoding
+/system script run global_functions_hashes
 ```
 

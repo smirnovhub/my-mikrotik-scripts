@@ -1,18 +1,24 @@
-    jobs:
-      update-title:
-        runs-on: ubuntu-latest
-        steps:
-          - name: Get current date
-            id: date
-            run: echo "::set-output name=current_date::$(date +'%Y-%m-%d')"
+name: Update PR Title
 
-          - name: Get branch name
-            id: branch
-            run: echo "::set-output name=branch_name::${{ github.head_ref }}"
+on:
+  pull_request:
+    types: [opened, synchronize]
 
-          - name: Update PR title
-            uses: peter-evans/create-pull-request@v5
-            with:
-              token: ${{ secrets.GITHUB_TOKEN }}
-              pull-request-number: ${{ github.event.pull_request.number }}
-              title: "${{ steps.date.outputs.current_date }} - ${{ steps.branch.outputs.branch_name }}"
+jobs:
+  update-title:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Get current date
+        id: date
+        run: echo "::set-output name=current_date::$(date +'%Y-%m-%d')"
+
+      - name: Get branch name
+        id: branch
+        run: echo "::set-output name=branch_name::${{ github.head_ref }}"
+
+      - name: Update PR title
+        uses: peter-evans/create-pull-request@v5
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          pull-request-number: ${{ github.event.pull_request.number }}
+          title: "${{ steps.date.outputs.current_date }} - ${{ steps.branch.outputs.branch_name }}"

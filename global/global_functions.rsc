@@ -79,32 +79,31 @@
 #       :global telegramChatID - your telegram chat id
 
 :set LogAndExit do={
-  :local Severity [ :tostr $1 ];
-  :local Name     [ :tostr $2 ];
-  :local Message  [ :tostr $3 ];
+  :local severity [ :tostr $1 ];
+  :local name     [ :tostr $2 ];
+  :local message  [ :tostr $3 ];
 
-  :local Log ($Name . ": " . $Message);
-  :if ($Severity = "info") do={
-      :log info $Log
+  :local text ($name . ": " . $message);
+  :if ($severity = "info") do={
+      :log info $text
   } else={
-      :if ($Severity = "warning") do={
-          :log warning $Log
+      :if ($severity = "warning") do={
+          :log warning $text
       } else={
-          :if ($Severity = "error") do={
-              :log error $Log
+          :if ($severity = "error") do={
+              :log error $text
           } else={
-              :if ($Severity = "debug") do={
-                  :log debug $Log
+              :if ($severity = "debug") do={
+                  :log debug $text
               } else={
-                  :log info $Log
+                  :log info $text
               }
           }
       }
   }
 
-  :error ($Log);
+  :error $text
 }
-
 
 # Purpose: Parse a list of key-value pairs (or standalone keys) into an associative array (map).
 # Parameters:
@@ -296,11 +295,11 @@
 # check if DNS is resolving
 :set DNSIsResolving do={
   :do {
-    :resolve "dns.google";
+    :resolve "dns.google"
   } on-error={
-    :return false;
+    :return false
   }
-  :return true;
+  :return true
 }
 
 # wait for DNS to resolve
@@ -409,15 +408,15 @@
 #   - Applies modulo operation with the specified Max to obtain the final random number.
 #   - If no maximum is provided, defaults to 32-bit unsigned integer range (0 to 4294967295).
 :set GetRandomNumber do={
-  :local Max 4294967295;
-  :if ([ :typeof $1 ] != "nothing" ) do={
-    :set Max ([ :tonum $1 ] + 1);
-  }
-
   :global GetRandom20CharHex;
   :global HexToNum;
 
-  :return ([ $HexToNum [ :pick [ $GetRandom20CharHex ] 0 15 ] ] % $Max);
+  :local max 4294967295;
+  :if ([ :typeof $1 ] != "nothing" ) do={
+    :set max ([ :tonum $1 ] + 1);
+  }
+
+  :return ([ $HexToNum [ :pick [ $GetRandom20CharHex ] 0 15 ] ] % $max);
 }
 
 # Purpose: Perform "silent ping" operations in RouterOS to either:
@@ -881,22 +880,22 @@
 #   $3 - Substring to replace with
 # Returns: A new string with all occurrences replaced
 :set ReplaceStr do={
-  :local String [ :tostr $1 ];
-  :local ReplaceFrom [ :tostr $2 ];
-  :local ReplaceWith [ :tostr $3 ];
-  :local Return "";
+  :local string [ :tostr $1 ];
+  :local replaceFrom [ :tostr $2 ];
+  :local replaceWith [ :tostr $3 ];
+  :local result "";
 
-  :if ($ReplaceFrom = "") do={
-    :return $String;
+  :if ($replaceFrom = "") do={
+    :return $string;
   }
 
-  :while ([ :typeof [ :find $String $ReplaceFrom ] ] != "nil") do={
-    :local Pos [ :find $String $ReplaceFrom ];
-    :set Return ($Return . [ :pick $String 0 $Pos ] . $ReplaceWith);
-    :set String [ :pick $String ($Pos + [ :len $ReplaceFrom ]) [ :len $String ] ];
+  :while ([ :typeof [ :find $string $replaceFrom ] ] != "nil") do={
+    :local Pos [ :find $string $replaceFrom ];
+    :set result ($result . [ :pick $string 0 $Pos ] . $replaceWith);
+    :set string [ :pick $string ($Pos + [ :len $replaceFrom ]) [ :len $string ] ];
   }
 
-  :return ($Return . $String);
+  :return ($result . $string);
 }
 
 # Purpose: Perform division of two integers and round the result to a specified number of decimal places.

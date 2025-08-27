@@ -125,6 +125,38 @@ The script is intended to be run at system startup or whenever modifications are
 ### Notifications
 - **SendTelegramMessage**: Send messages via Telegram (requires bot token and chat ID).
 
+### Base64 Encoding & Decoding
+- **Base64Encode**: Encode an input string into Base64 format according to RFC 4648.  
+  - Supports optional URL-safe variant (`"url"`) and optional padding removal (`"nopad"`).  
+  - **Parameters:**  
+    1. Input string to encode  
+    2. Optional `"url"` flag for URL-safe Base64  
+    3. Optional `"nopad"` flag to remove padding (`=`)  
+  - **Returns:** Base64 encoded string
+
+- **Base64Decode**: Decode a Base64-encoded string into its original representation.  
+  - Supports standard and URL-safe alphabets, optional padding enforcement, and ignoring invalid characters.  
+  - **Parameters:**  
+    1. Base64 input string  
+    2. Optional `"url"` flag for URL-safe Base64  
+    3. Optional `"mustpad"` flag to enforce padding  
+    4. Optional `"ignoreotherchr"` flag to skip invalid characters  
+  - **Returns:** Decoded plain string
+
+### URL Encoding & Decoding
+- **UrlEncode**: Encode a string into URL-encoded format, replacing non-alphanumeric characters with `%HH` codes.  
+  - **Parameters:**  
+    1. Input string  
+  - **Returns:** URL-encoded string
+
+- **UrlDecode**: Decode a URL-encoded string, converting `%HH` codes back into their original characters.  
+  - **Parameters:**  
+    1. URL-encoded input string  
+  - **Returns:** Decoded string
+
+### External Dependencies
+- **HexToNum**: Converts a hexadecimal string to a numeric value (used internally by UrlDecode).
+
 ## Installation
 1. Save the scripts as `global_config`, `global_functions`, `global_functions_encoding` and `global_functions_hashes`.  
 2. Add the following line to your startup script to execute it at system boot:

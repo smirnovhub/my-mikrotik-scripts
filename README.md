@@ -180,7 +180,7 @@ The scripts are intended to be run at system startup or whenever modifications a
 
 ## Installation
 1. Save the scripts as `global_config`, `global_functions`, `global_functions_encoding` and `global_functions_hashes`.  
-2. Add the following line to your startup script to execute it at system boot:
+2. Add the following lines to your startup script to execute it at system boot:
 ```
 /system script run global_config
 /system script run global_functions

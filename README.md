@@ -67,13 +67,21 @@ This simple script notifies users that the system is going down for reboot. Afte
 # Global Functions List
 
 ## Files list
+* `global_config.rsc`
 * `global_functions.rsc`
 * `global_functions_encoding.rsc`
 * `global_functions_hashes.rsc`
 
 ## Overview
-This script is a comprehensive collection of global functions and utilities for RouterOS. It provides reusable functions for string manipulation, date-time conversion, networking checks, random number generation, and more.  
-The script is intended to be run at system startup or whenever modifications are made.
+This scripts are a comprehensive collection of global functions and utilities for RouterOS. It provides reusable functions for string manipulation, date-time conversion, networking checks, random number generation, and more.  
+The scripts are intended to be run at system startup or whenever modifications are made.
+
+### Global Variables
+
+- **warningSignEmoji**: Stores the URL-encoded warning emoji (`⚠️`) used for alert messages
+- **squaredUpWithExclamationMark**: Stores the URL-encoded “squared up” emoji (`🆙`) with exclamation mark
+- **telegramBotToken**: Stores the token for the Telegram bot used to send messages
+- **telegramChatID**: Stores the Telegram chat ID where messages will be sent
 
 ## Features
 

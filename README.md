@@ -64,4 +64,71 @@ This simple script notifies users that the system is going down for reboot. Afte
 - `SendTelegramMessage` – function to send messages via Telegram Bot API
 - `warningSignEmoji` – emoji prefix for the notification message
 
+# Global Functions List
+
+## Files list
+* `global_functions.rsc`
+* `global_functions_encoding.rsc`
+* `global_functions_hashes.rsc`
+
+## Overview
+This script is a comprehensive collection of global functions and utilities for RouterOS. It provides reusable functions for string manipulation, date-time conversion, networking checks, random number generation, and more.  
+The script is intended to be run at system startup or whenever modifications are made.
+
+## Features
+
+### Logging & Error Handling
+- **LogAndExit**: Logs messages with severity (`info`, `warning`, `error`, `debug`) and stops execution if necessary.
+
+### Argument & Configuration Handling
+- **ParseKeyValueStore**: Converts key-value pairs or space-separated strings into associative arrays (maps).  
+- **GetArgOrDefault**: Retrieves a parameter or returns a default value.  
+- **GetArgOrExit**: Retrieves a required parameter and exits if missing.
+
+### Network Utilities
+- **SilentPing**: Perform silent pings to a single host or multiple hosts in parallel.  
+- **DNSIsResolving / WaitDNSResolving**: Check or wait for DNS resolution.  
+- **DefaultRouteIsReachable / WaitDefaultRouteReachable**: Check or wait for default route availability.  
+- **TimeIsSync / WaitTimeSync**: Check or wait for NTP time synchronization.  
+- **WaitFullyConnected**: Wait until network is fully ready (DNS, route, and time synced).
+
+### Random & Numeric Utilities
+- **GetRandom20CharHex**: Generate a random 20-character hexadecimal string.  
+- **GetRandomNumber**: Generate a pseudo-random number within a range.  
+- **HexToNum**: Convert hexadecimal strings to numeric values.  
+- **DivideIntAndRound**: Divide integers and round to a specified precision.
+
+### Array & String Utilities
+- **MapArray**: Apply a transformation function to each array element.  
+- **JoinArray**: Join array elements into a single string with a separator.  
+- **SplitStr**: Split strings into arrays.  
+- **TrimStr, TrimStrLeft, TrimStrRight**: Trim characters from strings.  
+- **ReplaceStr**: Replace substrings in a string.
+
+### Date & Time Utilities
+- **GetCurrentDateTime**: Retrieve the current system date-time in `YYYY-MM-DD HH:MM:SS` format.  
+- **ParseDateTime**: Convert RouterOS-style date strings to standard format.  
+- **ToUnixTimestamp / FromUnixTimestamp**: Convert between date-time strings and Unix timestamps.  
+- **GetWeekday**: Get the weekday from a date.
+
+### File & Script Utilities
+- **EnsureFileWithIdExists**: Ensure a file exists and return its ID.  
+- **RunScript**: Execute another RouterOS script with optional parameters.  
+- **ExportConfiguration**: Export RouterOS configuration with a standardized filename.
+
+### Case Conversion
+- **ToUpperCase / ToLowerCase**: Convert strings to uppercase or lowercase.
+
+### Sorting
+- **RecursiveMergeSort**: Perform merge sort on an array of comparable items.
+
+### Notifications
+- **SendTelegramMessage**: Send messages via Telegram (requires bot token and chat ID).
+
+## Installation
+1. Save the script as `global_functions`.  
+2. Add the following line to your startup script to execute it at system boot:
+```
+/system script run global_functions
+```
 

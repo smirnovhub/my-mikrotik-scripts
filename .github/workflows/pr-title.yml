@@ -23,4 +23,5 @@ jobs:
         uses: peter-evans/create-pull-request@v5
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
+          base: ${{ github.event.pull_request.base.ref }}
           title: "${{ steps.date.outputs.current_date }} - ${{ steps.branch.outputs.branch_name }}"

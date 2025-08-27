@@ -1,35 +1,18 @@
-name: Set PR Title Automatically
+    jobs:
+      update-title:
+        runs-on: ubuntu-latest
+        steps:
+          - name: Get current date
+            id: date
+            run: echo "::set-output name=current_date::$(date +'%Y-%m-%d')"
 
-# Trigger the workflow when a pull request is opened
-on:
-  pull_request:
-    types: [opened]
+          - name: Get branch name
+            id: branch
+            run: echo "::set-output name=branch_name::${{ github.head_ref }}"
 
-jobs:
-  set-pr-title:
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Set PR title to "[YYYY-MM-DD] branch-name"
-        uses: actions/github-script@v6
-        with:
-          script: |
-            // Get the pull request number
-            const pr_number = context.payload.pull_request.number;
-
-            // Get the branch name from which the PR was created
-            const branch_name = context.payload.pull_request.head.ref;
-
-            // Get current date in YYYY-MM-DD format
-            const date = new Date().toISOString().split('T')[0];
-
-            // Build the new PR title in the format: [YYYY-MM-DD] branch-name
-            const new_title = `[${date}] ${branch_name}`;
-
-            // Update the pull request title via GitHub API
-            await github.rest.pulls.update({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              pull_number: pr_number,
-              title: new_title
-            });
+          - name: Update PR title
+            uses: peter-evans/create-pull-request@v5
+            with:
+              token: ${{ secrets.GITHUB_TOKEN }}
+              pull-request-number: ${{ github.event.pull_request.number }}
+              title: "${{ steps.date.outputs.current_date }} - ${{ steps.branch.outputs.branch_name }}"

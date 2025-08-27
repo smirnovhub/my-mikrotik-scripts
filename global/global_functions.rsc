@@ -353,7 +353,7 @@
     :return false;
   }
 
-  :log error "TimeIsSync: NTP server is not enabled!"
+  :log error "TimeIsSync: NTP client is not enabled!"
   :return true;
 }
 

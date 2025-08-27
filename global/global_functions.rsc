@@ -28,6 +28,10 @@
 # https://forum.mikrotik.com/
 # and many others...
 #
+
+# global variables not to be changed by user
+:global globalFunctionsReady false;
+
 # global functions
 :global LogAndExit;
 :global ParseKeyValueStore;
@@ -65,6 +69,8 @@
 :global WaitDNSResolving;
 :global DefaultRouteIsReachable;
 :global WaitDefaultRouteReachable;
+:global TimeIsSync;
+:global WaitTimeSync;
 :global WaitFullyConnected;
 
 # Global dependencies:
@@ -301,9 +307,16 @@
 :set WaitDNSResolving do={
   :global DNSIsResolving;
 
+  :local delay 1s
+  :local attempts 0
+
   :while ([ $DNSIsResolving ] = false) do={
-    :delay 1s;
+    :delay $delay
+    :set attempts ($attempts + 1)
   }
+
+  # return total wait time
+  :return ($attempts * $delay)
 }
 
 # default route is reachable
@@ -318,18 +331,61 @@
 :set WaitDefaultRouteReachable do={
   :global DefaultRouteIsReachable;
 
+  :local delay 1s
+  :local attempts 0
+
   :while ([ $DefaultRouteIsReachable ] = false) do={
-    :delay 1s;
+    :delay $delay
+    :set attempts ($attempts + 1)
   }
+
+  # return total wait time
+  :return ($attempts * $delay)
+}
+
+# check if system time is sync
+:set TimeIsSync do={
+  :if ([ / system ntp client get enabled ] = true) do={
+    :if ([ :typeof [ / system ntp client get last-adjustment ] ] = "time") do={
+      :return true;
+    }
+
+    :return false;
+  }
+
+  :log error "TimeIsSync: NTP server is not enabled!"
+  :return true;
+}
+
+# wait for time to become synced
+:set WaitTimeSync do={
+  :global TimeIsSync;
+
+  :local delay 1s
+  :local attempts 0
+
+  :while ([ $TimeIsSync ] = false) do={
+    :delay $delay
+    :set attempts ($attempts + 1)
+  }
+
+  # return total wait time
+  :return ($attempts * $delay)
 }
 
 # wait to be fully connected (default route is reachable, time is sync, DNS resolves)
 :set WaitFullyConnected do={
   :global WaitDefaultRouteReachable;
   :global WaitDNSResolving;
+  :global WaitTimeSync;
 
-  $WaitDefaultRouteReachable;
-  $WaitDNSResolving;
+  :local totalTime 0
+
+  :set totalTime ($totalTime + [$WaitDefaultRouteReachable])
+  :set totalTime ($totalTime + [$WaitDNSResolving])
+  :set totalTime ($totalTime + [$WaitTimeSync])
+
+  :return $totalTime
 }
 
 # Purpose: Generate a random 20-character hexadecimal string using RouterOS SCEP server OTP generation.
@@ -1341,3 +1397,6 @@
     /tool fetch url="https://api.telegram.org/bot$telegramBotToken/sendMessage\?chat_id=$telegramChatID&parse_mode=$parseMode&text=$messageText" keep-result=no;
     :log info "Send Telegram message: $messageText";
 }
+
+# signal we are ready
+:set globalFunctionsReady true;

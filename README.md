@@ -11,7 +11,7 @@ and many others...
 
 Also thanks to ChatGPT. He can do something valuable somewhere in the 10th attempt)
 
-## `check_dhcp_dynamic_leases.rsc`
+## [`check_dhcp_dynamic_leases.rsc`](check_dhcp_dynamic_leases.rsc)
 
 **Purpose:**  
 Detect dynamic (unapproved) DHCP leases on the network and send an alert via Telegram
@@ -32,7 +32,7 @@ This script iterates through all DHCP leases on the MikroTik device and identifi
 
 ---
 
-## `on_startup.rsc`
+## [`on_startup.rsc`](on_startup.rsc)
 
 **Purpose:**  
 Ensure all required global functions are ready on system startup, wait until the system is fully connected, and send a startup notification via Telegram
@@ -52,7 +52,7 @@ This script is intended to run during system startup. It waits for the global va
 
 ---
 
-## `reboot.rsc`
+## [`reboot.rsc`](reboot.rsc)
 
 **Purpose:**  
 Send a warning message via Telegram before rebooting the MikroTik device
@@ -67,10 +67,10 @@ This simple script notifies users that the system is going down for reboot. Afte
 # Global Functions List
 
 ## Files list
-* `global_config.rsc`
-* `global_functions.rsc`
-* `global_functions_encoding.rsc`
-* `global_functions_hashes.rsc`
+* [`global_config.rsc`](global_config.rsc)
+* [`global_functions.rsc`](global_functions.rsc)
+* [`global_functions_encoding.rsc`](global_functions_encoding.rsc)
+* [`global_functions_hashes.rsc`](global_functions_hashes.rsc)
 
 ## Overview
 This scripts are a comprehensive collection of global functions and utilities for RouterOS. It provides reusable functions for string manipulation, date-time conversion, networking checks, random number generation, and more.  

@@ -23,7 +23,14 @@
 # /system script run global_config
 #
 # global variables
+:global largeGreenCircleEmoji "%F0%9F%9F%A2"
+:global largeRedCircleEmoji "%F0%9F%94%B4"
+:global largeYellowCircleEmoji "%F0%9F%9F%A1"
+:global whiteCircleEmoji "%E2%9A%AA"
+:global backhandIndexPointingLeftEmoji "%F0%9F%91%88"
 :global warningSignEmoji "%E2%9A%A0%EF%B8%8F"
 :global squaredUpWithExclamationMark "%F0%9F%86%99"
+:global nbsp "%C2%A0"
 :global telegramBotToken "YOUR TELEGRAM BOT TOKEN"
-:global telegramChatID "YOUR TELEGRAM CHAT ID"
+:global telegramPublicChatID "YOUR PUBLIC TELEGRAM CHAT ID"
+:global telegramPrivateChatID "YOUR PRIVATE TELEGRAM CHAT ID"

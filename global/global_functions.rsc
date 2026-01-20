@@ -30,7 +30,7 @@
 #
 
 # global variables not to be changed by user
-:global globalFunctionsReady false;
+:global globalFunctionsReady false
 
 # global functions
 :global LogAndExit

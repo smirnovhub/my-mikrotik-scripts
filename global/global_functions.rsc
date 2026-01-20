@@ -30,60 +30,65 @@
 #
 
 # global variables not to be changed by user
-:global globalFunctionsReady false;
+:global globalFunctionsReady false
 
 # global functions
-:global LogAndExit;
-:global ParseKeyValueStore;
-:global GetArgOrDefault;
-:global GetArgOrExit;
-:global GetRandom20CharHex;
-:global GetRandomNumber;
-:global SilentPing;
-:global HexToNum;
-:global MapArray;
-:global JoinArray;
-:global SplitStr;
-:global TrimStr;
-:global TrimStrLeft;
-:global TrimStrRight;
-:global ReplaceStr;
-:global RunScript;
-:global ExportConfiguration;
-:global RecursiveMergeSort;
-:global DivideIntAndRound;
-:global GetCurrentDateTime;
-:global ParseDateTime;
-:global EnsureFileWithIdExists;
-:global ToUpperCase;
-:global ToLowerCase;
-:global ToUnixTimestamp;
-:global GetUnixTimestamp;
-:global FromUnixTimestamp;
-:global GetWeekday;
-:global FormatSecondsLong;
-:global FormatSecondsShort;
-:global SendTelegramMessage;
+:global LogAndExit
+:global ParseKeyValueStore
+:global GetArgOrDefault
+:global GetArgOrExit
+:global GetRandom20CharHex
+:global GetRandomNumber
+:global GetHttpFileContent
+:global SilentPing
+:global HexToNum
+:global MapArray
+:global JoinArray
+:global SplitStr
+:global TrimStr
+:global TrimStrLeft
+:global TrimStrRight
+:global ReplaceStr
+:global RunScript
+:global ExportConfiguration
+:global RecursiveMergeSort
+:global DivideIntAndRound
+:global GetCurrentDateTime
+:global ParseDateTime
+:global EnsureFileWithIdExists
+:global ToUpperCase
+:global ToLowerCase
+:global ToUnixTimestamp
+:global GetUnixTimestamp
+:global FromUnixTimestamp
+:global GetWeekday
+:global FormatSecondsLong
+:global FormatSecondsShort
+:global SendPublicTelegramMessage
+:global SendPrivateTelegramMessage
+:global GetDhcpClientAddress
+:global GetDhcpClientGateway
 
-:global DNSIsResolving;
-:global WaitDNSResolving;
-:global DefaultRouteIsReachable;
-:global WaitDefaultRouteReachable;
-:global TimeIsSync;
-:global WaitTimeSync;
-:global WaitFullyConnected;
+:global DNSIsResolving
+:global WaitDNSResolving
+:global DefaultRouteIsReachable
+:global WaitDefaultRouteReachable
+:global TimeIsSync
+:global WaitTimeSync
+:global WaitFullyConnected
 
 # Global dependencies:
-#   Telegram (if you want to use SendTelegramMessage)
-#       :global telegramBotToken - your telegram bot token
-#       :global telegramChatID - your telegram chat id
+#   Telegram (if you want to use SendPublicTelegramMessage or SendPrivateTelegramMessage)
+#       :global telegramBotToken      - your telegram bot token
+#       :global telegramPublicChatID  - your public telegram chat id
+#       :global telegramPrivateChatID - your private telegram chat id
 
 :set LogAndExit do={
-  :local severity [ :tostr $1 ];
-  :local name     [ :tostr $2 ];
-  :local message  [ :tostr $3 ];
+  :local severity [:tostr $1]
+  :local name     [:tostr $2]
+  :local message  [:tostr $3]
 
-  :local text ($name . ": " . $message);
+  :local text ($name . ": " . $message)
   :if ($severity = "info") do={
       :log info $text
   } else={
@@ -161,11 +166,11 @@
 
   :if ([:len $2] > 0) do={ :set delimiter $2 }
 
-  :if ([ :typeof $source ] != "array") do={
-    :set source [ $SplitStr $1 $delimiter]
+  :if ([:typeof $source] != "array") do={
+    :set source [$SplitStr $1 $delimiter]
   }
 
-  :local result [ :toarray "" ]
+  :local result [:toarray ""]
   :foreach src in=$source do={
     :local keyValue [$TrimStr $src " "]
     :local pos [:find $keyValue "="]
@@ -304,12 +309,12 @@
 
 # wait for DNS to resolve
 :set WaitDNSResolving do={
-  :global DNSIsResolving;
+  :global DNSIsResolving
 
   :local delay 1s
   :local attempts 0
 
-  :while ([ $DNSIsResolving ] = false) do={
+  :while ([$DNSIsResolving] = false) do={
     :delay $delay
     :set attempts ($attempts + 1)
   }
@@ -320,20 +325,20 @@
 
 # default route is reachable
 :set DefaultRouteIsReachable do={
-  :if ([ :len [ / ip route find where dst-address=0.0.0.0/0 active !blackhole !routing-mark !unreachable gateway!=loopback ] ] > 0) do={
-    :return true;
+  :if ([:len [/ip route find where dst-address=0.0.0.0/0 active !blackhole !routing-mark !unreachable gateway!=loopback]] > 0) do={
+    :return true
   }
-  :return false;
+  :return false
 }
 
 # wait for default route to be reachable
 :set WaitDefaultRouteReachable do={
-  :global DefaultRouteIsReachable;
+  :global DefaultRouteIsReachable
 
   :local delay 1s
   :local attempts 0
 
-  :while ([ $DefaultRouteIsReachable ] = false) do={
+  :while ([$DefaultRouteIsReachable] = false) do={
     :delay $delay
     :set attempts ($attempts + 1)
   }
@@ -344,26 +349,26 @@
 
 # check if system time is sync
 :set TimeIsSync do={
-  :if ([ / system ntp client get enabled ] = true) do={
-    :if ([ :typeof [ / system ntp client get last-adjustment ] ] = "time") do={
-      :return true;
+  :if ([/system ntp client get enabled] = true) do={
+    :if ([:typeof [/system ntp client get last-adjustment]] = "time") do={
+      :return true
     }
 
-    :return false;
+    :return false
   }
 
   :log error "TimeIsSync: NTP client is not enabled!"
-  :return true;
+  :return true
 }
 
 # wait for time to become synced
 :set WaitTimeSync do={
-  :global TimeIsSync;
+  :global TimeIsSync
 
   :local delay 1s
   :local attempts 0
 
-  :while ([ $TimeIsSync ] = false) do={
+  :while ([$TimeIsSync] = false) do={
     :delay $delay
     :set attempts ($attempts + 1)
   }
@@ -374,9 +379,9 @@
 
 # wait to be fully connected (default route is reachable, time is sync, DNS resolves)
 :set WaitFullyConnected do={
-  :global WaitDefaultRouteReachable;
-  :global WaitDNSResolving;
-  :global WaitTimeSync;
+  :global WaitDefaultRouteReachable
+  :global WaitDNSResolving
+  :global WaitTimeSync
 
   :local totalTime 0
 
@@ -395,7 +400,7 @@
 #   - Extracts the "password" field from the returned value.
 #   - Can be used as a source of randomness for other scripts or functions requiring random hex strings.
 :set GetRandom20CharHex do={
-  :return ([ / certificate scep-server otp generate minutes-valid=0 as-value ]->"password");
+  :return ([/certificate scep-server otp generate minutes-valid=0 as-value]->"password")
 }
 
 # Purpose: Generate a pseudo-random number within a specified range using a pre-generated 20-character hex string.
@@ -408,15 +413,47 @@
 #   - Applies modulo operation with the specified Max to obtain the final random number.
 #   - If no maximum is provided, defaults to 32-bit unsigned integer range (0 to 4294967295).
 :set GetRandomNumber do={
-  :global GetRandom20CharHex;
-  :global HexToNum;
+  :global GetRandom20CharHex
+  :global HexToNum
 
-  :local max 4294967295;
-  :if ([ :typeof $1 ] != "nothing" ) do={
-    :set max ([ :tonum $1 ] + 1);
+  :local max 4294967295
+  :if ([:typeof $1] != "nothing") do={
+    :set max ([:tonum $1] + 1)
   }
 
-  :return ([ $HexToNum [ :pick [ $GetRandom20CharHex ] 0 15 ] ] % $max);
+  :return ([$HexToNum [:pick [$GetRandom20CharHex] 0 15]] % $max)
+}
+
+# Purpose: Download and return the content of a file from a specified HTTP URL.
+# Parameters:
+#   $1 - The target URL of the file to fetch (string, required)
+#   $2 - Optional TCP port number for the HTTP request (default is 80)
+# Returns: The downloaded file content as a string; returns an empty string if an error occurs.
+:set GetHttpFileContent do={
+  :local url $1
+
+  :local port 80
+  :if ([:typeof $2] != "nothing") do={
+    :set port [:tonum $2]
+  }
+
+  :local result [:toarray ""]
+
+  :do {
+    :set result [/tool fetch url="$url" mode=http port=$port output=user as-value]
+  } on-error={
+    :log error "An error occurred while downloading file: $url"
+    :return ""
+  }
+
+  :local maxFileSize 64512
+
+  :local str ($result->"data")
+  :if ([:len $str] = $maxFileSize) do={
+    :log warning "File is too big. Max file size is $maxFileSize bytes: $url "
+  }
+
+  :return $str
 }
 
 # Purpose: Perform "silent ping" operations in RouterOS to either:
@@ -587,16 +624,16 @@
 # Returns: Numeric value corresponding to the input hex string (e.g. 26, 255)
 :set HexToNum do={
     # Convert input to string in case it isn't already
-    :local input [:tostr $1];
+    :local input [:tostr $1]
 
     # String containing all hexadecimal digits (both lowercase and uppercase)
-    :local hex "0123456789abcdef0123456789ABCDEF";
+    :local hex "0123456789abcdef0123456789ABCDEF"
 
     # Multiplier represents the current positional value in base-16 (1, 16, 256, ...)
-    :local multiplier 1;
+    :local multiplier 1
 
     # Initialize result to 0; this will accumulate the numeric value
-    :local result 0;
+    :local result 0
 
     # Loop over each character in the input string from rightmost to leftmost
     :for i from=([:len $input] - 1) to=0 do={
@@ -604,14 +641,14 @@
         # Find the position of the current hex character in the hex string
         # Use modulo 16 to map both lowercase and uppercase letters correctly
         # Multiply by the positional multiplier and add to the result
-        :set result ($result + (([:find $hex [:pick $input $i]] % 16) * $multiplier));
+        :set result ($result + (([:find $hex [:pick $input $i]] % 16) * $multiplier))
 
         # Update multiplier for next left character (multiply by 16)
-        :set multiplier ($multiplier * 16);
+        :set multiplier ($multiplier * 16)
     }
 
     # Return the final numeric value
-    :return $result;
+    :return $result
 }
 
 # Purpose: Apply a transformation function to each element of an associative array (map)
@@ -640,21 +677,21 @@
 #   :local output1 [$MapArray $input1 $square]
 #   :local output2 [$MapArray $input2 $square]
 #
-#   :put  ("input1  = " . [:tostr $input1] )
-#   :put  ("output1 = " . [:tostr $output1] )
-#   :put  ("input2  = " . [:tostr $input2] )
-#   :put  ("output2 = " . [:tostr $output2] )
+#   :put  ("input1  = " . [:tostr $input1])
+#   :put  ("output1 = " . [:tostr $output1])
+#   :put  ("input2  = " . [:tostr $input2])
+#   :put  ("output2 = " . [:tostr $output2])
 # Output:
 #   input1  = 7;5;10
 #   output1 = 49;25;100
 #   input2  = a=4;b=7;c=15
 #   output2 = a=16;b=49;c=225
 :set MapArray do={
-    :local result [:toarray ""];
+    :local result [:toarray ""]
     :foreach n,v in=$1 do={
-        :set ($result->$n) [$2 n=$n v=$v];
+        :set ($result->$n) [$2 n=$n v=$v]
     }
-    :return $result;
+    :return $result
 }
 
 # Purpose: Concatenate all elements of an input array into a single string,
@@ -666,16 +703,16 @@
 # Example: :put [$JoinArray (1,3,4,2,7,5) ","]
 :set JoinArray do={
     # String to hold the joined result
-    :local resultString;
+    :local resultString
 
     # Loop over each element in the input array
     :foreach item in=$1 do={
         # Append current item and the separator to the result string
-        :set $resultString ($resultString.$item.$2);
+        :set $resultString ($resultString.$item.$2)
     }
 
     # Remove the last appended separator and return the final string
-    :return [:pick $resultString 0 ([:len $resultString]-[:len $2])];
+    :return [:pick $resultString 0 ([:len $resultString]-[:len $2])]
 }
 
 # Purpose: Split a string into an array of substrings based on a specified delimiter.
@@ -686,39 +723,43 @@
 # Returns: Array of substrings resulting from the split
 :set SplitStr do={
     # Array to hold the resulting split parts
-    :local result;
+    :local result
 
     # Length of the delimiter string
-    :local delimiterLength [:len $2];
+    :local delimiterLength [:len $2]
 
     # Start index for the next substring to extract
-    :local substringStart 0;
+    :local substringStart 0
 
     # Loop counter initialized as negative delimiter length
-    :local i (0-$delimiterLength);
+    :local i (0-$delimiterLength)
 
     # Edge offset for handling empty delimiter case
-    :local edgeOffset 0;
+    :local edgeOffset 0
 
     # If delimiter length is 0, set edgeOffset to 1 to avoid zero-length issues
-    :if ($delimiterLength=0) do={:set $edgeOffset 1;}
+    :if ($delimiterLength=0) do={
+      :set $edgeOffset 1
+    }
 
     # Loop while delimiter is found in the string
     :while ([:set $i [:find $1 $2 ($i+$delimiterLength-1+$edgeOffset)]; (any$i)]) do={
 
         # Append substring from 'substringStart' to found delimiter index 'i' to result
-        :set $result ($result, ([:pick $1 $substringStart $i]));
+        :set $result ($result, ([:pick $1 $substringStart $i]))
 
         # Move 'substringStart' to the character after the found delimiter
-        :set $substringStart ($i+$delimiterLength);
+        :set $substringStart ($i+$delimiterLength)
 
         # If the result array has reached the maximum number of parts ($3),
         # append the rest of the string and return
-        :if ([:len $result]=$3) do={:return ($result, ([:pick $1 $substringStart [:len $1]]));}
+        :if ([:len $result]=$3) do={
+          :return ($result, ([:pick $1 $substringStart [:len $1]]))
+        }
     }
 
     # After the loop, append the remaining part of the string to the result array
-    :return ($result, ([:pick $1 $substringStart [:len $1]]));
+    :return ($result, ([:pick $1 $substringStart [:len $1]]))
 }
 
 # Purpose: Remove all leading characters from a string that match any character in a given set.
@@ -782,8 +823,8 @@
 #   $2 - Set of characters to remove from both ends
 # Returns: The trimmed string with specified leading and trailing characters removed
 :set TrimStr do={
-    :global TrimStrLeft;
-    :global TrimStrRight;
+    :global TrimStrLeft
+    :global TrimStrRight
 
     :local s $1
 
@@ -803,9 +844,13 @@
 # Returns: The result of the executed script (if any)
 # Usage: $RunScript my_script_name false true
 :set RunScript do={
-    :local scriptName [ :tostr $1 ];
-    :local script [:parse [/system script get $scriptName source]]
-    $script $2 $3 $4 $5 $6 $7
+    :local scriptName [:tostr $1]
+    do {
+        :local script [:parse [/system script get $scriptName source]]
+        $script $2 $3 $4 $5 $6 $7
+    } on-error={
+        :log error "Error while running script $scriptName"
+    }
 }
 
 # Purpose: Export the current RouterOS configuration to a file
@@ -819,7 +864,7 @@
     :global ReplaceStr
     :global GetCurrentDateTime
 
-    :local path [ :tostr $1 ];
+    :local path [:tostr $1]
 
     :local routerName [/system identity get name]
     :set routerName [$ToLowerCase $routerName]
@@ -838,39 +883,39 @@
 # NOTE: This only works if each array item can
 # be compared using the '<' operator.
 :set RecursiveMergeSort do={
-  :global RecursiveMergeSort;
+  :global RecursiveMergeSort
 
-  :local out [:toarray $1];
-  :local l [:len $out];
+  :local out [:toarray $1]
+  :local l [:len $out]
   :if ($l>1) do={
     # Split the list in two, recursively sort, then merge results
 
     # Pick split point index:
-    :local s ($l/2);
+    :local s ($l/2)
 
     # Recursively sort each half-list:
-    :local a [$RecursiveMergeSort [:pick $out 0 $s]];
-    :local b [$RecursiveMergeSort [:pick $out $s $l]];
+    :local a [$RecursiveMergeSort [:pick $out 0 $s]]
+    :local b [$RecursiveMergeSort [:pick $out $s $l]]
 
     # Merge results:
-    :set out [:toarray ""];
-    :set l [:len $b];
-    :local s 0;       # Use $s as index into array $b
+    :set out [:toarray ""]
+    :set l [:len $b]
+    :local s 0; # Use $s as index into array $b
     :foreach i in=$a do={
-      :local j [:pick $b $s];
+      :local j [:pick $b $s]
       :while ($s<$l && $j<$i) do={
-        :set out ($out,$j);
-        :set s ($s+1);
-        :set j [:pick $b $s];
-      };
-      :set out ($out,$i);
-    };
+        :set out ($out,$j)
+        :set s ($s+1)
+        :set j [:pick $b $s]
+      }
+      :set out ($out,$i)
+    }
     :while ($s<$l) do={
-      :set out ($out,[:pick $b $s]);
-      :set s ($s+1);
-    };
-  };
-  :return $out;
+      :set out ($out,[:pick $b $s])
+      :set s ($s+1)
+    }
+  }
+  :return $out
 }
 
 # Purpose: Replace all occurrences of a substring within a string with another substring.
@@ -880,22 +925,22 @@
 #   $3 - Substring to replace with
 # Returns: A new string with all occurrences replaced
 :set ReplaceStr do={
-  :local string [ :tostr $1 ];
-  :local replaceFrom [ :tostr $2 ];
-  :local replaceWith [ :tostr $3 ];
-  :local result "";
+  :local string [:tostr $1]
+  :local replaceFrom [:tostr $2]
+  :local replaceWith [:tostr $3]
+  :local result ""
 
   :if ($replaceFrom = "") do={
-    :return $string;
+    :return $string
   }
 
-  :while ([ :typeof [ :find $string $replaceFrom ] ] != "nil") do={
-    :local Pos [ :find $string $replaceFrom ];
-    :set result ($result . [ :pick $string 0 $Pos ] . $replaceWith);
-    :set string [ :pick $string ($Pos + [ :len $replaceFrom ]) [ :len $string ] ];
+  :while ([:typeof [:find $string $replaceFrom]] != "nil") do={
+    :local pos [:find $string $replaceFrom]
+    :set result ($result . [:pick $string 0 $pos] . $replaceWith)
+    :set string [:pick $string ($pos + [:len $replaceFrom]) [:len $string]]
   }
 
-  :return ($result . $string);
+  :return ($result . $string)
 }
 
 # Purpose: Perform division of two integers and round the result to a specified number of decimal places.
@@ -967,8 +1012,8 @@
     :global ParseDateTime
 
     # Get current date and time from system clock
-    :local currentDate [/system clock get date]   ; # Example: "aug/17/2025"
-    :local currentTime [/system clock get time]   ; # Example: "14:32:07"
+    :local currentDate [/system clock get date]; # Example: "aug/17/2025"
+    :local currentTime [/system clock get time]; # Example: "14:32:07"
     # Return parsed date and time
     :return [$ParseDateTime ($currentDate . " " . $currentTime)]
 }
@@ -1009,9 +1054,9 @@
 #   $3 - File content
 # Returns: File ID of the ensured file
 :set EnsureFileWithIdExists do={
-    :local fileId [ :tostr $1 ];
-    :local fileName [ :tostr $2 ];
-    :local fileContent [ :tostr $3 ];
+    :local fileId [:tostr $1]
+    :local fileName [:tostr $2]
+    :local fileContent [:tostr $3]
 
     :if ([:len $fileId] = 0) do={
         /file print file=$fileName
@@ -1070,8 +1115,8 @@
 #   $1 - Date-time string "YYYY-MM-DD HH:MM:SS"
 # Returns: Unix timestamp (seconds since 1970-01-01 00:00:00 UTC)
 :set ToUnixTimestamp do={
-    :local dt [ :tostr $1 ];
-    
+    :local dt [:tostr $1]
+
     # Extract year, month, day, hour, minute, second
     :local year [:tonum [:pick $dt 0 4]]
     :local month [:tonum [:pick $dt 5 7]]
@@ -1079,28 +1124,32 @@
     :local hour [:tonum [:pick $dt 11 13]]
     :local min [:tonum [:pick $dt 14 16]]
     :local sec [:tonum [:pick $dt 17 19]]
-    
+
     # Days in months
     :local monthDays {31;28;31;30;31;30;31;31;30;31;30;31}
     # Leap year adjustment
     :if (($year % 4 = 0 && $year % 100 != 0) || ($year % 400 = 0)) do={ :set ($monthDays->1) 29 }
-    
+
     # Count total days from 1970 to previous year
     :local days 0
     :for y from=1970 to=($year - 1) do={
         :set days ($days + 365)
         :if (($y % 4 = 0 && $y % 100 != 0) || ($y % 400 = 0)) do={ :set days ($days + 1) }
     }
-    
+
     # Count days in previous months of current year
-    :for i from=1 to=($month - 1) do={ :set days ($days + ($monthDays->($i - 1))) }
-    
+    :if ($month > 1) do={
+        :for i from=1 to=($month - 1) do={
+            :set days ($days + ($monthDays->($i - 1)))
+        }
+    }
+
     # Add days in current month
     :set days ($days + $day - 1)
-    
+
     # Convert total days + hours, minutes, seconds to seconds
     :local timestamp ($days * 86400 + $hour * 3600 + $min * 60 + $sec)
-    
+
     :return $timestamp
 }
 
@@ -1110,72 +1159,74 @@
 :set GetUnixTimestamp do={
     # Get current system date in format "aug/17/2025"
     :local date [/system clock get date]    
-    
+
     # Get current system time in format "22:10:45"
     :local time [/system clock get time]    
-    
+
     # Extract the month as a string (first 3 letters of date, e.g. "aug")
     :local monthStr [:pick $date 0 3]
-    
+
     # Extract the day part (characters 4-6, e.g. "17") and convert to number
     :local day [:tonum [:pick $date 4 6]]
-    
+
     # Extract the year part (characters 7-11, e.g. "2025") and convert to number
     :local year [:tonum [:pick $date 7 11]]
-    
+
     # Mapping of month abbreviations to numeric values
     :local months {"jan"=1;"feb"=2;"mar"=3;"apr"=4;"may"=5;"jun"=6;"jul"=7;"aug"=8;"sep"=9;"oct"=10;"nov"=11;"dec"=12}
-    
+
     # Get numeric month value using the mapping
-    :local month (:$months->$monthStr)
-    
+    :local month ($months->$monthStr)
+
     # Extract the hour part from time string and convert to number
     :local hour [:tonum [:pick $time 0 2]]
-    
+
     # Extract the minute part from time string and convert to number
     :local minute [:tonum [:pick $time 3 5]]
-    
+
     # Extract the second part from time string and convert to number
     :local second [:tonum [:pick $time 6 8]]
-    
+
     # Create local copies for year, month, and day
     :local y $year
     :local m $month
     :local d $day
-    
+
     # Initialize days counter (number of days since 1970-01-01)
     :local days (0)
-    
+
     # Add days for all full years since 1970
     :for i from=1970 to=($y - 1) do={
         # Add 365 days for each year
         :set days ($days + 365)
-    
+
         # If year is leap year, add one extra day
         :if (($i % 4 = 0 && $i % 100 != 0) || ($i % 400 = 0)) do={ 
             :set days ($days + 1) 
         }
     }
-    
+
     # Number of days in each month for a regular year
     :local monthDays {31;28;31;30;31;30;31;31;30;31;30;31}
-    
+
     # If current year is leap year, adjust February to 29 days
     :if (($y % 4 = 0 && $y % 100 != 0) || ($y % 400 = 0)) do={
         :set ($monthDays->1) 29
     }
-    
+
     # Add days from previous months of the current year
-    :for i from=1 to=($m - 1) do={
-        :set days ($days + ($monthDays->($i - 1)))
+    :if ($m > 1) do={
+        :for i from=1 to=($m - 1) do={
+            :set days ($days + ($monthDays->($i - 1)))
+        }
     }
-    
+
     # Add days from the current month (subtract 1 because day count starts at 0)
     :set days ($days + $d - 1)
-    
+
     # Convert total days + time into seconds (Unix timestamp)
     :local timestamp ($days * 86400 + $hour * 3600 + $minute * 60 + $second)
-    
+
     # Return calculated Unix timestamp
     :return $timestamp
 }
@@ -1186,58 +1237,58 @@
 # Returns: Formatted date-time string
 :set FromUnixTimestamp do={
     # Input parameter: Unix timestamp (seconds since 1970-01-01 00:00:00 UTC)
-    :local ts [ :tonum $1 ];
-    
+    :local ts [:tonum $1]
+
     # Extract seconds part (remaining after dividing by 60)
     :local sec ($ts % 60)
-    
+
     # Convert timestamp from seconds to minutes
     :set ts ($ts / 60)
-    
+
     # Extract minutes part (remaining after dividing by 60)
     :local min ($ts % 60)
-    
+
     # Convert timestamp from minutes to hours
     :set ts ($ts / 60)
-    
+
     # Extract hours part (remaining after dividing by 24)
     :local hour ($ts % 24)
-    
+
     # Convert timestamp from hours to days
     :set ts ($ts / 24)
-    
+
     # Now "ts" contains number of full days since 1970-01-01
     :local year 1970
-    
+
     # Determine year by subtracting full years from "ts" (no break)
     :while ($ts >= 365) do={
-    
+
         # Default number of days in the current year
         :local daysInYear 365
-    
+
         # If year is a leap year, adjust days to 366
         :if (($year % 4 = 0 && $year % 100 != 0) || ($year % 400 = 0)) do={
             :set daysInYear 366
         }
-    
+
         # Only subtract if ts is still greater or equal to daysInYear
         :if ($ts >= $daysInYear) do={
             :set ts ($ts - $daysInYear)
             :set year ($year + 1)
         }
     }
-    
+
     # Array with number of days in each month for a regular year
     :local monthDays {31;28;31;30;31;30;31;31;30;31;30;31}
-    
+
     # Adjust February to 29 days if current year is a leap year
     :if (($year % 4 = 0 && $year % 100 != 0) || ($year % 400 = 0)) do={
         :set ($monthDays->1) 29
     }
-    
+
     # Initialize month counter
     :local month 1
-    
+
     # Determine month by subtracting full months from "ts" (no break)
     :local i 0
     :while ($i < 12 && $ts >= ($monthDays->$i)) do={
@@ -1245,21 +1296,21 @@
         :set month ($month + 1)
         :set i ($i + 1)
     }
-    
+
     # Day is the remainder + 1 (since counting starts from 0)
     :local day ($ts + 1)
-    
+
     # Format result as "YYYY-MM-DD"
     :local result ([:tostr $year] . "-" . \
                    [:pick ("0" . $month) ([:len ("0" . $month)] - 2) [:len ("0" . $month)]] . "-" . \
                    [:pick ("0" . $day) ([:len ("0" . $day)] - 2) [:len ("0" . $day)]])
-    
+
     # Append "HH:MM:SS" to result string
     :set result ($result . " " . \
                  [:pick ("0" . $hour) ([:len ("0" . $hour)] - 2) [:len ("0" . $hour)]] . ":" . \
                  [:pick ("0" . $min) ([:len ("0" . $min)] - 2) [:len ("0" . $min)]] . ":" . \
                  [:pick ("0" . $sec) ([:len ("0" . $sec)] - 2) [:len ("0" . $sec)]])
-    
+
     # Return formatted date-time string
     :return $result
 }
@@ -1301,32 +1352,32 @@
 # Returns: Formatted string, e.g., "2d 3h 15m 10s", skipping any zero components
 :set FormatSecondsLong do={
     # Input parameter: total seconds
-    :local totalSec [ :tonum $1 ];
-    
+    :local totalSec [:tonum $1]
+
     # Calculate total days
     :local days ($totalSec / 86400)
     :set totalSec ($totalSec % 86400)
-    
+
     # Calculate hours
     :local hours ($totalSec / 3600)
     :set totalSec ($totalSec % 3600)
-    
+
     # Calculate minutes
     :local minutes ($totalSec / 60)
-    
+
     # Remaining seconds
     :local seconds ($totalSec % 60)
-    
+
     # Build result string, skipping zeros
     :local result ""
     :if ($days > 0) do={ :set result ($result . $days . "d ") }
     :if ($hours > 0) do={ :set result ($result . $hours . "h ") }
     :if ($minutes > 0) do={ :set result ($result . $minutes . "m ") }
     :if ($seconds > 0) do={ :set result ($result . $seconds . "s") }
-    
+
     # Trim any trailing space
     :set result [:pick $result 0 [:len $result]]
-    
+
     # Return result
     :return $result
 }
@@ -1337,7 +1388,7 @@
 # Returns: Formatted string, e.g., "3 days", "5 hrs", "12 min", or "30 sec"
 :set FormatSecondsShort do={
     # Input parameter: total seconds
-    :local sec [ :tonum $1 ];
+    :local sec [:tonum $1]
 
     # Prepare an empty formattedTime variable (string)
     :local formattedTime ""
@@ -1380,22 +1431,99 @@
     :return $formattedTime
 }
 
-# Purpose: Send a message to a Telegram chat using a bot token.
+# Purpose: Send a message to the public Telegram chat using a bot token.
 # Parameters:
 #   $1 - Message text to send
 # Globals:
-#   telegramBotToken - Telegram bot token
-#   telegramChatID   - Chat ID to send the message to
+#   telegramBotToken     - Telegram bot token
+#   telegramPublicChatID - Chat ID to send the message to
 # Returns: None
-:set SendTelegramMessage do={
+:set SendPublicTelegramMessage do={
     :global telegramBotToken
-    :global telegramChatID
+    :global telegramPublicChatID
 
-    :local messageText [ :tostr $1 ];
-    :local parseMode "HTML";
-    /tool fetch url="https://api.telegram.org/bot$telegramBotToken/sendMessage\?chat_id=$telegramChatID&parse_mode=$parseMode&text=$messageText" keep-result=no;
-    :log info "Send Telegram message: $messageText";
+    :local messageText [:tostr $1]
+    :local parseMode "HTML"
+    /tool fetch url="https://api.telegram.org/bot$telegramBotToken/sendMessage\?chat_id=$telegramPublicChatID&parse_mode=$parseMode&text=$messageText" keep-result=no
+    :log info "Send public Telegram message: $messageText"
 }
 
-# signal we are ready
-:set globalFunctionsReady true;
+# Purpose: Send a message to the private Telegram chat using a bot token.
+# Parameters:
+#   $1 - Message text to send
+# Globals:
+#   telegramBotToken      - Telegram bot token
+#   telegramPrivateChatID - Chat ID to send the message to
+# Returns: None
+:set SendPrivateTelegramMessage do={
+    :global telegramBotToken
+    :global telegramPrivateChatID
+
+    :local messageText [:tostr $1]
+    :local parseMode "HTML"
+    /tool fetch url="https://api.telegram.org/bot$telegramBotToken/sendMessage\?chat_id=$telegramPrivateChatID&parse_mode=$parseMode&text=$messageText" keep-result=no
+    :log info "Send private Telegram message: $messageText"
+}
+
+:set GetDhcpClientAddress do={
+    :global SplitStr
+
+    :local iface [:tostr $1]
+    :local dhcpId ""
+
+    # Try to find active DHCP client
+    :set dhcpId [/ip dhcp-client find where interface=$iface]
+
+    # No DHCP client on this interface
+    :if ([:len $dhcpId] = 0) do={
+        :log error ("No DHCP client on interface " . $iface)
+        :return ""
+    }
+
+    # Check DHCP state
+    :local status [/ip dhcp-client get $dhcpId status]
+    :if ($status != "bound") do={
+        :log warning ("DHCP client not bound on " . $iface . ", status=" . $status)
+        :return ""
+    }
+
+    # Safe to read parameters
+    :local ip [/ip dhcp-client get $dhcpId address]
+
+    :local parts [$SplitStr $ip "/"]
+
+    :if ([:len $parts] < 2) do={
+        :return $ip
+    }
+
+    :return ($parts->0)
+}
+
+:set GetDhcpClientGateway do={
+    :local iface [:tostr $1]
+    :local dhcpId ""
+
+    # Try to find active DHCP client
+    :set dhcpId [/ip dhcp-client find where interface=$iface]
+
+    # No DHCP client on this interface
+    :if ([:len $dhcpId] = 0) do={
+        :log error ("No DHCP client on interface " . $iface)
+        :return ""
+    }
+
+    # Check DHCP state
+    :local status [/ip dhcp-client get $dhcpId status]
+    :if ($status != "bound") do={
+        :log warning ("DHCP client not bound on " . $iface . ", status=" . $status)
+        :return ""
+    }
+
+    # Safe to read parameters
+    :local gw [/ip dhcp-client get $dhcpId gateway]
+
+    :return $gw
+}
+
+# Signal we are ready
+:set globalFunctionsReady true

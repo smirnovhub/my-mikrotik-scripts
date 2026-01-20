@@ -1,7 +1,7 @@
 # Author: Dmitry Smirnov 2025
 
 :global WaitFullyConnected
-:global SendTelegramMessage
+:global SendPrivateTelegramMessage
 :global globalFunctionsReady
 :global squaredUpWithExclamationMark
 
@@ -32,4 +32,4 @@
 :log info "Send startup message..."
 :local deviceName [/system identity get name]
 :local message "$squaredUpWithExclamationMark $deviceName: The system is started up"
-$SendTelegramMessage $message
+$SendPrivateTelegramMessage $message

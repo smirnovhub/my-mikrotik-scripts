@@ -1,4 +1,4 @@
-:global SendTelegramMessage
+:global SendPrivateTelegramMessage
 :global GetUnixTimestamp
 :global lastDhcpDynamicLeaseWarningTime
 :global warningSignEmoji
@@ -8,7 +8,7 @@
 # Parameters:
 #   (none) - Works directly with the DHCP lease table.
 # Globals:
-#   SendTelegramMessage              - Function to send messages through the Telegram Bot API.
+#   SendPrivateTelegramMessage       - Function to send messages through the Telegram Bot API.
 #   GetUnixTimestamp                 - Function returning the current UNIX timestamp (seconds since 1970).
 #   lastDhcpDynamicLeaseWarningTime  - Timestamp of the last sent warning (used for rate limiting).
 #   warningSignEmoji                 - Emoji used as a prefix in the Telegram message.
@@ -84,7 +84,7 @@
     :log info $logMessage
 
     # Send message using Telegram Bot API
-    $SendTelegramMessage $message
+    $SendPrivateTelegramMessage $message
 
     # Update time
     :set lastDhcpDynamicLeaseWarningTime [$GetUnixTimestamp]

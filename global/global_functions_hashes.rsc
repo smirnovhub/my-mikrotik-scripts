@@ -23,7 +23,7 @@
 # /system script run global_functions_hashes
 #
 # global functions
-:global GetMd5Sum;
+:global GetMd5Sum
 
 # String message to MD5 Hash
 # Creates a MD5 hash from a message string

@@ -505,6 +505,12 @@
     :return $fileId
 }
 
+# Purpose: Retrieve the IPv4 address assigned by a bound DHCP client on a given interface.
+# Parameters:
+#   $1 - Interface name to check for an active DHCP client
+# Returns:
+#   IPv4 address without prefix length (e.g. "192.168.1.10") if DHCP client is bound;
+#   empty string if no DHCP client exists on the interface or if it is not in "bound" state.
 :set GetDhcpClientAddress do={
     :global SplitStr
 
@@ -539,6 +545,12 @@
     :return ($parts->0)
 }
 
+# Purpose: Retrieve the default gateway received from a bound DHCP client on a given interface.
+# Parameters:
+#   $1 - Interface name to check for an active DHCP client
+# Returns:
+#   Gateway IPv4 address provided by DHCP if the client is in "bound" state;
+#   empty string if no DHCP client exists on the interface or if it is not bound.
 :set GetDhcpClientGateway do={
     :local iface [:tostr $1]
     :local dhcpId ""

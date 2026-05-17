@@ -590,7 +590,12 @@
 
     :local messageText [:tostr $1]
     :local parseMode "HTML"
-    /tool fetch url="https://api.telegram.org/bot$telegramBotToken/sendMessage\?chat_id=$telegramPublicChatID&parse_mode=$parseMode&text=$messageText" keep-result=no
+
+    :local url "https://api.telegram.org/bot$telegramBotToken/sendMessage"
+
+    :local payload "chat_id=$telegramPublicChatID&parse_mode=$parseMode&text=$messageText"
+
+    /tool fetch url=$url http-method=post http-data=$payload keep-result=no
     :log info "Send public Telegram message: $messageText"
 }
 
@@ -607,6 +612,11 @@
 
     :local messageText [:tostr $1]
     :local parseMode "HTML"
-    /tool fetch url="https://api.telegram.org/bot$telegramBotToken/sendMessage\?chat_id=$telegramPrivateChatID&parse_mode=$parseMode&text=$messageText" keep-result=no
+
+    :local url "https://api.telegram.org/bot$telegramBotToken/sendMessage"
+
+    :local payload "chat_id=$telegramPrivateChatID&parse_mode=$parseMode&text=$messageText"
+
+    /tool fetch url=$url http-method=post http-data=$payload keep-result=no
     :log info "Send private Telegram message: $messageText"
 }

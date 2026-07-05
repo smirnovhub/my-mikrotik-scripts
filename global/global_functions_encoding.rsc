@@ -52,7 +52,7 @@
     :local charsString ""
     :for x from=0 to=15 step=1 do={ :for y from=0 to=15 step=1 do={
         :local tmpHex "$[:pick "0123456789ABCDEF" $x ($x+1)]$[:pick "0123456789ABCDEF" $y ($y+1)]"
-        :set $charsString "$charsString$[[:parse "(\"\\$tmpHex\")"]]"
+        :set charsString "$charsString$[[:parse "(\"\\$tmpHex\")"]]"
     } }
 
     # Function to convert a single character to its integer code
@@ -122,7 +122,7 @@
     :local charsString ""
     :for x from=0 to=15 step=1 do={ :for y from=0 to=15 step=1 do={
         :local tmpHex "$[:pick "0123456789ABCDEF" $x ($x+1)]$[:pick "0123456789ABCDEF" $y ($y+1)]"
-        :set $charsString "$charsString$[[:parse "(\"\\$tmpHex\")"]]"
+        :set charsString "$charsString$[[:parse "(\"\\$tmpHex\")"]]"
     } }
 
     # RFC 4648 base64 Standard

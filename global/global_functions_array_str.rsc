@@ -253,7 +253,7 @@
     # Loop over each element in the input array
     :foreach item in=$1 do={
         # Append current item and the separator to the result string
-        :set $resultString ($resultString.$item.$2)
+        :set resultString ($resultString.$item.$2)
     }
 
     # Remove the last appended separator and return the final string
@@ -284,17 +284,16 @@
 
     # If delimiter length is 0, set edgeOffset to 1 to avoid zero-length issues
     :if ($delimiterLength=0) do={
-      :set $edgeOffset 1
+      :set edgeOffset 1
     }
 
     # Loop while delimiter is found in the string
-    :while ([:set $i [:find $1 $2 ($i+$delimiterLength-1+$edgeOffset)]; (any$i)]) do={
-
+    :while ([:set i [:find $1 $2 ($i+$delimiterLength-1+$edgeOffset)]; (any$i)]) do={
         # Append substring from 'substringStart' to found delimiter index 'i' to result
-        :set $result ($result, ([:pick $1 $substringStart $i]))
+        :set result ($result, ([:pick $1 $substringStart $i]))
 
         # Move 'substringStart' to the character after the found delimiter
-        :set $substringStart ($i+$delimiterLength)
+        :set substringStart ($i+$delimiterLength)
 
         # If the result array has reached the maximum number of parts ($3),
         # append the rest of the string and return
@@ -463,11 +462,11 @@
     :for idx from=0 to=([:len $1] - 1) do={ 
         :local char [:pick $1 $idx]
         :local match
-        :for i from=0 to=[:len $lower] do={
-            :set $match ($lower->$i)
-            :if ($char = $match) do={:set $char ($upper->$i)}
+        :for i from=0 to=([:len $lower] - 1) do={
+            :set match ($lower->$i)
+            :if ($char = $match) do={:set char ($upper->$i)}
         }
-        :set $result ($result.$char)
+        :set result ($result.$char)
     }
     :return $result
 }
@@ -484,11 +483,11 @@
     :for idx from=0 to=([:len $1] - 1) do={ 
         :local char [:pick $1 $idx]
         :local match
-        :for i from=0 to=[:len $upper] do={
-            :set $match ($upper->$i)
-            :if ($char = $match) do={:set $char ($lower->$i)}
+        :for i from=0 to=([:len $upper] - 1) do={
+            :set match ($upper->$i)
+            :if ($char = $match) do={:set char ($lower->$i)}
         }
-        :set $result ($result.$char)
+        :set result ($result.$char)
     }
     :return $result
 }

@@ -58,6 +58,9 @@
 #       :global SplitStr
 #   global_functions_datetime:
 #       :global GetCurrentDateTime
+#   global_functions_vars:
+#       :global DeclareGlobalVar
+#       :global GetGlobalVar
 
 :set LogAndExit do={
   :local severity [:tostr $1]
@@ -272,49 +275,53 @@
 # Unknown    = 0
 :set SilentPing do={
     :global GetRandom20CharHex
+    :global DeclareGlobalVar
+    :global GetGlobalVar
 
     :local input $1
     :local count 1
 
-    :if ([:len $2] > 0) do={ :set count $2 }
+    :if ([:len $2] > 0) do={
+        :set count $2
+    }
 
     :local varPrefix "pingresult"
 
     # --- Case 1: single host ---
     :if ([:typeof $input] != "array") do={
         :local host $input
- 
+
         # Random string
         :local rnd [$GetRandom20CharHex]
+
         # Name of global variable to store result
-        :local varName "$varPrefix$rnd"
-      
-        # Dynamically create global variable using :parse
-        :execute (":global " . $varName)
-      
-        # Run ping in background with error handling using :do on-error
+        :local varName ($varPrefix . $rnd)
+
+        # Create temporary global variable
+        $DeclareGlobalVar $varName
+
+        # Run ping in background with error handling
         :local jobCode (":do { \
             :set \$" . $varName . " [:ping count=" . $count . " address=" . $host . "] \
         } on-error={ :set \$" . $varName . " 0 }")
-      
+
         # Run job
         :local jobID [:execute $jobCode]
 
         # Wait for pings end
-        :delay ($count."s")
+        :delay ($count . "s")
 
         # Wait until job finishes
         :while ([:len [/system script job find where .id=$jobID]] > 0) do={
             :delay 500ms
         }
-      
-        # Read the result from the dynamic global variable
-        :local script [:parse ":global $varName; :return \$$varName"]
-        :local result [$script]
-      
+
+        # Read the result
+        :local result [$GetGlobalVar $varName]
+
         # Remove the temporary global variable
         /system script environment remove [find name=$varName]
-      
+
         :return $result
     }
 
@@ -328,12 +335,12 @@
     :foreach k,v in=$input do={
         :local host $v
         :local rnd [$GetRandom20CharHex]
-        :local varName "$varPrefix$rnd"
+        :local varName ($varPrefix . $rnd)
 
         :set ($varsList->([:len $varsList])) $varName
 
-        # Create global variable placeholder
-        :execute (":global " . $varName)
+        # Create temporary global variable
+        $DeclareGlobalVar $varName
 
         # Job code for each host
         :local jobCode (":do { \
@@ -352,17 +359,17 @@
     }
 
     # Wait for pings end
-    :delay ($count."s")
+    :delay ($count . "s")
 
     # Wait until ALL jobs finish
     :while (true) do={
         :local allFinished true
+
         :foreach j,k in=$jobs do={
             :if ([:len [/system script job find where .id=$j]] = 0) do={
                 # Job finished, fetch result
                 :local varName ($vars->$k)
-                :local script [:parse ":global $varName; :return \$$varName"]
-                :local result [$script]
+                :local result [$GetGlobalVar $varName]
 
                 # Save result into return array
                 :set ($results->$k) $result
@@ -371,7 +378,7 @@
             }
         }
 
-        if ($allFinished = true) do={
+        :if ($allFinished = true) do={
             /system script environment remove $varsList
             :return $results
         }

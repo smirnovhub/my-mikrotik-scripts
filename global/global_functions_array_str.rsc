@@ -50,7 +50,7 @@
 :global CompareStr
 
 # Automatically generated ASCII code table
-:global AsciiCodeTable
+:global asciiCodeTable
 
 # Purpose: Parse a list of key-value pairs (or standalone keys) into an associative array (map).
 # Parameters:
@@ -608,15 +608,15 @@
 # Output:
 #   -1
 :set CompareStr do={
-    :global AsciiCodeTable
     :global DecToChar
+    :global asciiCodeTable
 
     # Initialize ASCII lookup table on first use
-    :if ([:typeof $AsciiCodeTable] = "nothing") do={
-        :set AsciiCodeTable [:toarray ""]
+    :if ([:typeof $asciiCodeTable] = "nothing") do={
+        :set asciiCodeTable [:toarray ""]
 
         :for i from=0 to=255 do={
-            :set ($AsciiCodeTable->[$DecToChar $i]) $i
+            :set ($asciiCodeTable->[$DecToChar $i]) $i
         }
     }
 
@@ -631,9 +631,11 @@
         :set minL $l2
     }
 
-    :for i from=0 to=($minL - 1) do={
-        :local c1 ($AsciiCodeTable->[:pick $s1 $i])
-        :local c2 ($AsciiCodeTable->[:pick $s2 $i])
+    :set minL ($minL - 1)
+
+    :for i from=0 to=$minL do={
+        :local c1 ($asciiCodeTable->[:pick $s1 $i])
+        :local c2 ($asciiCodeTable->[:pick $s2 $i])
 
         :if ($c1 < $c2) do={ :return -1 }
         :if ($c1 > $c2) do={ :return 1 }

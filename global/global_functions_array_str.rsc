@@ -42,8 +42,15 @@
 :global TrimStrRight
 :global ReplaceStr
 :global RecursiveMergeSort
+:global RecursiveMergeSortStr
 :global ToUpperCase
 :global ToLowerCase
+:global HexToChar
+:global DecToChar
+:global CompareStr
+
+# Automatically generated ASCII code table
+:global AsciiCodeTable
 
 # Purpose: Parse a list of key-value pairs (or standalone keys) into an associative array (map).
 # Parameters:
@@ -245,7 +252,9 @@
 #   $1 - Array of strings to be joined
 #   $2 - Separator string to insert between elements
 # Returns: A single string with all elements joined by the separator
-# Example: :put [$JoinArray (1,3,4,2,7,5) ","]
+# Example: :put [$JoinArray (1,3,4,2,7,5) "+"]
+# Output:
+#   1+3+4+2+7+5
 :set JoinArray do={
     # String to hold the joined result
     :local resultString
@@ -266,6 +275,9 @@
 #   $2 - Delimiter string to split by
 #   $3 - Optional maximum number of parts to return
 # Returns: Array of substrings resulting from the split
+# Example: :put [$SplitStr "1+3+4+2+7+5" "+"]
+# Output:
+#   1;3;4;2;7;5
 :set SplitStr do={
     # Array to hold the resulting split parts
     :local result
@@ -311,6 +323,9 @@
 #   $1 - Input string to trim
 #   $2 - Set of characters to remove from the left side
 # Returns: The trimmed string with specified leading characters removed
+# Example: :put [$TrimStrLeft "TrimmedString" "Trng"]
+# Output:
+#   immedString
 :set TrimStrLeft do={
     :local s $1
     :local chars $2
@@ -338,6 +353,9 @@
 #   $1 - Input string to trim
 #   $2 - Set of characters to remove from the right side
 # Returns: The trimmed string with specified trailing characters removed
+# Example: :put [$TrimStrRight "TrimmedString" "Trng"]
+# Output:
+#   TrimmedStri
 :set TrimStrRight do={
     :local s $1
     :local chars $2
@@ -366,6 +384,9 @@
 #   $1 - Input string to trim
 #   $2 - Set of characters to remove from both ends
 # Returns: The trimmed string with specified leading and trailing characters removed
+# Example: :put [$TrimStr "TrimmedString" "Trng"]
+# Output:
+#   immedStri
 :set TrimStr do={
     :global TrimStrLeft
     :global TrimStrRight
@@ -387,6 +408,9 @@
 #   $2 - Substring to find and replace
 #   $3 - Substring to replace with
 # Returns: A new string with all occurrences replaced
+# Example: :put [$ReplaceStr "StringToReplace" "e" "777"]
+# Output:
+#   StringToR777plac777
 :set ReplaceStr do={
   :local string [:tostr $1]
   :local replaceFrom [:tostr $2]
@@ -412,7 +436,10 @@
 #   $1 - Array to sort
 # Returns: A new array containing the sorted elements
 # NOTE: This only works if each array item can
-# be compared using the '<' operator.
+# be compared using the '<' operator. It doesn't work for a strings!
+# Example: :put [$RecursiveMergeSort (7,1,3,4,2,7,7,0,1)]
+# Output:
+#   0;1;1;2;3;4;7;7;7
 :set RecursiveMergeSort do={
   :global RecursiveMergeSort
 
@@ -449,11 +476,57 @@
   :return $out
 }
 
+# Purpose: Sort an array of strings in ascending lexicographical order using the merge sort algorithm.
+# Parameters:
+#   $1 - Array of strings to sort
+# Returns: A new array containing the sorted strings
+# Example: :put [$RecursiveMergeSortStr ("banana","apple","cherry")]
+# Output:
+#   apple;banana;cherry
+:set RecursiveMergeSortStr do={
+  :global CompareStr
+  :global RecursiveMergeSortStr
+
+  :local out [:toarray $1]
+  :local l [:len $out]
+  :if ($l>1) do={
+    # Split the list in two, recursively sort, then merge results
+
+    # Pick split point index:
+    :local s ($l/2)
+
+    # Recursively sort each half-list:
+    :local a [$RecursiveMergeSortStr [:pick $out 0 $s]]
+    :local b [$RecursiveMergeSortStr [:pick $out $s $l]]
+
+    # Merge results:
+    :set out [:toarray ""]
+    :set l [:len $b]
+    :local s 0; # Use $s as index into array $b
+    :foreach i in=$a do={
+      :local j [:pick $b $s]
+      :while (($s < $l) && ([$CompareStr $j $i] < 0)) do={
+        :set out ($out,$j)
+        :set s ($s+1)
+        :set j [:pick $b $s]
+      }
+      :set out ($out,$i)
+    }
+    :while ($s<$l) do={
+      :set out ($out,[:pick $b $s])
+      :set s ($s+1)
+    }
+  }
+  :return $out
+}
 
 # Purpose: Convert all lowercase letters in a string to uppercase.
 # Parameters:
 #   $1 - Input string
 # Returns: A new string with all lowercase letters converted to uppercase
+# Example: :put [$ToUpperCase "Convert All Lowercase Letters"]
+# Output:
+#   CONVERT ALL LOWERCASE LETTERS
 :set ToUpperCase do={
     :local lower [:toarray "a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p,q,r,s,t,u,v,w,x,y,z"]
     :local upper [:toarray "A,B,C,D,E,F,G,H,I,J,K,L,M,N,O,P,Q,R,S,T,U,V,W,X,Y,Z"]
@@ -475,6 +548,9 @@
 # Parameters:
 #   $1 - Input string
 # Returns: A new string with all uppercase letters converted to lowercase
+# Example: :put [$ToLowerCase "Convert All Lowercase Letters"]
+# Output:
+#   convert all lowercase letters
 :set ToLowerCase do={
     :local lower [:toarray "a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p,q,r,s,t,u,v,w,x,y,z"]
     :local upper [:toarray "A,B,C,D,E,F,G,H,I,J,K,L,M,N,O,P,Q,R,S,T,U,V,W,X,Y,Z"]
@@ -490,4 +566,81 @@
         :set result ($result.$char)
     }
     :return $result
+}
+
+# Purpose: Convert a two-digit hexadecimal ASCII value to its corresponding character.
+# Parameters:
+#   $1 - Two-digit hexadecimal ASCII value (00-FF)
+# Returns: The corresponding ASCII character
+# Example: :put [$HexToChar "41"]
+# Output:
+#   A
+:set HexToChar do={
+    :return [[:parse "(\"\\$1\")"]]
+}
+
+# Purpose: Convert a decimal ASCII value to its corresponding character.
+# Parameters:
+#   $1 - Decimal ASCII value (0-255)
+# Returns: The corresponding ASCII character
+# Example: :put [$DecToChar 65]
+# Output:
+#   A
+:set DecToChar do={
+    :local input [:tonum $1]
+    :local hexchars "0123456789ABCDEF"
+
+    :local convert [:pick $hexchars (($input >> 4) & 0xF)]
+    :set convert ($convert . [:pick $hexchars ($input & 0xF)])
+
+    :return [[:parse "(\"\\$convert\")"]]
+}
+
+# Purpose: Compare two strings lexicographically using ASCII character codes.
+# Parameters:
+#   $1 - First input string
+#   $2 - Second input string
+# Returns:
+#   -1 if the first string is less than the second string
+#    0 if both strings are equal
+#    1 if the first string is greater than the second string
+# Example: :put [$CompareStr "apple" "banana"]
+# Output:
+#   -1
+:set CompareStr do={
+    :global AsciiCodeTable
+    :global DecToChar
+
+    # Initialize ASCII lookup table on first use
+    :if ([:typeof $AsciiCodeTable] = "nothing") do={
+        :set AsciiCodeTable [:toarray ""]
+
+        :for i from=0 to=255 do={
+            :set ($AsciiCodeTable->[$DecToChar $i]) $i
+        }
+    }
+
+    :local s1 [:tostr $1]
+    :local s2 [:tostr $2]
+
+    :local l1 [:len $s1]
+    :local l2 [:len $s2]
+
+    :local minL $l1
+    :if ($l2 < $minL) do={
+        :set minL $l2
+    }
+
+    :for i from=0 to=($minL - 1) do={
+        :local c1 ($AsciiCodeTable->[:pick $s1 $i])
+        :local c2 ($AsciiCodeTable->[:pick $s2 $i])
+
+        :if ($c1 < $c2) do={ :return -1 }
+        :if ($c1 > $c2) do={ :return 1 }
+    }
+
+    :if ($l1 < $l2) do={ :return -1 }
+    :if ($l1 > $l2) do={ :return 1 }
+
+    :return 0
 }

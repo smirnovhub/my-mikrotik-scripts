@@ -356,69 +356,27 @@
     # Convert timestamp from hours to days
     :set ts ($ts / 24)
 
-    # Now "ts" contains number of full days since 1970-01-01
-    :local days $ts
-    :local year 1970
-    :local found false
+    # Shift epoch to 0000-03-01 to handle leap years inline without loops
+    :local z ($ts + 719468)
 
-    # Determine year by subtracting full years from "ts" (no break)
-    :while (!$found) do={
-
-        :local leap false
-
-        :if (((($year % 4) = 0) && (($year % 100) != 0)) || (($year % 400) = 0)) do={
-            :set leap true
-        }
-
-        :local daysInYear 365
-
-        :if ($leap) do={
-            :set daysInYear 366
-        }
-
-        :if ($days < $daysInYear) do={
-            :set found true
-        } else={
-            :set days ($days - $daysInYear)
-            :set year ($year + 1)
-        }
+    :local era ($z / 146097)
+    :local doe ($z % 146097)
+    :local yoe (($doe - ($doe / 1460) + ($doe / 36524) - ($doe / 146096)) / 365)
+    
+    :local year ($yoe + ($era * 400))
+    :local doy ($doe - ((365 * $yoe) + ($yoe / 4) - ($yoe / 100)))
+    :local mp (((5 * $doy) + 2) / 153)
+    
+    :local day ($doy - (((153 * $mp) + 2) / 5) + 1)
+    :local month ($mp + 3)
+    
+    # Adjust year and month if the date falls into January or February
+    :if ($mp >= 10) do={
+        :set month ($mp - 9)
+        :set year ($year + 1)
     }
 
-    # Month offsets for non leap year
-    :local monthOffset {0;31;59;90;120;151;181;212;243;273;304;334}
-
-    :local leap false
-
-    :if (((($year % 4) = 0) && (($year % 100) != 0)) || (($year % 400) = 0)) do={
-        :set leap true
-    }
-
-    # Find month
-    :local month 1
-    :local monthFound false
-
-    :local i 11
-
-    :while (($i >= 0) && (!$monthFound)) do={
-
-        :local offset ($monthOffset->$i)
-
-        :if ($leap && ($i >= 2)) do={
-            :set offset ($offset + 1)
-        }
-
-        :if ($days >= $offset) do={
-            :set month ($i + 1)
-            :set days ($days - $offset)
-            :set monthFound true
-        }
-
-        :set i ($i - 1)
-    }
-
-    :local day ($days + 1)
-
-    # Format
+    # Format output with leading zeros
     :local monthStr [:tostr $month]
     :local dayStr [:tostr $day]
     :local hourStr [:tostr $hour]

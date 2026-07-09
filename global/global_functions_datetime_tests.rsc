@@ -233,6 +233,30 @@
     [$RunTestCase "2100-03-01 00:00:00" "4107542400" "Non-leap century 2100"]
     [$RunTestCase "2400-03-01 00:00:00" "13574649600" "Leap century 2400"]
 
+    # =========================================================================
+    # Other tests
+    # =========================================================================
+    [$RunTestCase "2000-02-29 12:00:00" "951825600" "Middle of leap century day"]
+    [$RunTestCase "2100-02-28 00:00:00" "4107456000" "Start of last day before non-leap century transition"]
+    [$RunTestCase "2100-03-01 00:00:00" "4107542400" "First day after skipped leap day in 2100"]
+    [$RunTestCase "1972-01-02 00:00:00" "63158400" "Second day of leap year 1972"]
+    [$RunTestCase "2010-01-01 00:00:00" "1262304000" "Round decade boundary"]
+    [$RunTestCase "2019-12-31 23:59:59" "1577836799" "End of decade"]
+    [$RunTestCase "2020-01-01 00:00:00" "1577836800" "Start of leap decade year"]
+    [$RunTestCase "2040-01-01 00:00:00" "2208988800" "Post 32-bit future date"]
+    [$RunTestCase "2100-01-01 23:59:59" "4102531199" "Century year beginning"]
+    [$RunTestCase "9999-12-31 00:00:00" "253402214400" "Near maximum supported date"]
+
+    [$RunTestCase "1973-01-01 00:00:00" "94694400" "First second after leap year"]
+    [$RunTestCase "2024-01-31 23:59:59" "1706745599" "End of January"]
+    [$RunTestCase "2024-03-31 23:59:59" "1711929599" "End of March"]
+    [$RunTestCase "2024-04-30 23:59:59" "1714521599" "End of April"]
+    [$RunTestCase "2024-05-31 23:59:59" "1717199999" "End of May"]
+    [$RunTestCase "2024-06-30 23:59:59" "1719791999" "End of June"]
+    [$RunTestCase "2000-01-01 00:00:00" "946684800" "Y2K midnight"]
+    [$RunTestCase "2000-01-01 12:00:00" "946728000" "Y2K noon"]
+    [$RunTestCase "2000-01-01 23:59:59" "946771199" "Y2K end of day"]
+
     :put "Testing completed."
 }
 
@@ -410,6 +434,30 @@
     [$RunTestCase "2000-03-01 00:00:00" "951868800" "Leap century 2000"]
     [$RunTestCase "2100-03-01 00:00:00" "4107542400" "Non-leap century 2100"]
     [$RunTestCase "2400-03-01 00:00:00" "13574649600" "Leap century 2400"]
+
+    # =========================================================================
+    # Other tests
+    # =========================================================================
+    [$RunTestCase "2000-02-29 12:00:00" "951825600" "Middle of leap century day"]
+    [$RunTestCase "2100-02-28 00:00:00" "4107456000" "Start of last day before non-leap century transition"]
+    [$RunTestCase "2100-03-01 00:00:00" "4107542400" "First day after skipped leap day in 2100"]
+    [$RunTestCase "1972-01-02 00:00:00" "63158400" "Second day of leap year 1972"]
+    [$RunTestCase "2010-01-01 00:00:00" "1262304000" "Round decade boundary"]
+    [$RunTestCase "2019-12-31 23:59:59" "1577836799" "End of decade"]
+    [$RunTestCase "2020-01-01 00:00:00" "1577836800" "Start of leap decade year"]
+    [$RunTestCase "2040-01-01 00:00:00" "2208988800" "Post 32-bit future date"]
+    [$RunTestCase "2100-01-01 23:59:59" "4102531199" "Century year beginning"]
+    [$RunTestCase "9999-12-31 00:00:00" "253402214400" "Near maximum supported date"]
+
+    [$RunTestCase "1973-01-01 00:00:00" "94694400" "First second after leap year"]
+    [$RunTestCase "2024-01-31 23:59:59" "1706745599" "End of January"]
+    [$RunTestCase "2024-03-31 23:59:59" "1711929599" "End of March"]
+    [$RunTestCase "2024-04-30 23:59:59" "1714521599" "End of April"]
+    [$RunTestCase "2024-05-31 23:59:59" "1717199999" "End of May"]
+    [$RunTestCase "2024-06-30 23:59:59" "1719791999" "End of June"]
+    [$RunTestCase "2000-01-01 00:00:00" "946684800" "Y2K midnight"]
+    [$RunTestCase "2000-01-01 12:00:00" "946728000" "Y2K noon"]
+    [$RunTestCase "2000-01-01 23:59:59" "946771199" "Y2K end of day"]
 
     # =========================================================================
     # Epoch (1970)

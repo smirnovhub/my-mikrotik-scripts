@@ -1,3 +1,4 @@
+:global RunAllArrayStrTests
 :global ParseKeyValueStoreTest
 :global JoinArrayTest
 :global SplitStrTest
@@ -10,6 +11,47 @@
 :global HexToCharTest
 :global DecToCharTest
 :global CompareStrTest
+
+:set RunAllArrayStrTests do={
+    :global ParseKeyValueStoreTest
+    :global JoinArrayTest
+    :global SplitStrTest
+    :global TrimStrTest
+    :global ReplaceStrTest
+    :global RecursiveMergeSortTest
+    :global RecursiveMergeSortStrTest
+    :global ToUpperCaseTest
+    :global ToLowerCaseTest
+    :global HexToCharTest
+    :global DecToCharTest
+    :global CompareStrTest
+
+    :put "\1B[35m=== STARTING ALL SYSTEM TESTS ===\1B[0m"
+
+    # Execute string manipulation tests
+    $TrimStrTest
+    $SplitStrTest
+    $JoinArrayTest
+    $ReplaceStrTest
+    
+    # Execute case conversion tests
+    $ToUpperCaseTest
+    $ToLowerCaseTest
+    
+    # Execute character conversion tests
+    $HexToCharTest
+    $DecToCharTest
+    
+    # Execute sorting and comparison tests
+    $CompareStrTest
+    $RecursiveMergeSortTest
+    $RecursiveMergeSortStrTest
+    
+    # Execute storage parser tests
+    $ParseKeyValueStoreTest
+
+    :put "\1B[35m=== ALL TESTS EXECUTED ===\1B[0m"
+}
 
 :set ParseKeyValueStoreTest do={
     :global ParseKeyValueStore
@@ -220,15 +262,17 @@
         :local expected [:tostr $4]
         :local name [:tostr $5]
 
-        :local actual ""
-        :if ($targetFunc = "left")  do={ :set actual [$TrimStrLeft $str $chars] }
-        :if ($targetFunc = "right") do={ :set actual [$TrimStrRight $str $chars] }
-        :if ($targetFunc = "both")  do={ :set actual [$TrimStr $str $chars] }
+        :if ([:len $targetFunc] > 0) do={
+            :local actual ""
+            :if ($targetFunc = "left")  do={ :set actual [$TrimStrLeft $str $chars] }
+            :if ($targetFunc = "right") do={ :set actual [$TrimStrRight $str $chars] }
+            :if ($targetFunc = "both")  do={ :set actual [$TrimStr $str $chars] }
 
-        :if ($actual = $expected) do={
-            :put ("\1B[32m  [PASS]\1B[0m [" . $targetFunc . "] " . $name . ": '" . $str . "' -> '" . $actual . "'")
-        } else={
-            :put ("\1B[31m  [FAIL]\1B[0m [" . $targetFunc . "] " . $name . ": '" . $str . "' | Expected: '" . $expected . "', Got: '" . $actual . "'")
+            :if ($actual = $expected) do={
+                :put ("\1B[32m  [PASS]\1B[0m [" . $targetFunc . "] " . $name . ": '" . $str . "' -> '" . $actual . "'")
+            } else={
+                :put ("\1B[31m  [FAIL]\1B[0m [" . $targetFunc . "] " . $name . ": '" . $str . "' | Expected: '" . $expected . "', Got: '" . $actual . "'")
+            }
         }
     }
 

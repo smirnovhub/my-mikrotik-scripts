@@ -1,4 +1,5 @@
 :global RunAllDateTimeTests
+:global GetWeekdayTest
 :global GetUnixTimestampTest
 :global FromUnixTimestampTest
 :global ToUnixTimestampTest
@@ -6,6 +7,7 @@
 :global ParseDateTimeTest
 
 :set RunAllDateTimeTests do={
+    :global GetWeekdayTest
     :global GetUnixTimestampTest
     :global FromUnixTimestampTest
     :global ToUnixTimestampTest
@@ -15,6 +17,7 @@
     :put "\1B[35m=== STARTING ALL DATETIME TESTS ===\1B[0m"
 
     # Execute conversion and parsing tests
+    $GetWeekdayTest
     $ParseDateTimeTest
     $FromUnixTimestampTest
     $ToUnixTimestampTest
@@ -24,6 +27,94 @@
     $GetUnixTimestampTest
 
     :put "\1B[35m=== ALL DATETIME TESTS EXECUTED ===\1B[0m"
+}
+
+:set GetWeekdayTest do={
+    :local RunTestCase do={
+        :global GetWeekday
+        :local ts [:tonum $1]
+        :local expected [:tostr $2]
+        :local name [:tostr $3]
+
+        # Ignore phantom calls from engine bugs or broken line endings
+        :if ([:len $1] > 0) do={
+            :local actual [$GetWeekday $ts]
+            :if ($actual = $expected) do={
+                :put ("  \1B[32m[PASS]\1B[0m " . $name . ": " . $ts . " -> '" . $actual . "'")
+            } else={
+                :put ("  \1B[31m[FAIL]\1B[0m " . $name . ": " . $ts . " | Expected: '" . $expected . "', Got: '" . $actual . "'")
+            }
+        }
+    }
+
+    :put "Starting GetWeekday tests..."
+
+    # Epoch base cases (1970-01-01 was a Thursday)
+    [$RunTestCase "0" "thursday" "Absolute Unix epoch start boundary"]
+    [$RunTestCase "86400" "friday" "One day past epoch baseline"]
+    [$RunTestCase "172800" "saturday" "Two days past epoch baseline"]
+    [$RunTestCase "259200" "sunday" "Three days past epoch - first Sunday"]
+    [$RunTestCase "345600" "monday" "Four days past epoch - first Monday"]
+
+    # Mid-week sequence validation
+    [$RunTestCase "1709164799" "wednesday" "End of February 28 before leap day 2024"]
+    [$RunTestCase "1709164800" "thursday" "Start of leap day February 29 2024"]
+    [$RunTestCase "1709251200" "friday" "Start of March 1 right after leap day 2024"]
+
+    # Year 2025 targets
+    [$RunTestCase "1740787199" "friday" "Last second of February 2025 standard year"]
+    [$RunTestCase "1740787200" "saturday" "Start of March 1 2025 standard year"]
+
+    # Documentation example verification
+    [$RunTestCase "1750031999" "sunday" "Target example validation from documentation header"]
+
+    # Year 2026 targets (Today check)
+    [$RunTestCase "1767225600" "thursday" "Start of the year Y2026 baseline"]
+    [$RunTestCase "1783639991" "thursday" "Current date timestamp validation anchor"]
+
+    # Far future check (Year 2038)
+    [$RunTestCase "2147483647" "tuesday" "Maximum 32-bit signed integer time threshold"]
+
+    [$RunTestCase "0" "thursday" "Thursday"]
+    [$RunTestCase "86400" "friday" "Friday"]
+    [$RunTestCase "172800" "saturday" "Saturday"]
+    [$RunTestCase "259200" "sunday" "Sunday"]
+    [$RunTestCase "345600" "monday" "Monday"]
+    [$RunTestCase "432000" "tuesday" "Tuesday"]
+    [$RunTestCase "518400" "wednesday" "Wednesday"]
+    [$RunTestCase "604800" "thursday" "Exactly one week later"]
+    
+    [$RunTestCase "0" "thursday" "Start of day"]
+    [$RunTestCase "1" "thursday" "One second later"]
+    [$RunTestCase "43200" "thursday" "Midday"]
+    [$RunTestCase "86398" "thursday" "Penultimate second"]
+    [$RunTestCase "86399" "thursday" "Last second of day"]
+    [$RunTestCase "86400" "friday" "Next day begins"]
+    
+    [$RunTestCase "1709251199" "thursday" "Last second of leap day"]
+    [$RunTestCase "1709251200" "friday" "First second after leap day"]
+    
+    [$RunTestCase "1735689599" "tuesday" "Last second of 2024"]
+    [$RunTestCase "1735689600" "wednesday" "First second of 2025"]
+    
+    [$RunTestCase "1767225599" "wednesday" "Last second of 2025"]
+    [$RunTestCase "1767225600" "thursday" "First second of 2026"]
+    
+    [$RunTestCase "951782400" "tuesday" "Leap century day 2000"]
+    [$RunTestCase "4107542400" "monday" "Non-leap century 2100"]
+    [$RunTestCase "13574649600" "wednesday" "Leap century 2400"]
+    
+    [$RunTestCase "253402300799" "friday" "Maximum supported date"]
+    
+    [$RunTestCase "951868800" "wednesday" "2000-03-01"]
+    [$RunTestCase "13574649600" "wednesday" "2400-03-01 same weekday after 400-year cycle"]
+    
+    [$RunTestCase "0" "thursday" "Week 0"]
+    [$RunTestCase "604800" "thursday" "Week 1"]
+    [$RunTestCase "1209600" "thursday" "Week 2"]
+    [$RunTestCase "1814400" "thursday" "Week 3"]
+    
+    :put "Testing completed."
 }
 
 :set ParseDateTimeTest do={

@@ -343,7 +343,9 @@
 #   - Indexing: 0 = Sunday, 1 = Monday, ..., 6 = Saturday.
 #   - To get the current weekday, pass [$GetUnixTimestamp] as the parameter.
 # Example usage:
-#   :put [$GetWeekday [$GetUnixTimestamp]]
+#   :put [$GetWeekday 1750031999]
+# Output:
+#   sunday
 :set GetWeekday do={
     # Read function argument: UNIX timestamp
     :local ts $1

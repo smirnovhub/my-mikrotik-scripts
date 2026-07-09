@@ -97,32 +97,49 @@
     :local min [:tonum [:pick $dt 14 16]]
     :local sec [:tonum [:pick $dt 17 19]]
 
-    # Days in months
-    :local monthDays {31;28;31;30;31;30;31;31;30;31;30;31}
-    # Leap year adjustment
-    :if (($year % 4 = 0 && $year % 100 != 0) || ($year % 400 = 0)) do={ :set ($monthDays->1) 29 }
-
-    # Count total days from 1970 to previous year
+    # Count days from 1970-01-01 to the beginning of the current year
     :local days 0
-    :for y from=1970 to=($year - 1) do={
-        :set days ($days + 365)
-        :if (($y % 4 = 0 && $y % 100 != 0) || ($y % 400 = 0)) do={ :set days ($days + 1) }
-    }
 
-    # Count days in previous months of current year
-    :if ($month > 1) do={
-        :for i from=1 to=($month - 1) do={
-            :set days ($days + ($monthDays->($i - 1)))
+    :if ($year > 1970) do={
+        :local lastYear ($year - 1)
+
+        :for y from=1970 to=$lastYear do={
+            :set days ($days + 365)
+
+            :if (((($y % 4) = 0) && ((($y % 100) != 0))) || ((($y % 400) = 0))) do={
+                :set days ($days + 1)
+            }
         }
     }
 
-    # Add days in current month
-    :set days ($days + $day - 1)
+    # Add days of completed months in the current year
+    :if ($month > 1) do={
+        :local lastMonth ($month - 1)
 
-    # Convert total days + hours, minutes, seconds to seconds
-    :local timestamp ($days * 86400 + $hour * 3600 + $min * 60 + $sec)
+        :for m from=1 to=$lastMonth do={
+            :local md 31
 
-    :return $timestamp
+            :if (($m = 4) || ($m = 6) || ($m = 9) || ($m = 11)) do={
+                :set md 30
+            }
+
+            :if ($m = 2) do={
+                :set md 28
+
+                :if (((($year % 4) = 0) && ((($year % 100) != 0))) || ((($year % 400) = 0))) do={
+                    :set md 29
+                }
+            }
+
+            :set days ($days + $md)
+        }
+    }
+
+    # Add completed days of the current month
+    :set days ($days + ($day - 1))
+
+    # Convert to Unix timestamp
+    :return (($days * 86400) + ($hour * 3600) + ($min * 60) + $sec)
 }
 
 # Purpose: Retrieve the current system date and time and convert it to a Unix timestamp.

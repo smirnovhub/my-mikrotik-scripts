@@ -82,9 +82,10 @@
 }
 
 
-# Purpose: Convert a date-time string in "YYYY-MM-DD HH:MM:SS" format to Unix timestamp.
+# Purpose: Convert a date-time string in "YYYY-MM-DD HH:MM:SS"
+#   or "mmm/DD/YYYY HH:MM:SS" format to Unix timestamp.
 # Parameters:
-#   $1 - Date-time string "YYYY-MM-DD HH:MM:SS"
+#   $1 - Date-time string "YYYY-MM-DD HH:MM:SS" or "mmm/DD/YYYY HH:MM:SS"
 # Returns: Unix timestamp (seconds since 1970-01-01 00:00:00 UTC)
 # Example: :put [$ToUnixTimestamp "2025-03-01 17:15:33"]
 # Output:
@@ -240,78 +241,15 @@
 # Parameters: None
 # Returns: Unix timestamp (seconds since 1970-01-01 00:00:00 UTC)
 :set GetUnixTimestamp do={
+    :global ToUnixTimestamp
+
     # Get current system date in format "aug/17/2025"
     :local date [/system clock get date]    
 
     # Get current system time in format "22:10:45"
     :local time [/system clock get time]    
 
-    # Extract the month as a string (first 3 letters of date, e.g. "aug")
-    :local monthStr [:pick $date 0 3]
-
-    # Extract the day part (characters 4-6, e.g. "17") and convert to number
-    :local day [:tonum [:pick $date 4 6]]
-
-    # Extract the year part (characters 7-11, e.g. "2025") and convert to number
-    :local year [:tonum [:pick $date 7 11]]
-
-    # Mapping of month abbreviations to numeric values
-    :local months {"jan"=1;"feb"=2;"mar"=3;"apr"=4;"may"=5;"jun"=6;"jul"=7;"aug"=8;"sep"=9;"oct"=10;"nov"=11;"dec"=12}
-
-    # Get numeric month value using the mapping
-    :local month ($months->$monthStr)
-
-    # Extract the hour part from time string and convert to number
-    :local hour [:tonum [:pick $time 0 2]]
-
-    # Extract the minute part from time string and convert to number
-    :local minute [:tonum [:pick $time 3 5]]
-
-    # Extract the second part from time string and convert to number
-    :local second [:tonum [:pick $time 6 8]]
-
-    # Create local copies for year, month, and day
-    :local y $year
-    :local m $month
-    :local d $day
-
-    # Initialize days counter (number of days since 1970-01-01)
-    :local days (0)
-
-    # Add days for all full years since 1970
-    :for i from=1970 to=($y - 1) do={
-        # Add 365 days for each year
-        :set days ($days + 365)
-
-        # If year is leap year, add one extra day
-        :if (($i % 4 = 0 && $i % 100 != 0) || ($i % 400 = 0)) do={ 
-            :set days ($days + 1) 
-        }
-    }
-
-    # Number of days in each month for a regular year
-    :local monthDays {31;28;31;30;31;30;31;31;30;31;30;31}
-
-    # If current year is leap year, adjust February to 29 days
-    :if (($y % 4 = 0 && $y % 100 != 0) || ($y % 400 = 0)) do={
-        :set ($monthDays->1) 29
-    }
-
-    # Add days from previous months of the current year
-    :if ($m > 1) do={
-        :for i from=1 to=($m - 1) do={
-            :set days ($days + ($monthDays->($i - 1)))
-        }
-    }
-
-    # Add days from the current month (subtract 1 because day count starts at 0)
-    :set days ($days + $d - 1)
-
-    # Convert total days + time into seconds (Unix timestamp)
-    :local timestamp ($days * 86400 + $hour * 3600 + $minute * 60 + $second)
-
-    # Return calculated Unix timestamp
-    :return $timestamp
+    :return [$ToUnixTimestamp "$date $time"]
 }
 
 # Purpose: Convert a Unix timestamp (seconds since 1970-01-01 00:00:00 UTC) to a formatted date-time string "YYYY-MM-DD HH:MM:SS"

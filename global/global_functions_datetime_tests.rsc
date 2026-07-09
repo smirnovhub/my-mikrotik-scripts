@@ -653,15 +653,26 @@
 
 :set GetUnixTimestampTest do={
     :global GetUnixTimestamp
+    :global FromUnixTimestamp
+    :global ToUnixTimestamp
 
     :put "Starting GetUnixTimestamp runtime tests..."
 
     # Executing dynamic check to confirm current live runtime fetches validate correctly
     :local ts1 [$GetUnixTimestamp]
-    :if ([:typeof $ts1] = "num" && $ts1 > 1700000000) do={
+    :local date [$FromUnixTimestamp $ts1]
+    :local ts2 [$ToUnixTimestamp $date]
+
+    :if ([:typeof $ts1] = "num" && $ts1 > 1783628648) do={
         :put ("  \1B[32m[PASS]\1B[0m Live system timestamp fetched successfully: " . $ts1)
     } else={
         :put ("  \1B[31m[FAIL]\1B[0m Live system timestamp fetch resulted in invalid structure: " . [:tostr $ts1])
+    }
+
+    :if ($ts1 = $ts2) do={
+        :put ("  \1B[32m[PASS]\1B[0m Conversion to date successful: " . $date)
+    } else={
+        :put ("  \1B[31m[FAIL]\1B[0m Conversion to date failed: " . [:tostr $date])
     }
 
     :put "Testing completed."

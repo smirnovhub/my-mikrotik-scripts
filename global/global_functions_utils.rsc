@@ -37,7 +37,6 @@
 :global SilentPing
 :global RunScript
 :global ExportConfiguration
-:global DivideIntAndRound
 :global EnsureFileWithIdExists
 :global GetDhcpClientAddress
 :global GetDhcpClientGateway
@@ -427,68 +426,6 @@
     :set path [$TrimStrRight $path "/"]
     :set path "$path/$routerName-backup-$curDate"
     /export file=$path
-}
-
-# Purpose: Perform division of two integers and round the result to a specified number of decimal places.
-# Parameters:
-#   $1 - Numerator
-#   $2 - Denominator
-#   $3 - Number of decimal places to round to
-# Returns: The result as a string with the specified number of decimal places
-:set DivideIntAndRound do={
-    # Convert inputs to numbers
-    :local numerator [:tonum $1]
-    :local denominator [:tonum $2]
-    :local decimalPlaces [:tonum $3]
-
-    # Check division by zero
-    :if ($denominator = 0) do={
-        :return "Division by zero error"
-    }
-
-    # Special case: decimalPlaces = 0
-    :if ($decimalPlaces = 0) do={
-        # Regular integer division
-        :local result ($numerator / $denominator)
-        # Compute remainder for rounding
-        :local remainder ($numerator % $denominator)
-        # Round: if remainder*2 >= denominator, increment result
-        :if (($remainder * 2) >= $denominator) do={
-            :set result ($result + 1)
-        }
-        :return ("" . $result)
-    }
-
-    # Compute factor = 10^decimalPlaces
-    :local factor 1
-    :for i from=1 to=$decimalPlaces do={
-        :set factor ($factor * 10)
-    }
-
-    # Scale numerator
-    :local scaledNum ($numerator * $factor)
-
-    # Compute integer division and remainder
-    :local result ($scaledNum / $denominator)
-    :local remainder ($scaledNum % $denominator)
-
-    # Round: if remainder*2 >= denominator, increment result
-    :if (($remainder * 2) >= $denominator) do={
-        :set result ($result + 1)
-    }
-
-    # Convert result to string
-    :local resultStr ("" . $result)
-
-    # Pad with leading zeros if needed
-    :while ([:len $resultStr] <= $decimalPlaces) do={
-        :set resultStr ("0" . $resultStr)
-    }
-
-    # Insert decimal point
-    :set resultStr ([:pick $resultStr 0 ([:len $resultStr] - $decimalPlaces)] . "." . [:pick $resultStr ([:len $resultStr] - $decimalPlaces) [:len $resultStr]])
-
-    :return $resultStr
 }
 
 # Purpose: Ensure a file exists with the given name and content, and return its file ID.

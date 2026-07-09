@@ -6,6 +6,7 @@
 :global ReplaceStrTest
 :global RecursiveMergeSortTest
 :global RecursiveMergeSortStrTest
+:global DivideIntAndRoundTest
 :global ToUpperCaseTest
 :global ToLowerCaseTest
 :global HexToCharTest
@@ -20,6 +21,7 @@
     :global ReplaceStrTest
     :global RecursiveMergeSortTest
     :global RecursiveMergeSortStrTest
+    :global DivideIntAndRoundTest
     :global ToUpperCaseTest
     :global ToLowerCaseTest
     :global HexToCharTest
@@ -46,7 +48,10 @@
     $CompareStrTest
     $RecursiveMergeSortTest
     $RecursiveMergeSortStrTest
-    
+
+    # Execute division with rounding tests
+    $DivideIntAndRoundTest
+
     # Execute storage parser tests
     $ParseKeyValueStoreTest
 
@@ -489,6 +494,55 @@ line3" "Replace comma with newline"]
     [$RunTestCase "abc,abc " "abc,abc " "Trailing space comparison"]
     [$RunTestCase "abc?,abc!" "abc!,abc?" "Punctuation (! is 33, ? is 63)"]
     [$RunTestCase "under_score,underscore" "under_score,underscore" "Underscore vs regular character"]
+
+    :put "Testing completed."
+}
+
+:set DivideIntAndRoundTest do={
+    :global DivideIntAndRound
+
+    :local RunTestCase do={
+        :global DivideIntAndRound
+        :local num [:tonum $1]
+        :local den [:tonum $2]
+        :local places [:tonum $3]
+        :local expected [:tostr $4]
+        :local name [:tostr $5]
+
+        # Ignore phantom calls from engine bugs or broken line endings
+        :if ([:len $1] > 0) do={
+            :local actual [$DivideIntAndRound $num $den $places]
+            :if ($actual = $expected) do={
+                :put ("  \1B[32m[PASS]\1B[0m " . $name . ": " . $num . "/" . $den . " (" . $places . " places) -> '" . $actual . "'")
+            } else={
+                :put ("  \1B[31m[FAIL]\1B[0m " . $name . ": " . $num . "/" . $den . " (" . $places . " places) | Expected: '" . $expected . "', Got: '" . $actual . "'")
+            }
+        }
+    }
+
+    :put "Starting DivideIntAndRound decimal precision tests..."
+
+    # Zero decimal places (fallback to rounded integer string)
+    [$RunTestCase "10" "3" "0" "3" "Round down to integer standard case"]
+    [$RunTestCase "11" "3" "0" "4" "Round up to integer standard case"]
+    [$RunTestCase "5" "2" "0" "3" "Round half up boundary to integer"]
+
+    # Division by zero error handling
+    [$RunTestCase "10" "0" "2" "Division by zero error" "Division by zero guard clause validation"]
+
+    # Exact division with formatting padding validation
+    [$RunTestCase "4" "2" "3" "2.000" "Exact division with trailing zeros padding"]
+    [$RunTestCase "0" "5" "2" "0.00" "Zero numerator with decimal places format"]
+
+    # Standard rounding operations (down, up, half-up)
+    [$RunTestCase "10" "7" "7" "1.4285714" "Example target step documentation case"]
+    [$RunTestCase "2" "3" "3" "0.667" "Repeating decimal rounding up case"]
+    [$RunTestCase "1" "3" "3" "0.333" "Repeating decimal rounding down case"]
+
+    # Results strictly smaller than one (leading zero verification)
+    [$RunTestCase "1" "8" "3" "0.125" "Fraction result with leading zero and exact decimals"]
+    [$RunTestCase "1" "200" "4" "0.0050" "Small fraction requiring single leading zero inside decimal part"]
+    [$RunTestCase "1" "2000" "5" "0.00050" "Very small fraction requiring multiple padding zeros"]
 
     :put "Testing completed."
 }

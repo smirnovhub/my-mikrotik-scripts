@@ -43,6 +43,7 @@
 :global ReplaceStr
 :global RecursiveMergeSort
 :global RecursiveMergeSortStr
+:global DivideIntAndRound
 :global ToUpperCase
 :global ToLowerCase
 :global HexToChar
@@ -527,6 +528,87 @@
     }
   }
   :return $out
+}
+
+# Purpose: Perform division of two integers and round the result to a specified number of decimal places.
+# Parameters:
+#   $1 - Numerator
+#   $2 - Denominator
+#   $3 - Number of decimal places to round to
+# Returns: The result as a string with the specified number of decimal places
+# Example: :put [$DivideIntAndRound 10 7 7]
+# Output:
+#   1.4285714
+:set DivideIntAndRound do={
+    # Workaround for the MikroTik RouterOS interpreter bug (phantom execution).
+    # When a function is called multiple times without assigning its return value 
+    # to a variable (e.g., inside square brackets like [$myFunc]), the ROS parser 
+    # suffers a stack shift after the 2nd call. 
+    # 
+    # Example of the failure:
+    #   [$myFunc text="1"] -> OK
+    #   [$myFunc text="2"] -> OK
+    #   (No third line in the code, but ROS executes the function a 3rd time 
+    #    automatically with empty arguments and a blank $0 name)
+    #
+    # This check drops the phantom call immediately before it executes any logic.
+    :if ([:len $0] = 0) do={
+        :return ""
+    }
+
+    # Convert inputs to numbers
+    :local numerator [:tonum $1]
+    :local denominator [:tonum $2]
+    :local decimalPlaces [:tonum $3]
+
+    # Check division by zero
+    :if ($denominator = 0) do={
+        :return "Division by zero error"
+    }
+
+    # Special case: decimalPlaces = 0
+    :if ($decimalPlaces = 0) do={
+        # Regular integer division
+        :local result ($numerator / $denominator)
+        # Compute remainder for rounding
+        :local remainder ($numerator % $denominator)
+        # Round: if remainder*2 >= denominator, increment result
+        :if (($remainder * 2) >= $denominator) do={
+            :set result ($result + 1)
+        }
+        :return ("" . $result)
+    }
+
+    # Compute factor = 10^decimalPlaces
+    :local factor 1
+    :for i from=1 to=$decimalPlaces do={
+        :set factor ($factor * 10)
+    }
+
+    # Scale numerator
+    :local scaledNum ($numerator * $factor)
+
+    # Compute integer division and remainder
+    :local result ($scaledNum / $denominator)
+    :local remainder ($scaledNum % $denominator)
+
+    # Round: if remainder*2 >= denominator, increment result
+    :if (($remainder * 2) >= $denominator) do={
+        :set result ($result + 1)
+    }
+
+    # Convert result to string
+    :local resultStr ("" . $result)
+
+    # Pad with leading zeros if needed
+    :while ([:len $resultStr] <= $decimalPlaces) do={
+        :set resultStr ("0" . $resultStr)
+    }
+
+    # Insert decimal point
+    :set resultStr ([:pick $resultStr 0 ([:len $resultStr] - $decimalPlaces)] . "." . [:pick $resultStr ([:len $resultStr] - $decimalPlaces) [:len $resultStr]])
+
+    :return $resultStr
 }
 
 # Purpose: Convert all lowercase letters in a string to uppercase.

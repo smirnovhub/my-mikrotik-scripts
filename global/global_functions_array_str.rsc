@@ -109,33 +109,36 @@
   :if ([:len $2] > 0) do={ :set delimiter $2 }
 
   :if ([:typeof $source] != "array") do={
-    :set source [$SplitStr $1 $delimiter]
+      :set source [$SplitStr $1 $delimiter]
   }
 
   :local result [:toarray ""]
   :foreach src in=$source do={
-    :local keyValue [$TrimStr $src " "]
-    :local pos [:find $keyValue "="]
-    :if ($pos >= 0) do={
-      :local key [:pick $keyValue 0 $pos]
-      :local val [:pick $keyValue ($pos + 1) [:len $keyValue]]
+      :local keyValue [$TrimStr $src " "]
 
-      :if ($val = "true") do={
-          :set val true
-      } else={
-          :if ($val = "false") do={
-              :set val false
+      # Skip empty elements to prevent adding false flags like "=true"
+      :if ([:len $keyValue] > 0) do={
+          :local pos [:find $keyValue "="]
+          :if ($pos >= 0) do={
+              :local key [:pick $keyValue 0 $pos]
+              :local val [:pick $keyValue ($pos + 1) [:len $keyValue]]
+         
+              :if ($val = "true") do={
+                  :set val true
+              } else={
+                  :if ($val = "false") do={
+                      :set val false
+                  }
+              }
+              :set ($result->$key) $val
+          } else={
+              :set ($result->$keyValue) true
           }
       }
-      :set ($result->$key) $val
-    } else={
-      :set ($result->$keyValue) true
-    }
   }
 
   :return $result
 }
-
 
 # Purpose: Generate a random 20-character hexadecimal string using RouterOS SCEP server OTP generation.
 # Parameters: None
@@ -299,6 +302,13 @@
       :set edgeOffset 1
     }
 
+    # Pre-calculate the target array length to stop at
+    # If $3 is a number, we stop when [:len $result] reaches ($3 - 1)
+    :local targetLen -1
+    :if ([:typeof [:tonum $3]] = "num") do={
+        :set targetLen ([:tonum $3] - 1)
+    }
+
     # Loop while delimiter is found in the string
     :while ([:set i [:find $1 $2 ($i+$delimiterLength-1+$edgeOffset)]; (any$i)]) do={
         # Append substring from 'substringStart' to found delimiter index 'i' to result
@@ -309,7 +319,7 @@
 
         # If the result array has reached the maximum number of parts ($3),
         # append the rest of the string and return
-        :if ([:len $result]=$3) do={
+        :if ([:len $result] = $targetLen) do={
           :return ($result, ([:pick $1 $substringStart [:len $1]]))
         }
     }
@@ -345,7 +355,7 @@
         }
     }
 
-    :return $s
+    :return [:tostr $s]
 }
 
 # Purpose: Remove all trailing characters from a string that match any character in a given set.
@@ -375,7 +385,7 @@
         }
     }
 
-    :return $s
+    :return [:tostr $s]
 }
 
 # Purpose: Remove all leading and trailing characters from a string
@@ -399,7 +409,7 @@
     # Trim right using TrimStrRight
     :set s [$TrimStrRight $s $2]
 
-    :return $s
+    :return [:tostr $s]
 }
 
 # Purpose: Replace all occurrences of a substring within a string with another substring.
@@ -429,7 +439,6 @@
 
   :return ($result . $string)
 }
-
 
 # Purpose: Perform a merge sort on a simple array of items that can be compared using '<'.
 # Parameters:
@@ -530,7 +539,7 @@
 :set ToUpperCase do={
     :local lower [:toarray "a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p,q,r,s,t,u,v,w,x,y,z"]
     :local upper [:toarray "A,B,C,D,E,F,G,H,I,J,K,L,M,N,O,P,Q,R,S,T,U,V,W,X,Y,Z"]
-    :local result
+    :local result ""
 
     :for idx from=0 to=([:len $1] - 1) do={ 
         :local char [:pick $1 $idx]
@@ -554,7 +563,7 @@
 :set ToLowerCase do={
     :local lower [:toarray "a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p,q,r,s,t,u,v,w,x,y,z"]
     :local upper [:toarray "A,B,C,D,E,F,G,H,I,J,K,L,M,N,O,P,Q,R,S,T,U,V,W,X,Y,Z"]
-    :local result
+    :local result ""
 
     :for idx from=0 to=([:len $1] - 1) do={ 
         :local char [:pick $1 $idx]
@@ -576,7 +585,12 @@
 # Output:
 #   A
 :set HexToChar do={
-    :return [[:parse "(\"\\$1\")"]]
+    :global HexToNum
+    :global DecToChar
+    
+    :local hex [:tostr $1]
+    :local dec [$HexToNum $hex]
+    :return [$DecToChar $dec]
 }
 
 # Purpose: Convert a decimal ASCII value to its corresponding character.

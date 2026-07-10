@@ -32,18 +32,21 @@
 :set GetWeekdayTest do={
     :local RunTestCase do={
         :global GetWeekday
+
+        # Workaround for the MikroTik RouterOS interpreter bug (phantom execution)
+        :if ([:len $0] = 0) do={
+            :return ""
+        }
+
         :local ts [:tonum $1]
         :local expected [:tostr $2]
         :local name [:tostr $3]
 
-        # Ignore phantom calls from engine bugs or broken line endings
-        :if ([:len $1] > 0) do={
-            :local actual [$GetWeekday $ts]
-            :if ($actual = $expected) do={
-                :put ("  \1B[32m[PASS]\1B[0m " . $name . ": " . $ts . " -> '" . $actual . "'")
-            } else={
-                :put ("  \1B[31m[FAIL]\1B[0m " . $name . ": " . $ts . " | Expected: '" . $expected . "', Got: '" . $actual . "'")
-            }
+        :local actual [$GetWeekday $ts]
+        :if ($actual = $expected) do={
+            :put ("  \1B[32m[PASS]\1B[0m " . $name . ": " . $ts . " -> '" . $actual . "'")
+        } else={
+            :put ("  \1B[31m[FAIL]\1B[0m " . $name . ": " . $ts . " | Expected: '" . $expected . "', Got: '" . $actual . "'")
         }
     }
 
@@ -122,20 +125,23 @@
 
     :local RunTestCase do={
         :global ParseDateTime
+
+        # Workaround for the MikroTik RouterOS interpreter bug (phantom execution)
+        :if ([:len $0] = 0) do={
+            :return ""
+        }
+
         :local inputStr [:tostr $1]
         :local expectedStr [:tostr $2]
         :local name [:tostr $3]
 
-        # Ignore phantom calls from engine bugs or broken line endings
-        :if ([:len $inputStr] > 0) do={
-            :local actual [$ParseDateTime $inputStr]
-            :local actualStr [:tostr $actual]
-            
-            :if ($actualStr = $expectedStr) do={
-                :put ("  \1B[32m[PASS]\1B[0m " . $name . ": '" . $inputStr . "' -> '" . $actualStr . "'")
-            } else={
-                :put ("  \1B[31m[FAIL]\1B[0m " . $name . ": '" . $inputStr . "' | Expected: '" . $expectedStr . "', Got: '" . $actualStr . "'")
-            }
+        :local actual [$ParseDateTime $inputStr]
+        :local actualStr [:tostr $actual]
+        
+        :if ($actualStr = $expectedStr) do={
+            :put ("  \1B[32m[PASS]\1B[0m " . $name . ": '" . $inputStr . "' -> '" . $actualStr . "'")
+        } else={
+            :put ("  \1B[31m[FAIL]\1B[0m " . $name . ": '" . $inputStr . "' | Expected: '" . $expectedStr . "', Got: '" . $actualStr . "'")
         }
     }
 
@@ -154,18 +160,21 @@
 
     :local RunTestCase do={
         :global FromUnixTimestamp
+
+        # Workaround for the MikroTik RouterOS interpreter bug (phantom execution)
+        :if ([:len $0] = 0) do={
+            :return ""
+        }
+
         :local expected [:tostr $1]
         :local inputStr [:tonum $2]
         :local name [:tostr $3]
 
-        # Ignore phantom calls from engine bugs or broken line endings
-        :if ([:len $inputStr] > 0) do={
-            :local actual [$FromUnixTimestamp $inputStr]
-            :if ($actual = $expected) do={
-                :put ("  \1B[32m[PASS]\1B[0m " . $name . ": '" . $inputStr . "' -> " . $actual)
-            } else={
-                :put ("  \1B[31m[FAIL]\1B[0m " . $name . ": '" . $inputStr . "' | Expected: " . $expected . ", Got: " . $actual)
-            }
+        :local actual [$FromUnixTimestamp $inputStr]
+        :if ($actual = $expected) do={
+            :put ("  \1B[32m[PASS]\1B[0m " . $name . ": '" . $inputStr . "' -> " . $actual)
+        } else={
+            :put ("  \1B[31m[FAIL]\1B[0m " . $name . ": '" . $inputStr . "' | Expected: " . $expected . ", Got: " . $actual)
         }
     }
 
@@ -356,18 +365,21 @@
 
     :local RunTestCase do={
         :global ToUnixTimestamp
+
+        # Workaround for the MikroTik RouterOS interpreter bug (phantom execution)
+        :if ([:len $0] = 0) do={
+            :return ""
+        }
+
         :local inputStr [:tostr $1]
         :local expected [:tonum $2]
         :local name [:tostr $3]
 
-        # Ignore phantom calls from engine bugs or broken line endings
-        :if ([:len $inputStr] > 0) do={
-            :local actual [$ToUnixTimestamp $inputStr]
-            :if ($actual = $expected) do={
-                :put ("  \1B[32m[PASS]\1B[0m " . $name . ": '" . $inputStr . "' -> " . $actual)
-            } else={
-                :put ("  \1B[31m[FAIL]\1B[0m " . $name . ": '" . $inputStr . "' | Expected: " . $expected . ", Got: " . $actual)
-            }
+        :local actual [$ToUnixTimestamp $inputStr]
+        :if ($actual = $expected) do={
+            :put ("  \1B[32m[PASS]\1B[0m " . $name . ": '" . $inputStr . "' -> " . $actual)
+        } else={
+            :put ("  \1B[31m[FAIL]\1B[0m " . $name . ": '" . $inputStr . "' | Expected: " . $expected . ", Got: " . $actual)
         }
     }
 
@@ -711,18 +723,21 @@
 
     :local RunTestCase do={
         :global FormatSecondsShort
+
+        # Workaround for the MikroTik RouterOS interpreter bug (phantom execution)
+        :if ([:len $0] = 0) do={
+            :return ""
+        }
+
         :local seconds [:tonum $1]
         :local expected [:tostr $2]
         :local name [:tostr $3]
 
-        # Ignore phantom calls from engine bugs or broken line endings
-        :if ([:len $1] > 0) do={
-            :local actual [$FormatSecondsShort $seconds]
-            :if ($actual = $expected) do={
-                :put ("  \1B[32m[PASS]\1B[0m " . $name . ": " . $seconds . "s -> '" . $actual . "'")
-            } else={
-                :put ("  \1B[31m[FAIL]\1B[0m " . $name . ": " . $seconds . "s | Expected: '" . $expected . "', Got: '" . $actual . "'")
-            }
+        :local actual [$FormatSecondsShort $seconds]
+        :if ($actual = $expected) do={
+            :put ("  \1B[32m[PASS]\1B[0m " . $name . ": " . $seconds . "s -> '" . $actual . "'")
+        } else={
+            :put ("  \1B[31m[FAIL]\1B[0m " . $name . ": " . $seconds . "s | Expected: '" . $expected . "', Got: '" . $actual . "'")
         }
     }
 
@@ -760,7 +775,7 @@
         :put ("  \1B[31m[FAIL]\1B[0m Live system timestamp fetch resulted in invalid structure: " . [:tostr $ts1])
     }
 
-    :if ($ts1 = $ts2) do={
+    :if ($ts1 = $ts2 && $ts1 > 1783628648) do={
         :put ("  \1B[32m[PASS]\1B[0m Conversion to date successful: " . $date)
     } else={
         :put ("  \1B[31m[FAIL]\1B[0m Conversion to date failed: " . [:tostr $date])

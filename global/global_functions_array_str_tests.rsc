@@ -64,6 +64,12 @@
     # Helper function to run a single test case for key-value parsing
     :local RunTestCase do={
         :global ParseKeyValueStore
+
+        # Workaround for the MikroTik RouterOS interpreter bug (phantom execution)
+        :if ([:len $0] = 0) do={
+            :return ""
+        }
+
         :local src $1;        # Can be a string or a real array
         :local delim $2;      # Can be nothing or a string delimiter
         :local expectedStr [:tostr $3]
@@ -151,6 +157,12 @@
     # Helper function to run a single test case for array joining
     :local RunTestCase do={
         :global JoinArray
+
+        # Workaround for the MikroTik RouterOS interpreter bug (phantom execution)
+        :if ([:len $0] = 0) do={
+            :return ""
+        }
+
         # ROS [:toarray] natively splits strings by comma
         :local arr [:toarray $1]
         :local delim [:tostr $2]
@@ -198,6 +210,12 @@
     # Helper function to run a single test case for array splitting
     :local RunTestCase do={
         :global SplitStr
+
+        # Workaround for the MikroTik RouterOS interpreter bug (phantom execution)
+        :if ([:len $0] = 0) do={
+            :return ""
+        }
+
         :local str [:tostr $1]
         :local delim [:tostr $2]
         :local limit $3; # Can be nothing or a number
@@ -260,6 +278,11 @@
         :global TrimStrLeft
         :global TrimStrRight
         :global TrimStr
+
+        # Workaround for the MikroTik RouterOS interpreter bug (phantom execution)
+        :if ([:len $0] = 0) do={
+            :return ""
+        }
 
         :local targetFunc [:tostr $1]
         :local str [:tostr $2]
@@ -330,6 +353,12 @@
     # Helper function to run a single test case
     :local RunTestCase do={
         :global ReplaceStr
+
+        # Workaround for the MikroTik RouterOS interpreter bug (phantom execution)
+        :if ([:len $0] = 0) do={
+            :return ""
+        }
+
         :local str [:tostr $1]
         :local from [:tostr $2]
         :local to [:tostr $3]
@@ -371,9 +400,7 @@
     [$RunTestCase ("price is " . ("\$") . "100") ("\$") "EUR " "price is EUR 100" "Replace dollar sign"]
     [$RunTestCase ("path\\to\\file") ("\\") "/" "path/to/file" "Replace backslashes to slashes"]
     [$RunTestCase "text with spaces" " " "_" "text_with_spaces" "Replace spaces with underscores"]
-    [$RunTestCase "line1,line2,line3" "," ("\n") "line1
-line2
-line3" "Replace comma with newline"]
+    [$RunTestCase "line1,line2,line3" "," ("\n") ("line1\nline2\nline3") "Replace comma with newline"]
 
     :put "Testing completed."
 }
@@ -384,6 +411,12 @@ line3" "Replace comma with newline"]
     # Helper function to run a single test case for numeric array sorting
     :local RunTestCase do={
         :global RecursiveMergeSort
+
+        # Workaround for the MikroTik RouterOS interpreter bug (phantom execution)
+        :if ([:len $0] = 0) do={
+            :return ""
+        }
+
         :local input [:toarray $1]
         :local expected [:toarray $2]
         :local name [:tostr $3]
@@ -440,6 +473,12 @@ line3" "Replace comma with newline"]
     # Helper function to run a single test case for array sorting
     :local RunTestCase do={
         :global RecursiveMergeSortStr
+
+        # Workaround for the MikroTik RouterOS interpreter bug (phantom execution)
+        :if ([:len $0] = 0) do={
+            :return ""
+        }
+
         :local input [:toarray $1]
         :local expected [:toarray $2]
         :local name [:tostr $3]
@@ -503,20 +542,23 @@ line3" "Replace comma with newline"]
 
     :local RunTestCase do={
         :global DivideIntAndRound
+
+        # Workaround for the MikroTik RouterOS interpreter bug (phantom execution)
+        :if ([:len $0] = 0) do={
+            :return ""
+        }
+
         :local num [:tonum $1]
         :local den [:tonum $2]
         :local places [:tonum $3]
         :local expected [:tostr $4]
         :local name [:tostr $5]
 
-        # Ignore phantom calls from engine bugs or broken line endings
-        :if ([:len $1] > 0) do={
-            :local actual [$DivideIntAndRound $num $den $places]
-            :if ($actual = $expected) do={
-                :put ("  \1B[32m[PASS]\1B[0m " . $name . ": " . $num . "/" . $den . " (" . $places . " places) -> '" . $actual . "'")
-            } else={
-                :put ("  \1B[31m[FAIL]\1B[0m " . $name . ": " . $num . "/" . $den . " (" . $places . " places) | Expected: '" . $expected . "', Got: '" . $actual . "'")
-            }
+        :local actual [$DivideIntAndRound $num $den $places]
+        :if ($actual = $expected) do={
+            :put ("  \1B[32m[PASS]\1B[0m " . $name . ": " . $num . "/" . $den . " (" . $places . " places) -> '" . $actual . "'")
+        } else={
+            :put ("  \1B[31m[FAIL]\1B[0m " . $name . ": " . $num . "/" . $den . " (" . $places . " places) | Expected: '" . $expected . "', Got: '" . $actual . "'")
         }
     }
 
@@ -553,6 +595,12 @@ line3" "Replace comma with newline"]
     # Helper function to run a single test case
     :local RunTestCase do={
         :global ToUpperCase
+
+        # Workaround for the MikroTik RouterOS interpreter bug (phantom execution)
+        :if ([:len $0] = 0) do={
+            :return ""
+        }
+
         :local input [:tostr $1]
         :local expected [:tostr $2]
         :local name [:tostr $3]
@@ -593,6 +641,12 @@ line3" "Replace comma with newline"]
     # Helper function to run a single test case
     :local RunTestCase do={
         :global ToLowerCase
+
+        # Workaround for the MikroTik RouterOS interpreter bug (phantom execution)
+        :if ([:len $0] = 0) do={
+            :return ""
+        }
+
         :local input [:tostr $1]
         :local expected [:tostr $2]
         :local name [:tostr $3]
@@ -633,6 +687,12 @@ line3" "Replace comma with newline"]
     # Helper function to run a single test case
     :local RunTestCase do={
         :global HexToChar
+
+        # Workaround for the MikroTik RouterOS interpreter bug (phantom execution)
+        :if ([:len $0] = 0) do={
+            :return ""
+        }
+
         :local hexCode [:tostr $1]
         :local expected [:tostr $2]
         :local name [:tostr $3]
@@ -689,6 +749,12 @@ line3" "Replace comma with newline"]
     # Helper function to run a single test case with explicit ANSI escape strings
     :local RunTestCase do={
         :global DecToChar
+
+        # Workaround for the MikroTik RouterOS interpreter bug (phantom execution)
+        :if ([:len $0] = 0) do={
+            :return ""
+        }
+
         :local asciiCode [:tonum $1]
         :local expected [:tostr $2]
         :local name [:tostr $3]
@@ -746,6 +812,12 @@ line3" "Replace comma with newline"]
     # Helper function to run a single test case with explicit ANSI escape strings
     :local RunTestCase do={
         :global CompareStr
+
+        # Workaround for the MikroTik RouterOS interpreter bug (phantom execution)
+        :if ([:len $0] = 0) do={
+            :return ""
+        }
+
         :local str1 [:tostr $1]
         :local str2 [:tostr $2]
         :local expected [:tonum $3]

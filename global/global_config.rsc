@@ -21,6 +21,7 @@
 #
 # Add script named global_config and then add call to startup script:
 # /system script run global_config
+# RUN THIS SCRIPT FIRST, BEFORE ALL OTHER GLOBAL SCRIPTS!
 #
 # global variables
 :global largeGreenCircleEmoji "%F0%9F%9F%A2"

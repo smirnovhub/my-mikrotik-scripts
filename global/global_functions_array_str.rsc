@@ -42,8 +42,16 @@
 :global TrimStrRight
 :global ReplaceStr
 :global RecursiveMergeSort
+:global RecursiveMergeSortStr
+:global DivideIntAndRound
 :global ToUpperCase
 :global ToLowerCase
+:global HexToChar
+:global DecToChar
+:global CompareStr
+
+# Automatically generated ASCII code table
+:global asciiCodeTable
 
 # Purpose: Parse a list of key-value pairs (or standalone keys) into an associative array (map).
 # Parameters:
@@ -102,33 +110,36 @@
   :if ([:len $2] > 0) do={ :set delimiter $2 }
 
   :if ([:typeof $source] != "array") do={
-    :set source [$SplitStr $1 $delimiter]
+      :set source [$SplitStr $1 $delimiter]
   }
 
   :local result [:toarray ""]
   :foreach src in=$source do={
-    :local keyValue [$TrimStr $src " "]
-    :local pos [:find $keyValue "="]
-    :if ($pos >= 0) do={
-      :local key [:pick $keyValue 0 $pos]
-      :local val [:pick $keyValue ($pos + 1) [:len $keyValue]]
+      :local keyValue [$TrimStr $src " "]
 
-      :if ($val = "true") do={
-          :set val true
-      } else={
-          :if ($val = "false") do={
-              :set val false
+      # Skip empty elements to prevent adding false flags like "=true"
+      :if ([:len $keyValue] > 0) do={
+          :local pos [:find $keyValue "="]
+          :if ($pos >= 0) do={
+              :local key [:pick $keyValue 0 $pos]
+              :local val [:pick $keyValue ($pos + 1) [:len $keyValue]]
+         
+              :if ($val = "true") do={
+                  :set val true
+              } else={
+                  :if ($val = "false") do={
+                      :set val false
+                  }
+              }
+              :set ($result->$key) $val
+          } else={
+              :set ($result->$keyValue) true
           }
       }
-      :set ($result->$key) $val
-    } else={
-      :set ($result->$keyValue) true
-    }
   }
 
   :return $result
 }
-
 
 # Purpose: Generate a random 20-character hexadecimal string using RouterOS SCEP server OTP generation.
 # Parameters: None
@@ -245,7 +256,9 @@
 #   $1 - Array of strings to be joined
 #   $2 - Separator string to insert between elements
 # Returns: A single string with all elements joined by the separator
-# Example: :put [$JoinArray (1,3,4,2,7,5) ","]
+# Example: :put [$JoinArray (1,3,4,2,7,5) "+"]
+# Output:
+#   1+3+4+2+7+5
 :set JoinArray do={
     # String to hold the joined result
     :local resultString
@@ -253,7 +266,7 @@
     # Loop over each element in the input array
     :foreach item in=$1 do={
         # Append current item and the separator to the result string
-        :set $resultString ($resultString.$item.$2)
+        :set resultString ($resultString.$item.$2)
     }
 
     # Remove the last appended separator and return the final string
@@ -266,6 +279,9 @@
 #   $2 - Delimiter string to split by
 #   $3 - Optional maximum number of parts to return
 # Returns: Array of substrings resulting from the split
+# Example: :put [$SplitStr "1+3+4+2+7+5" "+"]
+# Output:
+#   1;3;4;2;7;5
 :set SplitStr do={
     # Array to hold the resulting split parts
     :local result
@@ -284,21 +300,27 @@
 
     # If delimiter length is 0, set edgeOffset to 1 to avoid zero-length issues
     :if ($delimiterLength=0) do={
-      :set $edgeOffset 1
+      :set edgeOffset 1
+    }
+
+    # Pre-calculate the target array length to stop at
+    # If $3 is a number, we stop when [:len $result] reaches ($3 - 1)
+    :local targetLen -1
+    :if ([:typeof [:tonum $3]] = "num") do={
+        :set targetLen ([:tonum $3] - 1)
     }
 
     # Loop while delimiter is found in the string
-    :while ([:set $i [:find $1 $2 ($i+$delimiterLength-1+$edgeOffset)]; (any$i)]) do={
-
+    :while ([:set i [:find $1 $2 ($i+$delimiterLength-1+$edgeOffset)]; (any$i)]) do={
         # Append substring from 'substringStart' to found delimiter index 'i' to result
-        :set $result ($result, ([:pick $1 $substringStart $i]))
+        :set result ($result, ([:pick $1 $substringStart $i]))
 
         # Move 'substringStart' to the character after the found delimiter
-        :set $substringStart ($i+$delimiterLength)
+        :set substringStart ($i+$delimiterLength)
 
         # If the result array has reached the maximum number of parts ($3),
         # append the rest of the string and return
-        :if ([:len $result]=$3) do={
+        :if ([:len $result] = $targetLen) do={
           :return ($result, ([:pick $1 $substringStart [:len $1]]))
         }
     }
@@ -312,6 +334,9 @@
 #   $1 - Input string to trim
 #   $2 - Set of characters to remove from the left side
 # Returns: The trimmed string with specified leading characters removed
+# Example: :put [$TrimStrLeft "TrimmedString" "Trng"]
+# Output:
+#   immedString
 :set TrimStrLeft do={
     :local s $1
     :local chars $2
@@ -331,7 +356,7 @@
         }
     }
 
-    :return $s
+    :return [:tostr $s]
 }
 
 # Purpose: Remove all trailing characters from a string that match any character in a given set.
@@ -339,6 +364,9 @@
 #   $1 - Input string to trim
 #   $2 - Set of characters to remove from the right side
 # Returns: The trimmed string with specified trailing characters removed
+# Example: :put [$TrimStrRight "TrimmedString" "Trng"]
+# Output:
+#   TrimmedStri
 :set TrimStrRight do={
     :local s $1
     :local chars $2
@@ -358,7 +386,7 @@
         }
     }
 
-    :return $s
+    :return [:tostr $s]
 }
 
 # Purpose: Remove all leading and trailing characters from a string
@@ -367,6 +395,9 @@
 #   $1 - Input string to trim
 #   $2 - Set of characters to remove from both ends
 # Returns: The trimmed string with specified leading and trailing characters removed
+# Example: :put [$TrimStr "TrimmedString" "Trng"]
+# Output:
+#   immedStri
 :set TrimStr do={
     :global TrimStrLeft
     :global TrimStrRight
@@ -379,7 +410,7 @@
     # Trim right using TrimStrRight
     :set s [$TrimStrRight $s $2]
 
-    :return $s
+    :return [:tostr $s]
 }
 
 # Purpose: Replace all occurrences of a substring within a string with another substring.
@@ -388,6 +419,9 @@
 #   $2 - Substring to find and replace
 #   $3 - Substring to replace with
 # Returns: A new string with all occurrences replaced
+# Example: :put [$ReplaceStr "StringToReplace" "e" "777"]
+# Output:
+#   StringToR777plac777
 :set ReplaceStr do={
   :local string [:tostr $1]
   :local replaceFrom [:tostr $2]
@@ -407,13 +441,15 @@
   :return ($result . $string)
 }
 
-
 # Purpose: Perform a merge sort on a simple array of items that can be compared using '<'.
 # Parameters:
 #   $1 - Array to sort
 # Returns: A new array containing the sorted elements
 # NOTE: This only works if each array item can
-# be compared using the '<' operator.
+# be compared using the '<' operator. It doesn't work for a strings!
+# Example: :put [$RecursiveMergeSort (7,1,3,4,2,7,7,0,1)]
+# Output:
+#   0;1;1;2;3;4;7;7;7
 :set RecursiveMergeSort do={
   :global RecursiveMergeSort
 
@@ -450,24 +486,151 @@
   :return $out
 }
 
+# Purpose: Sort an array of strings in ascending lexicographical order using the merge sort algorithm.
+# Parameters:
+#   $1 - Array of strings to sort
+# Returns: A new array containing the sorted strings
+# Example: :put [$RecursiveMergeSortStr ("banana","apple","cherry")]
+# Output:
+#   apple;banana;cherry
+:set RecursiveMergeSortStr do={
+  :global CompareStr
+  :global RecursiveMergeSortStr
+
+  :local out [:toarray $1]
+  :local l [:len $out]
+  :if ($l>1) do={
+    # Split the list in two, recursively sort, then merge results
+
+    # Pick split point index:
+    :local s ($l/2)
+
+    # Recursively sort each half-list:
+    :local a [$RecursiveMergeSortStr [:pick $out 0 $s]]
+    :local b [$RecursiveMergeSortStr [:pick $out $s $l]]
+
+    # Merge results:
+    :set out [:toarray ""]
+    :set l [:len $b]
+    :local s 0; # Use $s as index into array $b
+    :foreach i in=$a do={
+      :local j [:pick $b $s]
+      :while (($s < $l) && ([$CompareStr $j $i] < 0)) do={
+        :set out ($out,$j)
+        :set s ($s+1)
+        :set j [:pick $b $s]
+      }
+      :set out ($out,$i)
+    }
+    :while ($s<$l) do={
+      :set out ($out,[:pick $b $s])
+      :set s ($s+1)
+    }
+  }
+  :return $out
+}
+
+# Purpose: Perform division of two integers and round the result to a specified number of decimal places.
+# Parameters:
+#   $1 - Numerator
+#   $2 - Denominator
+#   $3 - Number of decimal places to round to
+# Returns: The result as a string with the specified number of decimal places
+# Example: :put [$DivideIntAndRound 10 7 7]
+# Output:
+#   1.4285714
+:set DivideIntAndRound do={
+    # Workaround for the MikroTik RouterOS interpreter bug (phantom execution).
+    # When a function is called multiple times without assigning its return value 
+    # to a variable (e.g., inside square brackets like [$myFunc]), the ROS parser 
+    # suffers a stack shift after the 2nd call. 
+    # 
+    # Example of the failure:
+    #   [$myFunc text="1"] -> OK
+    #   [$myFunc text="2"] -> OK
+    #   (No third line in the code, but ROS executes the function a 3rd time 
+    #    automatically with empty arguments and a blank $0 name)
+    #
+    # This check drops the phantom call immediately before it executes any logic.
+    :if ([:len $0] = 0) do={
+        :return ""
+    }
+
+    # Convert inputs to numbers
+    :local numerator [:tonum $1]
+    :local denominator [:tonum $2]
+    :local decimalPlaces [:tonum $3]
+
+    # Check division by zero
+    :if ($denominator = 0) do={
+        :return "Division by zero error"
+    }
+
+    # Special case: decimalPlaces = 0
+    :if ($decimalPlaces = 0) do={
+        # Regular integer division
+        :local result ($numerator / $denominator)
+        # Compute remainder for rounding
+        :local remainder ($numerator % $denominator)
+        # Round: if remainder*2 >= denominator, increment result
+        :if (($remainder * 2) >= $denominator) do={
+            :set result ($result + 1)
+        }
+        :return ("" . $result)
+    }
+
+    # Compute factor = 10^decimalPlaces
+    :local factor 1
+    :for i from=1 to=$decimalPlaces do={
+        :set factor ($factor * 10)
+    }
+
+    # Scale numerator
+    :local scaledNum ($numerator * $factor)
+
+    # Compute integer division and remainder
+    :local result ($scaledNum / $denominator)
+    :local remainder ($scaledNum % $denominator)
+
+    # Round: if remainder*2 >= denominator, increment result
+    :if (($remainder * 2) >= $denominator) do={
+        :set result ($result + 1)
+    }
+
+    # Convert result to string
+    :local resultStr ("" . $result)
+
+    # Pad with leading zeros if needed
+    :while ([:len $resultStr] <= $decimalPlaces) do={
+        :set resultStr ("0" . $resultStr)
+    }
+
+    # Insert decimal point
+    :set resultStr ([:pick $resultStr 0 ([:len $resultStr] - $decimalPlaces)] . "." . [:pick $resultStr ([:len $resultStr] - $decimalPlaces) [:len $resultStr]])
+
+    :return $resultStr
+}
 
 # Purpose: Convert all lowercase letters in a string to uppercase.
 # Parameters:
 #   $1 - Input string
 # Returns: A new string with all lowercase letters converted to uppercase
+# Example: :put [$ToUpperCase "Convert All Lowercase Letters"]
+# Output:
+#   CONVERT ALL LOWERCASE LETTERS
 :set ToUpperCase do={
     :local lower [:toarray "a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p,q,r,s,t,u,v,w,x,y,z"]
     :local upper [:toarray "A,B,C,D,E,F,G,H,I,J,K,L,M,N,O,P,Q,R,S,T,U,V,W,X,Y,Z"]
-    :local result
+    :local result ""
 
     :for idx from=0 to=([:len $1] - 1) do={ 
         :local char [:pick $1 $idx]
         :local match
-        :for i from=0 to=[:len $lower] do={
-            :set $match ($lower->$i)
-            :if ($char = $match) do={:set $char ($upper->$i)}
+        :for i from=0 to=([:len $lower] - 1) do={
+            :set match ($lower->$i)
+            :if ($char = $match) do={:set char ($upper->$i)}
         }
-        :set $result ($result.$char)
+        :set result ($result.$char)
     }
     :return $result
 }
@@ -476,19 +639,106 @@
 # Parameters:
 #   $1 - Input string
 # Returns: A new string with all uppercase letters converted to lowercase
+# Example: :put [$ToLowerCase "Convert All Lowercase Letters"]
+# Output:
+#   convert all lowercase letters
 :set ToLowerCase do={
     :local lower [:toarray "a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p,q,r,s,t,u,v,w,x,y,z"]
     :local upper [:toarray "A,B,C,D,E,F,G,H,I,J,K,L,M,N,O,P,Q,R,S,T,U,V,W,X,Y,Z"]
-    :local result
+    :local result ""
 
     :for idx from=0 to=([:len $1] - 1) do={ 
         :local char [:pick $1 $idx]
         :local match
-        :for i from=0 to=[:len $upper] do={
-            :set $match ($upper->$i)
-            :if ($char = $match) do={:set $char ($lower->$i)}
+        :for i from=0 to=([:len $upper] - 1) do={
+            :set match ($upper->$i)
+            :if ($char = $match) do={:set char ($lower->$i)}
         }
-        :set $result ($result.$char)
+        :set result ($result.$char)
     }
     :return $result
+}
+
+# Purpose: Convert a two-digit hexadecimal ASCII value to its corresponding character.
+# Parameters:
+#   $1 - Two-digit hexadecimal ASCII value (00-FF)
+# Returns: The corresponding ASCII character
+# Example: :put [$HexToChar "41"]
+# Output:
+#   A
+:set HexToChar do={
+    :global HexToNum
+    :global DecToChar
+    
+    :local hex [:tostr $1]
+    :local dec [$HexToNum $hex]
+    :return [$DecToChar $dec]
+}
+
+# Purpose: Convert a decimal ASCII value to its corresponding character.
+# Parameters:
+#   $1 - Decimal ASCII value (0-255)
+# Returns: The corresponding ASCII character
+# Example: :put [$DecToChar 65]
+# Output:
+#   A
+:set DecToChar do={
+    :local input [:tonum $1]
+    :local hexchars "0123456789ABCDEF"
+
+    :local convert [:pick $hexchars (($input >> 4) & 0xF)]
+    :set convert ($convert . [:pick $hexchars ($input & 0xF)])
+
+    :return [[:parse "(\"\\$convert\")"]]
+}
+
+# Purpose: Compare two strings lexicographically using ASCII character codes.
+# Parameters:
+#   $1 - First input string
+#   $2 - Second input string
+# Returns:
+#   -1 if the first string is less than the second string
+#    0 if both strings are equal
+#    1 if the first string is greater than the second string
+# Example: :put [$CompareStr "apple" "banana"]
+# Output:
+#   -1
+:set CompareStr do={
+    :global DecToChar
+    :global asciiCodeTable
+
+    # Initialize ASCII lookup table on first use
+    :if ([:typeof $asciiCodeTable] = "nothing") do={
+        :set asciiCodeTable [:toarray ""]
+
+        :for i from=0 to=255 do={
+            :set ($asciiCodeTable->[$DecToChar $i]) $i
+        }
+    }
+
+    :local s1 [:tostr $1]
+    :local s2 [:tostr $2]
+
+    :local l1 [:len $s1]
+    :local l2 [:len $s2]
+
+    :local minL $l1
+    :if ($l2 < $minL) do={
+        :set minL $l2
+    }
+
+    :set minL ($minL - 1)
+
+    :for i from=0 to=$minL do={
+        :local c1 ($asciiCodeTable->[:pick $s1 $i])
+        :local c2 ($asciiCodeTable->[:pick $s2 $i])
+
+        :if ($c1 < $c2) do={ :return -1 }
+        :if ($c1 > $c2) do={ :return 1 }
+    }
+
+    :if ($l1 < $l2) do={ :return -1 }
+    :if ($l1 > $l2) do={ :return 1 }
+
+    :return 0
 }

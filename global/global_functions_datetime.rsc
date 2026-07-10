@@ -249,7 +249,8 @@
     # Get current system time in format "22:10:45"
     :local time [/system clock get time]    
 
-    :return [$ToUnixTimestamp "$date $time"]
+    :local dateTime "$date $time"
+    :return [$ToUnixTimestamp $dateTime]
 }
 
 # Purpose: Convert a Unix timestamp (seconds since 1970-01-01 00:00:00 UTC) to a formatted date-time string "YYYY-MM-DD HH:MM:SS"

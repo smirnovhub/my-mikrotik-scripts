@@ -28,7 +28,7 @@
     :global DecToCharTest
     :global CompareStrTest
 
-    :put "\1B[35m=== STARTING ALL SYSTEM TESTS ===\1B[0m"
+    :put "\1B[35m=== STARTING ALL ARRAY AND STRING TESTS ===\1B[0m"
 
     # Execute string manipulation tests
     $TrimStrTest
@@ -55,7 +55,7 @@
     # Execute storage parser tests
     $ParseKeyValueStoreTest
 
-    :put "\1B[35m=== ALL TESTS EXECUTED ===\1B[0m"
+    :put "\1B[35m=== ALL ARRAY AND STRING TESTS EXECUTED ===\1B[0m"
 }
 
 :set ParseKeyValueStoreTest do={

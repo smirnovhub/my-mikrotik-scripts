@@ -42,6 +42,9 @@
 # Purpose: Retrieve the current system date and time, formatted as "YYYY-MM-DD HH:MM:SS"
 # Parameters: None
 # Returns: Formatted date-time string
+# Example: :put [$GetCurrentDateTime]
+# Output:
+#   2026-07-11 23:35:03
 :set GetCurrentDateTime do={
     :global ParseDateTime
 
@@ -53,34 +56,78 @@
 }
 
 # Purpose: Parse RouterOS date-time string like "aug/22/2025 12:03:04"
+# or "YYYY-MM-DD HH:MM:SS"
 # Parameters:
 #   $1 - Input date-time string
 # Returns: Formatted date-time string "YYYY-MM-DD HH:MM:SS"
+# Example: :put [$ParseDateTime "jul/31/2025 03:30:05"]
+# Output:
+#   2025-07-31 03:30:05
+# Example: :put [$ParseDateTime "2025-07-25 12:31:25"]
+# Output:
+#   2025-07-25 12:31:25
 :set ParseDateTime do={
+    # Workaround for the MikroTik RouterOS interpreter bug (phantom execution).
+    # When a function is called multiple times without assigning its return value 
+    # to a variable (e.g., inside square brackets like [$myFunc]), the ROS parser 
+    # suffers a stack shift after the 2nd call. 
+    # 
+    # Example of the failure:
+    #   [$myFunc text="1"] -> OK
+    #   [$myFunc text="2"] -> OK
+    #   (No third line in the code, but ROS executes the function a 3rd time 
+    #    automatically with empty arguments and a blank $0 name)
+    #
+    # This check drops the phantom call immediately before it executes any logic.
+    :if ([:len $0] = 0) do={
+        :return 0
+    }
+
     :local input $1
 
-    # Extract month short name (first 3 chars)
-    :local month [:pick $input 0 3]              ; # "aug"
-    # Extract day (characters 4-6, may be 1 or 2 digits)
-    :local day [:pick $input 4 6]                ; # "17"
-    # Extract year (characters 7-11)
-    :local year [:pick $input 7 11]              ; # "2025"
-    # Extract time part (characters after space, starting at pos 12)
-    :local time [:pick $input 12 [:len $input]]  ; # "14:32:07"
+    # Regex patterns
+    :local regexISO "^[0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2}\$"
+    :local regexROS "^[a-z]{3}/[0-9]{2}/[0-9]{4} [0-9]{2}:[0-9]{2}:[0-9]{2}\$"
 
-    # Convert month short name to numeric string
-    :local months {"jan"="01"; "feb"="02"; "mar"="03"; "apr"="04"; "may"="05"; "jun"="06"; "jul"="07"; "aug"="08"; "sep"="09"; "oct"="10"; "nov"="11"; "dec"="12"}
-    :local monthNum ($months->$month)
+    # Parse based on detected format
+    :if ($input ~ $regexISO) do={
+      :return $input
+    } else={
+        :if ($input ~ $regexROS) do={
+            # Declare time variables
+            :local month ""
+            :local monthStr [:pick $input 0 3]
 
-    # Ensure day is always 2 digits (prefix with 0 if needed)
-    :if ([:len $day] = 1) do={ :set day ("0" . $day) }
+            :if ($monthStr = "jan") do={ :set month "01" } else={
+            :if ($monthStr = "feb") do={ :set month "02" } else={
+            :if ($monthStr = "mar") do={ :set month "03" } else={
+            :if ($monthStr = "apr") do={ :set month "04" } else={
+            :if ($monthStr = "may") do={ :set month "05" } else={
+            :if ($monthStr = "jun") do={ :set month "06" } else={
+            :if ($monthStr = "jul") do={ :set month "07" } else={
+            :if ($monthStr = "aug") do={ :set month "08" } else={
+            :if ($monthStr = "sep") do={ :set month "09" } else={
+            :if ($monthStr = "oct") do={ :set month "10" } else={
+            :if ($monthStr = "nov") do={ :set month "11" } else={
+            :if ($monthStr = "dec") do={ :set month "12" } else={
+                :log error "Invalid month name: '$monthStr'"
+                :error "Invalid month name: '$monthStr'"
+            }}}}}}}}}}}}
 
-    # Build final formatted datetime string
-    :local formattedDateTime ($year . "-" . $monthNum . "-" . $day . " " . $time)
+            :local day  [:pick $input 4 6]
+            :local year [:pick $input 7 11]
+            :local hour [:pick $input 12 14]
+            :local min  [:pick $input 15 17]
+            :local sec  [:pick $input 18 20]
 
-    :return $formattedDateTime
+            :local dateTime "$year-$month-$day $hour:$min:$sec"
+            :return $dateTime
+        } else={
+            :log error "Invalid date-time format: '$input'. Expected YYYY-MM-DD HH:MM:SS or mmm/DD/YYYY HH:MM:SS"
+            :error "Invalid date-time format: '$input'. Expected YYYY-MM-DD HH:MM:SS or mmm/DD/YYYY HH:MM:SS"
+        }
+    }
 }
-
 
 # Purpose: Convert a date-time string in "YYYY-MM-DD HH:MM:SS"
 #   or "mmm/DD/YYYY HH:MM:SS" format to Unix timestamp.
@@ -369,6 +416,8 @@
 #   $1 - Total seconds (integer)
 # Returns: Formatted string, e.g., "2d 3h 15m 10s", skipping any zero components
 :set FormatSecondsLong do={
+    :global TrimStrRight
+
     # Input parameter: total seconds
     :local totalSec [:tonum $1]
 
@@ -397,7 +446,7 @@
     :set result [:pick $result 0 [:len $result]]
 
     # Return result
-    :return $result
+    :return [$TrimStrRight $result " "]
 }
 
 # Purpose: Convert total seconds into a short, human-readable format using the largest unit only.

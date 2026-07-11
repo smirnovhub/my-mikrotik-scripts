@@ -1,27 +1,33 @@
 :global RunAllDateTimeTests
+:global GetCurrentDateTimeTest
 :global GetWeekdayTest
 :global GetUnixTimestampTest
 :global FromUnixTimestampTest
 :global ToUnixTimestampTest
 :global FormatSecondsShortTest
+:global FormatSecondsLongTest
 :global ParseDateTimeTest
 
 :set RunAllDateTimeTests do={
     :global GetWeekdayTest
+    :global GetCurrentDateTimeTest
+    :global ParseDateTimeTest
     :global GetUnixTimestampTest
     :global FromUnixTimestampTest
     :global ToUnixTimestampTest
     :global FormatSecondsShortTest
-    :global ParseDateTimeTest
+    :global FormatSecondsLongTest
 
     :put "\1B[35m=== STARTING ALL DATETIME TESTS ===\1B[0m"
 
     # Execute conversion and parsing tests
     $GetWeekdayTest
+    $GetCurrentDateTimeTest
     $ParseDateTimeTest
     $FromUnixTimestampTest
     $ToUnixTimestampTest
     $FormatSecondsShortTest
+    $FormatSecondsLongTest
     
     # Execute runtime clock tracking tests
     $GetUnixTimestampTest
@@ -120,6 +126,33 @@
     :put "Testing completed."
 }
 
+:set GetCurrentDateTimeTest do={
+    :global GetCurrentDateTime
+    :global FromUnixTimestamp
+    :global ToUnixTimestamp
+
+    :put "Starting GetCurrentDateTime runtime tests..."
+
+    # Executing dynamic check to confirm current live runtime fetches validate correctly
+    :local date1 [$GetCurrentDateTime]
+    :local ts1 [$ToUnixTimestamp $date1]
+    :local date2 [$FromUnixTimestamp $ts1]
+
+    :if ([:typeof $ts1] = "num" && $ts1 > 1783628648) do={
+        :put ("  \1B[32m[PASS]\1B[0m Live system date/time fetched successfully: " . $date1)
+    } else={
+        :put ("  \1B[31m[FAIL]\1B[0m Live system date/time fetch resulted in invalid structure: " . [:tostr $date1])
+    }
+
+    :if ($date1 = $date2 && $ts1 > 1783628648) do={
+        :put ("  \1B[32m[PASS]\1B[0m Conversion to timestamp successful: " . $ts1)
+    } else={
+        :put ("  \1B[31m[FAIL]\1B[0m Conversion to timestamp failed: " . [:tostr $ts1])
+    }
+
+    :put "Testing completed."
+}
+
 :set ParseDateTimeTest do={
     :global ParseDateTime
 
@@ -131,26 +164,56 @@
             :return ""
         }
 
-        :local inputStr [:tostr $1]
-        :local expectedStr [:tostr $2]
+        :local input [:tostr $1]
+        :local expected [:tostr $2]
         :local name [:tostr $3]
+        :local actual ""
 
-        :local actual [$ParseDateTime $inputStr]
-        :local actualStr [:tostr $actual]
-        
-        :if ($actualStr = $expectedStr) do={
-            :put ("  \1B[32m[PASS]\1B[0m " . $name . ": '" . $inputStr . "' -> '" . $actualStr . "'")
-        } else={
-            :put ("  \1B[31m[FAIL]\1B[0m " . $name . ": '" . $inputStr . "' | Expected: '" . $expectedStr . "', Got: '" . $actualStr . "'")
+        # Safe execution container to handle internal script :error actions
+        :do {
+            :set actual [$ParseDateTime $input]
+            :if ($actual = $expected) do={
+                :put ("  \1B[32m[PASS]\1B[0m " . $name . ": '" . $input . "' -> '" . $actual . "'")
+            } else={
+                :put ("  \1B[31m[FAIL]\1B[0m " . $name . ": '" . $input . "' | Expected: '" . $expected . "', Got: '" . $actual . "'")
+            }
+        } on-error={
+            :if ($expected = "error") do={
+                :put ("  \1B[32m[PASS]\1B[0m " . $name . ": Checked invalid input '" . $input . "' threw error successfully")
+            } else={
+                :put ("  \1B[31m[FAIL]\1B[0m " . $name . ": Unexpected crash on input '" . $input . "'")
+            }
         }
     }
 
     :put "Starting ParseDateTime tests..."
 
-    # Test cases matching the actual ISO string output of the function
+    # Original base cases (RouterOS format)
     [$RunTestCase "jan/01/2026 00:00:00" "2026-01-01 00:00:00" "Midnight start of the year"]
     [$RunTestCase "feb/28/2024 23:59:59" "2024-02-28 23:59:59" "End of day leap year February"]
     [$RunTestCase "jul/09/2026 15:45:21" "2026-07-09 15:45:21" "Standard afternoon daytime string"]
+
+    # Extended month mapping tests (RouterOS format)
+    [$RunTestCase "mar/15/2025 08:30:00" "2025-03-15 08:30:00" "March date format conversion"]
+    [$RunTestCase "apr/30/2025 12:00:00" "2025-04-30 12:00:00" "April date format conversion"]
+    [$RunTestCase "may/01/2025 06:15:45" "2025-05-01 06:15:45" "May date format conversion"]
+    [$RunTestCase "jun/22/2025 18:40:12" "2025-06-22 18:40:12" "June date format conversion"]
+    [$RunTestCase "aug/31/2025 21:05:00" "2025-08-31 21:05:00" "August date format conversion"]
+    [$RunTestCase "sep/10/2025 09:14:23" "2025-09-10 09:14:23" "September date format conversion"]
+    [$RunTestCase "oct/05/2025 04:02:59" "2025-10-05 04:02:59" "October date format conversion"]
+    [$RunTestCase "nov/11/2025 11:11:11" "2025-11-11 11:11:11" "November date format conversion"]
+    [$RunTestCase "dec/25/2025 20:00:00" "2025-12-25 20:00:00" "December date format conversion"]
+
+    # Native ISO format pass-through tests
+    [$RunTestCase "2025-07-25 12:31:25" "2025-07-25 12:31:25" "Standard input matching native ISO pattern"]
+    [$RunTestCase "1970-01-01 00:00:00" "1970-01-01 00:00:00" "Epoch baseline input matching native ISO pattern"]
+
+    # Negative validation tests (Invalid layout structures)
+    [$RunTestCase "bad/12/2025 12:00:00" "error" "Rejection check for non-existent month name"]
+    [$RunTestCase "2025/07/25 12:31:25" "error" "Rejection check for slash separators in ISO style"]
+    [$RunTestCase "jul-31-2025 03:30:05" "error" "Rejection check for dash separators in ROS style"]
+    [$RunTestCase "jul/31/2025"          "error" "Rejection check for completely missing time block"]
+    [$RunTestCase "12:00:00"             "error" "Rejection check for completely missing date block"]
 
     :put "Testing completed."
 }
@@ -714,6 +777,125 @@
     [$RunTestCase "mar/01/2000 00:00:00" "951868800" "Leap century 2000"]
     [$RunTestCase "mar/01/2100 00:00:00" "4107542400" "Non-leap century 2100"]
     [$RunTestCase "mar/01/2400 00:00:00" "13574649600" "Leap century 2400"]
+
+    :put "Testing completed."
+}
+
+:set FormatSecondsLongTest do={
+    :global FormatSecondsLong
+
+    :local RunTestCase do={
+        :global FormatSecondsLong
+
+        # Workaround for the MikroTik RouterOS interpreter bug (phantom execution)
+        :if ([:len $0] = 0) do={
+            :return ""
+        }
+
+        :local seconds [:tonum $1]
+        :local expected [:tostr $2]
+        :local name [:tostr $3]
+
+        :local actual [$FormatSecondsLong $seconds]
+        :if ($actual = $expected) do={
+            :put ("  \1B[32m[PASS]\1B[0m " . $name . ": " . $seconds . "s -> '" . $actual . "'")
+        } else={
+            :put ("  \1B[31m[FAIL]\1B[0m " . $name . ": " . $seconds . "s | Expected: '" . $expected . "', Got: '" . $actual . "'")
+        }
+    }
+
+    :put "Starting FormatSecondsLong tests..."
+
+    # Zero threshold baseline execution
+    [$RunTestCase "0" "" "Zero seconds absolute boundary check"]
+
+    # Single isolated time components
+    [$RunTestCase "45" "45s" "Pure seconds component evaluation"]
+    [$RunTestCase "3600" "1h" "Pure hours boundary transition validation"]
+    [$RunTestCase "86400" "1d" "Pure days boundary transition validation"]
+
+    # Consecutive sequence combinations
+    [$RunTestCase "65" "1m 5s" "Adjacent minute and second components validation"]
+    [$RunTestCase "3615" "1h 15s" "Hour and second combination skipping empty minutes"]
+    [$RunTestCase "90000" "1d 1h" "Day and hour combination skipping minutes and seconds"]
+
+    # Full display configuration matching documentation pattern
+    [$RunTestCase "184510" "2d 3h 15m 10s" "Complete multi component structural layout validation"]
+
+    # Edge transitions spanning maximum nested limits
+    [$RunTestCase "86399" "23h 59m 59s" "Maximum limit directly prior to days scale shift"]
+
+    # Pure minute boundary
+    [$RunTestCase "60" "1m" "Pure minutes boundary transition validation"]
+
+    # Minute upper limit before hour rollover
+    [$RunTestCase "3599" "59m 59s" "Maximum minute range before hour transition"]
+
+    # Exact hour with remaining minutes
+    [$RunTestCase "3660" "1h 1m" "Hour and minute combination without seconds"]
+
+    # Exact hour with minute and second
+    [$RunTestCase "3661" "1h 1m 1s" "Hour minute second complete combination"]
+
+    # Exact day with remaining minutes
+    [$RunTestCase "86460" "1d 1m" "Day and minute combination without hours and seconds"]
+
+    # Exact day with remaining seconds
+    [$RunTestCase "86401" "1d 1s" "Day and second combination without hours and minutes"]
+
+    # Day minute second combination
+    [$RunTestCase "86461" "1d 1m 1s" "Day minute second combination skipping hours"]
+
+    # Day hour second combination
+    [$RunTestCase "90001" "1d 1h 1s" "Day hour second combination skipping minutes"]
+
+    # Day hour minute combination
+    [$RunTestCase "90060" "1d 1h 1m" "Day hour minute combination without seconds"]
+
+    # All components equal to one
+    [$RunTestCase "90061" "1d 1h 1m 1s" "Minimal nonzero value in every component"]
+
+    # Two complete days minus one second
+    [$RunTestCase "172799" "1d 23h 59m 59s" "Upper boundary immediately before two day transition"]
+
+    # Exact two day boundary
+    [$RunTestCase "172800" "2d" "Exact multi day boundary validation"]
+
+    # Large value with every component
+    [$RunTestCase "987654" "11d 10h 20m 54s" "Large duration decomposition validation"]
+
+    # Large value ending on minutes only
+    [$RunTestCase "435000" "5d 50m" "Large duration with omitted hour and second components"]
+
+    # Double digit day count
+    [$RunTestCase "864000" "10d" "Exact double digit day count validation"]
+
+    # Double digit days with all remaining components
+    [$RunTestCase "900610" "10d 10h 10m 10s" "Double digit day decomposition validation"]
+
+    # Hundred day boundary
+    [$RunTestCase "8640000" "100d" "Exact hundred day boundary validation"]
+
+    # Hundred days with all remaining components
+    [$RunTestCase "8680215" "100d 11h 10m 15s" "Hundred day duration decomposition validation"]
+
+    # Thousand day boundary
+    [$RunTestCase "86400000" "1000d" "Exact thousand day boundary validation"]
+
+    # Thousand days with all remaining components
+    [$RunTestCase "86440261" "1000d 11h 11m 1s" "Thousand day duration decomposition validation"]
+
+    # Large arbitrary duration
+    [$RunTestCase "123456789" "1428d 21h 33m 9s" "Large arbitrary duration conversion validation"]
+
+    # Very large arbitrary duration
+    [$RunTestCase "987654321" "11431d 4h 25m 21s" "Very large duration conversion validation"]
+
+    # Maximum signed 32 bit integer
+    [$RunTestCase "2147483647" "24855d 3h 14m 7s" "Maximum signed thirty two bit integer validation"]
+
+    # One million days
+    [$RunTestCase "86400000000" "1000000d" "Million day exact duration validation"]
 
     :put "Testing completed."
 }

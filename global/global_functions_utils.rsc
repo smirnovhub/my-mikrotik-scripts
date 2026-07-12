@@ -113,6 +113,11 @@
 #   :local arg2 [$GetArgOrDefault $args "noarg" "192.168.1.103" "Test script"]
 #   :put $arg2
 :set GetArgOrDefault do={
+    # Workaround for the MikroTik RouterOS interpreter bug (phantom execution)
+    :if ([:len $0] = 0) do={
+        :return 0
+    }
+
     :global LogAndExit
 
     :local args $1
@@ -164,6 +169,11 @@
 #   :local arg2 [$GetArgOrDefault $args "noarg" "192.168.1.103" "Test script"]
 #   :put $arg2
 :set GetArgOrExit do={
+    # Workaround for the MikroTik RouterOS interpreter bug (phantom execution)
+    :if ([:len $0] = 0) do={
+        :return 0
+    }
+
     :global LogAndExit
 
     :local args $1

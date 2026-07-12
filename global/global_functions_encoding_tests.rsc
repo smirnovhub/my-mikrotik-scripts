@@ -1,7 +1,24 @@
+:global RunAllEncodingTests
 :global Base64EncodeTest
 :global Base64DecodeTest
 :global UrlEncodeTest
 :global UrlDecodeTest
+
+:set RunAllEncodingTests do={
+    :global Base64EncodeTest
+    :global Base64DecodeTest
+    :global UrlEncodeTest
+    :global UrlDecodeTest
+
+    :put "\1B[35m=== STARTING ALL ENCODING TESTS ===\1B[0m"
+
+    $Base64EncodeTest
+    $Base64DecodeTest
+    $UrlEncodeTest
+    $UrlDecodeTest
+
+    :put "\1B[35m=== ALL ENCODING TESTS EXECUTED ===\1B[0m"
+}
 
 :set Base64EncodeTest do={
     :global Base64Encode

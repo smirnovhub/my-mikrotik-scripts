@@ -182,13 +182,16 @@
         :if (([:typeof $v1] = "nil") or ([:typeof $v2] = "nil") or ([:typeof $v3] = "nil") or ([:typeof $v4] = "nil")) do={
             :error "Unexpected character, invalid Base64 sequence"
         }
-        :if ([:typeof [:pick $work 1 2]] = "nil") do={
+
+        :if ([:len $p2] = 0) do={
             :if ($options~"ignoreotherchr") do={:set v2 64 ; :set v3 64 ; :set v4 64} else={:error "Required 2nd character is missing"}
         }
-        :if (([:typeof [:pick $work 2 3]] = "nil") and (($v2 & 15) != 0)) do={
+
+        :if (([:len $p3] = 0) and (($v2 & 15) != 0)) do={
             :if ($options~"ignoreotherchr") do={:set v3 64 ; :set v4 64} else={:error "Required 3rd character is missing"}
         }
-        :if (([:typeof [:pick $work 3 4]] = "nil") and (($v3 &  3) != 0)) do={
+
+        :if (([:len $p4] = 0) and (($v3 &  3) != 0)) do={
             :if ($options~"ignoreotherchr") do={:set v4 64} else={:error "Required 4th character is missing"}
         }
 

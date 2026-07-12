@@ -35,15 +35,15 @@
     $SplitStrTest
     $JoinArrayTest
     $ReplaceStrTest
-    
+
     # Execute case conversion tests
     $ToUpperCaseTest
     $ToLowerCaseTest
-    
+
     # Execute character conversion tests
     $HexToCharTest
     $DecToCharTest
-    
+
     # Execute sorting and comparison tests
     $CompareStrTest
     $RecursiveMergeSortTest

@@ -256,22 +256,22 @@
 
     # Binary round-trip validation for all possible byte values (0x00-0xFF)
     :local input ""
-    
+
     :for i from=0 to=255 do={
         :local hex "$[:pick "0123456789ABCDEF" ($i >> 4) (($i >> 4) + 1)]$[:pick "0123456789ABCDEF" ($i & 15) (($i & 15) + 1)]"
         :set input "$input$[[:parse "(\"\\$hex\")"]]"
     }
-    
+
     :local encoded [$Base64Encode $input]
     :local decoded [$Base64Decode $encoded]
-    
+
     :if ($decoded = $input) do={
         :put "  \1B[32m[PASS]\1B[0m Full binary round-trip validation (0x00-0xFF)"
     } else={
         :put "  \1B[31m[FAIL]\1B[0m Full binary round-trip validation (0x00-0xFF)"
         :put ("Expected length: " . [:len $input])
         :put ("Actual length: " . [:len $decoded])
-    
+
         :for i from=0 to=255 do={
             :if ([:pick $input $i ($i + 1)] != [:pick $decoded $i ($i + 1)]) do={
                 :put ("First mismatch at byte index " . $i)
@@ -279,7 +279,7 @@
             }
         }
     }
-    
+
     :put "Testing completed."
 }
 

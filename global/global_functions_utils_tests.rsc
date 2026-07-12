@@ -2,6 +2,20 @@
 :global GetArgOrExitTest
 :global SilentPingTest
 
+:set RunAllUtilsTests do={
+    :global GetArgOrDefaultTest
+    :global GetArgOrExitTest
+    :global SilentPingTest
+
+    :put "\1B[35m=== STARTING ALL UTILS TESTS ===\1B[0m"
+
+    $GetArgOrDefaultTest
+    $GetArgOrExitTest
+    $SilentPingTest
+
+    :put "\1B[35m=== ALL UTILS TESTS EXECUTED ===\1B[0m"
+}
+
 :set GetArgOrDefaultTest do={
     :global GetArgOrDefault
 
@@ -364,7 +378,7 @@
         # Handle validation for array (dictionary) results
         :if ([:typeof $actual] = "array" && [:typeof $expected] = "array") do={
             :local arraysMatch true
-            
+
             # Check size parity
             :if ([:len $actual] != [:len $expected]) do={
                 :set arraysMatch false

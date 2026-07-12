@@ -98,7 +98,7 @@
 
         # Append the Base64 characters to the output string
         :set output   "$output$($arrb64->$f6bit)$($arrb64->$s6bit)$($arrb64->$t6bit)$($arrb64->$q6bit)"
-        
+
         # Move to next chunk of input
         :set position ($position + 3)
     }
@@ -165,10 +165,20 @@
 
     :while ($position < [:len $input]) do={
         :set work [:pick $input $position ($position + 4)]
-        :set v1 [:find $arrb64 [:pick $work 0 1]]
-        :set v2 [:find $arrb64 [:pick $work 1 2]]
-        :set v3 [:find $arrb64 [:pick $work 2 3]]
-        :set v4 [:find $arrb64 [:pick $work 3 4]]
+
+        # Safely extract parts to determine missing padding elements
+        :local p1 [:pick $work 0 1]
+        :local p2 [:pick $work 1 2]
+        :local p3 [:pick $work 2 3]
+        :local p4 [:pick $work 3 4]
+
+        # Explicitly fallback to padding index 64 if tokens are physically missing
+        :set v1 [:find $arrb64 $p1]
+        :set v2 [:find $arrb64 $p2]
+
+        :if ([:len $p3] = 0) do={ :set v3 64 } else={ :set v3 [:find $arrb64 $p3] }
+        :if ([:len $p4] = 0) do={ :set v4 64 } else={ :set v4 [:find $arrb64 $p4] }
+
         :if (([:typeof $v1] = "nil") or ([:typeof $v2] = "nil") or ([:typeof $v3] = "nil") or ([:typeof $v4] = "nil")) do={
             :error "Unexpected character, invalid Base64 sequence"
         }
@@ -181,9 +191,11 @@
         :if (([:typeof [:pick $work 3 4]] = "nil") and (($v3 &  3) != 0)) do={
             :if ($options~"ignoreotherchr") do={:set v4 64} else={:error "Required 4th character is missing"}
         }
+
         :set fchr [:pick $charsString  (($v1 << 2)       + ($v2 >> 4))]
         :set schr [:pick $charsString ((($v2 & 15) << 4) + ($v3 >> 2))]
         :set tchr [:pick $charsString ((($v3 &  3) << 6) +  $v4     ) ]
+
         :if ($v4 = 64) do={:set tchr "" ; :set position [:len $input]}
         :if ($v3 = 64) do={:set schr "" ; :set position [:len $input]}
         :if ($v2 = 64) do={
@@ -217,7 +229,7 @@
     :local encodedResult ""
 
     # Characters that need to be percent-encoded
-    :local specialChars "\n\r !\"#\$%&'()*+,:;<=>\?@[\\]^`{|}~\80\81\82\83\84\85\86\87\88\89\8A\8B\8C\8D\8E\8F\90\91\92\93\94\95\96\97\98\99\9A\9B\9C\9D\9E\9F\A0\A1\A2\A3\A4\A5\A6\A7\A8\A9\AA\AB\AC\AD\AE\AF\B0\B1\B2\B3\B4\B5\B6\B7\B8\B9\BA\BB\BC\BD\BE\BF\C0\C1\C2\C3\C4\C5\C6\C7\C8\C9\CA\CB\CC\CD\CE\CF\D0\D1\D2\D3\D4\D5\D6\D7\D8\D9\DA\DB\DC\DD\DE\DF\E0\E1\E2\E3\E4\E5\E6\E7\E8\E9\EA\EB\EC\ED\EE\EF\F0\F1\F2\F3\F4\F5\F6\F7\F8\F9\FA\FB\FC\FD\FE\FF";
+    :local specialChars "\n\r !\"#\$%&'()*+,:;<=>\?@[\\]^`{|}\80\81\82\83\84\85\86\87\88\89\8A\8B\8C\8D\8E\8F\90\91\92\93\94\95\96\97\98\99\9A\9B\9C\9D\9E\9F\A0\A1\A2\A3\A4\A5\A6\A7\A8\A9\AA\AB\AC\AD\AE\AF\B0\B1\B2\B3\B4\B5\B6\B7\B8\B9\BA\BB\BC\BD\BE\BF\C0\C1\C2\C3\C4\C5\C6\C7\C8\C9\CA\CB\CC\CD\CE\CF\D0\D1\D2\D3\D4\D5\D6\D7\D8\D9\DA\DB\DC\DD\DE\DF\E0\E1\E2\E3\E4\E5\E6\E7\E8\E9\EA\EB\EC\ED\EE\EF\F0\F1\F2\F3\F4\F5\F6\F7\F8\F9\FA\FB\FC\FD\FE\FF";
 
     # Corresponding URL-encoded replacements for each character in specialChars
     :local encodedSubs { "%0A"; "%0D"; "%20"; "%21"; "%22"; "%23"; "%24"; "%25"; "%26"; "%27";

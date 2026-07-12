@@ -348,14 +348,14 @@
     :local era ($z / 146097)
     :local doe ($z % 146097)
     :local yoe (($doe - ($doe / 1460) + ($doe / 36524) - ($doe / 146096)) / 365)
-    
+
     :local year ($yoe + ($era * 400))
     :local doy ($doe - ((365 * $yoe) + ($yoe / 4) - ($yoe / 100)))
     :local mp (((5 * $doy) + 2) / 153)
-    
+
     :local day ($doy - (((153 * $mp) + 2) / 5) + 1)
     :local month ($mp + 3)
-    
+
     # Adjust year and month if the date falls into January or February
     :if ($mp >= 10) do={
         :set month ($mp - 9)

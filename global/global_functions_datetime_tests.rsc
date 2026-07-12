@@ -28,7 +28,7 @@
     $ToUnixTimestampTest
     $FormatSecondsShortTest
     $FormatSecondsLongTest
-    
+
     # Execute runtime clock tracking tests
     $GetUnixTimestampTest
 
@@ -92,37 +92,37 @@
     [$RunTestCase "432000" "tuesday" "Tuesday"]
     [$RunTestCase "518400" "wednesday" "Wednesday"]
     [$RunTestCase "604800" "thursday" "Exactly one week later"]
-    
+
     [$RunTestCase "0" "thursday" "Start of day"]
     [$RunTestCase "1" "thursday" "One second later"]
     [$RunTestCase "43200" "thursday" "Midday"]
     [$RunTestCase "86398" "thursday" "Penultimate second"]
     [$RunTestCase "86399" "thursday" "Last second of day"]
     [$RunTestCase "86400" "friday" "Next day begins"]
-    
+
     [$RunTestCase "1709251199" "thursday" "Last second of leap day"]
     [$RunTestCase "1709251200" "friday" "First second after leap day"]
-    
+
     [$RunTestCase "1735689599" "tuesday" "Last second of 2024"]
     [$RunTestCase "1735689600" "wednesday" "First second of 2025"]
-    
+
     [$RunTestCase "1767225599" "wednesday" "Last second of 2025"]
     [$RunTestCase "1767225600" "thursday" "First second of 2026"]
-    
+
     [$RunTestCase "951782400" "tuesday" "Leap century day 2000"]
     [$RunTestCase "4107542400" "monday" "Non-leap century 2100"]
     [$RunTestCase "13574649600" "wednesday" "Leap century 2400"]
-    
+
     [$RunTestCase "253402300799" "friday" "Maximum supported date"]
-    
+
     [$RunTestCase "951868800" "wednesday" "2000-03-01"]
     [$RunTestCase "13574649600" "wednesday" "2400-03-01 same weekday after 400-year cycle"]
-    
+
     [$RunTestCase "0" "thursday" "Week 0"]
     [$RunTestCase "604800" "thursday" "Week 1"]
     [$RunTestCase "1209600" "thursday" "Week 2"]
     [$RunTestCase "1814400" "thursday" "Week 3"]
-    
+
     :put "Testing completed."
 }
 

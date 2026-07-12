@@ -201,7 +201,7 @@
                        [ :tonum $lShiftedVal ], \
                      ( [ :pick $arrWordArray ( [ :tonum $lWordCount ] + 1 ) \
                 [ :len $arrWordArray ] ] ) ) 
-                
+
   :set arrWordArray  [ :toarray ( ( [ :pick $arrWordArray 0 ($lNumberOfWords - 2) ] ), \
                               ( ( ( [ :tonum $lMessageLength ] + 0 ) << 3 ) | \
                        ( ( [ :tonum $lMessageLength ] + 0 ) >> 29 ) ), \
@@ -262,7 +262,7 @@
       :set b ( ( [ :tonum $tmp1 ] + 0 ) & 0xFFFFFFFF )
       :set j ( $j + 5 )
     }
-   
+
   ### Round 3 ###
     :set j 5
     :for i from=0 to=15 do={
@@ -279,7 +279,7 @@
       :set b ( ( [ :tonum $tmp1 ] + 0) & 0xFFFFFFFF )
       :set j ( $j + 3 )
     }
-   
+
   ### Round 4 ###
     :set j 0
     :for i from=0 to=15 do={

@@ -123,7 +123,7 @@
           :if ($pos >= 0) do={
               :local key [:pick $keyValue 0 $pos]
               :local val [:pick $keyValue ($pos + 1) [:len $keyValue]]
-         
+
               :if ($val = "true") do={
                   :set val true
               } else={
@@ -172,7 +172,6 @@
 
   :return ([$HexToNum [:pick [$GetRandom20CharHex] 0 15]] % $max)
 }
-
 
 # Purpose: Convert a hexadecimal string into its corresponding numeric value.
 # Parameters:
@@ -669,7 +668,7 @@
 :set HexToChar do={
     :global HexToNum
     :global DecToChar
-    
+
     :local hex [:tostr $1]
     :local dec [$HexToNum $hex]
     :return [$DecToChar $dec]

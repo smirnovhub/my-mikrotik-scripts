@@ -14,8 +14,14 @@
 :set GetMd5SumTest do={
     :global GetMd5Sum
 
+    :global testsPassedCount
+    :global testsFailedCount
+
     :local RunTestCase do={
         :global GetMd5Sum
+
+        :global testsPassedCount
+        :global testsFailedCount
 
         # Workaround for the MikroTik RouterOS interpreter bug (phantom execution)
         :if ([:len $0] = 0) do={
@@ -29,8 +35,10 @@
         # Use an explicit check for the test execution block to handle empty strings safely
         :local actual [$GetMd5Sum $inputStr]
         :if ($actual = $expected) do={
+            :set testsPassedCount ($testsPassedCount + 1)
             :put ("  \1B[32m[PASS]\1B[0m " . $name . ": '" . $inputStr . "' -> '" . $actual . "'")
         } else={
+            :set testsFailedCount ($testsFailedCount + 1)
             :put ("  \1B[31m[FAIL]\1B[0m " . $name . ": '" . $inputStr . "' | Expected: '" . $expected . "', Got: '" . $actual . "'")
         }
     }

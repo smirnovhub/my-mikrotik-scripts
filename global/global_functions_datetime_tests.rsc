@@ -18,6 +18,9 @@
     :global FormatSecondsShortTest
     :global FormatSecondsLongTest
 
+    :global testsPassedCount
+    :global testsFailedCount
+
     :put "\1B[35m=== STARTING ALL DATETIME TESTS ===\1B[0m"
 
     # Execute conversion and parsing tests
@@ -39,6 +42,9 @@
     :local RunTestCase do={
         :global GetWeekday
 
+        :global testsPassedCount
+        :global testsFailedCount
+
         # Workaround for the MikroTik RouterOS interpreter bug (phantom execution)
         :if ([:len $0] = 0) do={
             :return ""
@@ -50,8 +56,10 @@
 
         :local actual [$GetWeekday $ts]
         :if ($actual = $expected) do={
+            :set testsPassedCount ($testsPassedCount + 1)
             :put ("  \1B[32m[PASS]\1B[0m " . $name . ": " . $ts . " -> '" . $actual . "'")
         } else={
+            :set testsFailedCount ($testsFailedCount + 1)
             :put ("  \1B[31m[FAIL]\1B[0m " . $name . ": " . $ts . " | Expected: '" . $expected . "', Got: '" . $actual . "'")
         }
     }
@@ -131,6 +139,9 @@
     :global FromUnixTimestamp
     :global ToUnixTimestamp
 
+    :global testsPassedCount
+    :global testsFailedCount
+
     :put "Starting GetCurrentDateTime runtime tests..."
 
     # Executing dynamic check to confirm current live runtime fetches validate correctly
@@ -139,14 +150,18 @@
     :local date2 [$FromUnixTimestamp $ts1]
 
     :if ([:typeof $ts1] = "num" && $ts1 > 1783628648) do={
+        :set testsPassedCount ($testsPassedCount + 1)
         :put ("  \1B[32m[PASS]\1B[0m Live system date/time fetched successfully: " . $date1)
     } else={
+        :set testsFailedCount ($testsFailedCount + 1)
         :put ("  \1B[31m[FAIL]\1B[0m Live system date/time fetch resulted in invalid structure: " . [:tostr $date1])
     }
 
     :if ($date1 = $date2 && $ts1 > 1783628648) do={
+        :set testsPassedCount ($testsPassedCount + 1)
         :put ("  \1B[32m[PASS]\1B[0m Conversion to timestamp successful: " . $ts1)
     } else={
+        :set testsFailedCount ($testsFailedCount + 1)
         :put ("  \1B[31m[FAIL]\1B[0m Conversion to timestamp failed: " . [:tostr $ts1])
     }
 
@@ -158,6 +173,9 @@
 
     :local RunTestCase do={
         :global ParseDateTime
+
+        :global testsPassedCount
+        :global testsFailedCount
 
         # Workaround for the MikroTik RouterOS interpreter bug (phantom execution)
         :if ([:len $0] = 0) do={
@@ -173,14 +191,18 @@
         :do {
             :set actual [$ParseDateTime $input]
             :if ($actual = $expected) do={
+                :set testsPassedCount ($testsPassedCount + 1)
                 :put ("  \1B[32m[PASS]\1B[0m " . $name . ": '" . $input . "' -> '" . $actual . "'")
             } else={
+                :set testsFailedCount ($testsFailedCount + 1)
                 :put ("  \1B[31m[FAIL]\1B[0m " . $name . ": '" . $input . "' | Expected: '" . $expected . "', Got: '" . $actual . "'")
             }
         } on-error={
             :if ($expected = "error") do={
+                :set testsPassedCount ($testsPassedCount + 1)
                 :put ("  \1B[32m[PASS]\1B[0m " . $name . ": Checked invalid input '" . $input . "' threw error successfully")
             } else={
+                :set testsFailedCount ($testsFailedCount + 1)
                 :put ("  \1B[31m[FAIL]\1B[0m " . $name . ": Unexpected crash on input '" . $input . "'")
             }
         }
@@ -224,6 +246,9 @@
     :local RunTestCase do={
         :global FromUnixTimestamp
 
+        :global testsPassedCount
+        :global testsFailedCount
+
         # Workaround for the MikroTik RouterOS interpreter bug (phantom execution)
         :if ([:len $0] = 0) do={
             :return ""
@@ -235,8 +260,10 @@
 
         :local actual [$FromUnixTimestamp $inputStr]
         :if ($actual = $expected) do={
+            :set testsPassedCount ($testsPassedCount + 1)
             :put ("  \1B[32m[PASS]\1B[0m " . $name . ": '" . $inputStr . "' -> " . $actual)
         } else={
+            :set testsFailedCount ($testsFailedCount + 1)
             :put ("  \1B[31m[FAIL]\1B[0m " . $name . ": '" . $inputStr . "' | Expected: " . $expected . ", Got: " . $actual)
         }
     }
@@ -429,6 +456,9 @@
     :local RunTestCase do={
         :global ToUnixTimestamp
 
+        :global testsPassedCount
+        :global testsFailedCount
+
         # Workaround for the MikroTik RouterOS interpreter bug (phantom execution)
         :if ([:len $0] = 0) do={
             :return ""
@@ -440,8 +470,10 @@
 
         :local actual [$ToUnixTimestamp $inputStr]
         :if ($actual = $expected) do={
+            :set testsPassedCount ($testsPassedCount + 1)
             :put ("  \1B[32m[PASS]\1B[0m " . $name . ": '" . $inputStr . "' -> " . $actual)
         } else={
+            :set testsFailedCount ($testsFailedCount + 1)
             :put ("  \1B[31m[FAIL]\1B[0m " . $name . ": '" . $inputStr . "' | Expected: " . $expected . ", Got: " . $actual)
         }
     }
@@ -787,6 +819,9 @@
     :local RunTestCase do={
         :global FormatSecondsLong
 
+        :global testsPassedCount
+        :global testsFailedCount
+
         # Workaround for the MikroTik RouterOS interpreter bug (phantom execution)
         :if ([:len $0] = 0) do={
             :return ""
@@ -798,8 +833,10 @@
 
         :local actual [$FormatSecondsLong $seconds]
         :if ($actual = $expected) do={
+            :set testsPassedCount ($testsPassedCount + 1)
             :put ("  \1B[32m[PASS]\1B[0m " . $name . ": " . $seconds . "s -> '" . $actual . "'")
         } else={
+            :set testsFailedCount ($testsFailedCount + 1)
             :put ("  \1B[31m[FAIL]\1B[0m " . $name . ": " . $seconds . "s | Expected: '" . $expected . "', Got: '" . $actual . "'")
         }
     }
@@ -906,6 +943,9 @@
     :local RunTestCase do={
         :global FormatSecondsShort
 
+        :global testsPassedCount
+        :global testsFailedCount
+
         # Workaround for the MikroTik RouterOS interpreter bug (phantom execution)
         :if ([:len $0] = 0) do={
             :return ""
@@ -917,8 +957,10 @@
 
         :local actual [$FormatSecondsShort $seconds]
         :if ($actual = $expected) do={
+            :set testsPassedCount ($testsPassedCount + 1)
             :put ("  \1B[32m[PASS]\1B[0m " . $name . ": " . $seconds . "s -> '" . $actual . "'")
         } else={
+            :set testsFailedCount ($testsFailedCount + 1)
             :put ("  \1B[31m[FAIL]\1B[0m " . $name . ": " . $seconds . "s | Expected: '" . $expected . "', Got: '" . $actual . "'")
         }
     }
@@ -944,6 +986,9 @@
     :global FromUnixTimestamp
     :global ToUnixTimestamp
 
+    :global testsPassedCount
+    :global testsFailedCount
+
     :put "Starting GetUnixTimestamp runtime tests..."
 
     # Executing dynamic check to confirm current live runtime fetches validate correctly
@@ -952,14 +997,18 @@
     :local ts2 [$ToUnixTimestamp $date]
 
     :if ([:typeof $ts1] = "num" && $ts1 > 1783628648) do={
+        :set testsPassedCount ($testsPassedCount + 1)
         :put ("  \1B[32m[PASS]\1B[0m Live system timestamp fetched successfully: " . $ts1)
     } else={
+        :set testsFailedCount ($testsFailedCount + 1)
         :put ("  \1B[31m[FAIL]\1B[0m Live system timestamp fetch resulted in invalid structure: " . [:tostr $ts1])
     }
 
     :if ($ts1 = $ts2 && $ts1 > 1783628648) do={
+        :set testsPassedCount ($testsPassedCount + 1)
         :put ("  \1B[32m[PASS]\1B[0m Conversion to date successful: " . $date)
     } else={
+        :set testsFailedCount ($testsFailedCount + 1)
         :put ("  \1B[31m[FAIL]\1B[0m Conversion to date failed: " . [:tostr $date])
     }
 

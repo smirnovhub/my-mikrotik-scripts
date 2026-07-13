@@ -23,8 +23,14 @@
 :set Base64EncodeTest do={
     :global Base64Encode
 
+    :global testsPassedCount
+    :global testsFailedCount
+
     :local RunTestCase do={
         :global Base64Encode
+
+        :global testsPassedCount
+        :global testsFailedCount
 
         # Workaround for the MikroTik RouterOS interpreter bug (phantom execution)
         :if ([:len $0] = 0) do={
@@ -39,8 +45,10 @@
 
         :local actual [$Base64Encode $input $opt1 $opt2]
         :if ($actual = $expected) do={
+            :set testsPassedCount ($testsPassedCount + 1)
             :put ("  \1B[32m[PASS]\1B[0m " . $name . ": '" . $input . "' -> '" . $actual . "'")
         } else={
+            :set testsFailedCount ($testsFailedCount + 1)
             :put ("  \1B[31m[FAIL]\1B[0m " . $name . ": '" . $input . "' | Expected: '" . $expected . "', Got: '" . $actual . "'")
         }
     }
@@ -100,8 +108,14 @@
     :global Base64Encode
     :global Base64Decode
 
+    :global testsPassedCount
+    :global testsFailedCount
+
     :local RunTestCase do={
         :global Base64Decode
+
+        :global testsPassedCount
+        :global testsFailedCount
 
         # Workaround for the MikroTik RouterOS interpreter bug (phantom execution)
         :if ([:len $0] = 0) do={
@@ -119,14 +133,18 @@
         :do {
             :local actual [$Base64Decode $input $opt1 $opt2 $opt3]
             :if ($actual = $expected) do={
+                :set testsPassedCount ($testsPassedCount + 1)
                 :put ("  \1B[32m[PASS]\1B[0m " . $name . ": '" . $input . "' -> '" . $actual . "'")
             } else={
+                :set testsFailedCount ($testsFailedCount + 1)
                 :put ("  \1B[31m[FAIL]\1B[0m " . $name . ": '" . $input . "' | Expected: '" . $expected . "', Got: '" . $actual . "'")
             }
         } on-error={
             :if ($expected = "error") do={
+                :set testsPassedCount ($testsPassedCount + 1)
                 :put ("  \1B[32m[PASS]\1B[0m " . $name . ": Checked invalid input '" . $input . "' threw error successfully")
             } else={
+                :set testsFailedCount ($testsFailedCount + 1)
                 :put ("  \1B[31m[FAIL]\1B[0m " . $name . ": Unexpected crash on input '" . $input . "'")
             }
         }
@@ -283,8 +301,10 @@
     :local decoded [$Base64Decode $encoded]
 
     :if ($decoded = $input) do={
+        :set testsPassedCount ($testsPassedCount + 1)
         :put "  \1B[32m[PASS]\1B[0m Full binary round-trip validation (0x00-0xFF)"
     } else={
+        :set testsFailedCount ($testsFailedCount + 1)
         :put "  \1B[31m[FAIL]\1B[0m Full binary round-trip validation (0x00-0xFF)"
         :put ("Expected length: " . [:len $input])
         :put ("Actual length: " . [:len $decoded])
@@ -303,8 +323,14 @@
 :set UrlEncodeTest do={
     :global UrlEncode
 
+    :global testsPassedCount
+    :global testsFailedCount
+
     :local RunTestCase do={
         :global UrlEncode
+
+        :global testsPassedCount
+        :global testsFailedCount
 
         # Workaround for the MikroTik RouterOS interpreter bug (phantom execution)
         :if ([:len $0] = 0) do={
@@ -317,8 +343,10 @@
 
         :local actual [$UrlEncode $input]
         :if ($actual = $expected) do={
+            :set testsPassedCount ($testsPassedCount + 1)
             :put ("  \1B[32m[PASS]\1B[0m " . $name . ": '" . $input . "' -> '" . $actual . "'")
         } else={
+            :set testsFailedCount ($testsFailedCount + 1)
             :put ("  \1B[31m[FAIL]\1B[0m " . $name . ": '" . $input . "' | Expected: '" . $expected . "', Got: '" . $actual . "'")
         }
     }
@@ -377,8 +405,14 @@
 :set UrlDecodeTest do={
     :global UrlDecode
 
+    :global testsPassedCount
+    :global testsFailedCount
+
     :local RunTestCase do={
         :global UrlDecode
+
+        :global testsPassedCount
+        :global testsFailedCount
 
         # Workaround for the MikroTik RouterOS interpreter bug (phantom execution)
         :if ([:len $0] = 0) do={
@@ -391,8 +425,10 @@
 
         :local actual [$UrlDecode $input]
         :if ($actual = $expected) do={
+            :set testsPassedCount ($testsPassedCount + 1)
             :put ("  \1B[32m[PASS]\1B[0m " . $name . ": '" . $input . "' -> '" . $actual . "'")
         } else={
+            :set testsFailedCount ($testsFailedCount + 1)
             :put ("  \1B[31m[FAIL]\1B[0m " . $name . ": '" . $input . "' | Expected: '" . $expected . "', Got: '" . $actual . "'")
         }
     }

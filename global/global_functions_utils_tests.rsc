@@ -1,3 +1,4 @@
+:global RunAllUtilsTests
 :global GetArgOrDefaultTest
 :global GetArgOrExitTest
 :global SilentPingTest

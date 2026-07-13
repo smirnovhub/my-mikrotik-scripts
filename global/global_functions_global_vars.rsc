@@ -30,8 +30,9 @@
 :global RemoveGlobalVar
 
 # Global dependencies:
-#   global_functions_array_str:
-#       :global ReplaceStr
+#   global_functions_encoding:
+#       :global UrlEncode
+#       :global UrlDecode
 
 # Purpose: Declare a global variable in the RouterOS environment.
 # Parameters:
@@ -51,6 +52,8 @@
 #   $1 - Global variable name
 # Returns: The value of the global variable
 :set GetGlobalVar do={
+  :global UrlDecode
+
   :if ([:len $0] = 0 or [:len $1] = 0) do={
     :return ""
   }
@@ -63,7 +66,7 @@
   }
 
   :local get [:parse ":global $varName; :return \$$varName"]
-  :return [$get]
+  :return [$UrlDecode [$get]]
 }
 
 # Purpose: Get the value of a global variable or return a default value
@@ -73,6 +76,8 @@
 #   $2 - Default value
 # Returns: The global variable value or the default value
 :set GetGlobalVarOrDefault do={
+  :global UrlDecode
+
   :local defaultValue $2
 
   :if ([:len $0] = 0 or [:len $1] = 0) do={
@@ -94,7 +99,7 @@
     :return $defaultValue
   }
 
-  :return $value
+  :return [$UrlDecode $value]
 }
 
 # Purpose: Set the value of a global variable.
@@ -104,7 +109,7 @@
 #   $2 - Value to assign
 # Returns: Nothing
 :set SetGlobalVar do={
-  :global ReplaceStr
+  :global UrlEncode
 
   :if ([:len $0] = 0 or [:len $1] = 0) do={
     :return ""
@@ -113,16 +118,8 @@
   :local varName ($1 . "GlobalVar")
   :local value $2
 
-  :if ([:typeof $value] = "str") do={
-    :local escaped [$ReplaceStr $value ("\"") ("\\\"")]
-    :execute (":global " . $varName . "; :set " . $varName . " \"" . $escaped . "\"")
-  } else={
-    if ([:typeof $value] = "array") do={
-      :execute (":global " . $varName . "; :set " . $varName . " \"" . [:tostr $value] . "\"")
-    } else={
-      :execute (":global " . $varName . "; :set " . $varName . " " . $value)
-    }
-  }
+  :local encoded [$UrlEncode [:tostr $value]]
+  :execute (":global " . $varName . "; :set " . $varName . " \"" . $encoded . "\"")
 }
 
 # Purpose: Find a global variable by name in the Environment and completely remove it.

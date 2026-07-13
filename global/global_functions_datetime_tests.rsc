@@ -18,9 +18,6 @@
     :global FormatSecondsShortTest
     :global FormatSecondsLongTest
 
-    :global testsPassedCount
-    :global testsFailedCount
-
     :put "\1B[35m=== STARTING ALL DATETIME TESTS ===\1B[0m"
 
     # Execute conversion and parsing tests

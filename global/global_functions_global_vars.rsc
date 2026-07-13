@@ -39,7 +39,7 @@
 # Returns: Nothing
 :set DeclareGlobalVar do={
   :if ([:len $0] = 0 or [:len $1] = 0) do={
-    :return 0
+    :return ""
   }
 
   :local varName ($1 . "GlobalVar")
@@ -52,7 +52,7 @@
 # Returns: The value of the global variable
 :set GetGlobalVar do={
   :if ([:len $0] = 0 or [:len $1] = 0) do={
-    :return 0
+    :return ""
   }
 
   :local varName ($1 . "GlobalVar")
@@ -73,12 +73,13 @@
 #   $2 - Default value
 # Returns: The global variable value or the default value
 :set GetGlobalVarOrDefault do={
+  :local defaultValue $2
+
   :if ([:len $0] = 0 or [:len $1] = 0) do={
-    :return 0
+    :return $defaultValue
   }
 
   :local varName ($1 . "GlobalVar")
-  :local defaultValue $2
 
   # Check if the variable exists in the environment
   :if ([:len [/system script environment find name=$varName]] = 0) do={
@@ -106,7 +107,7 @@
   :global ReplaceStr
 
   :if ([:len $0] = 0 or [:len $1] = 0) do={
-    :return 0
+    :return ""
   }
 
   :local varName ($1 . "GlobalVar")
@@ -130,7 +131,7 @@
 # Returns: Nothing
 :set RemoveGlobalVar do={
   :if ([:len $0] = 0 or [:len $1] = 0) do={
-    :return 0
+    :return ""
   }
 
   :local varName ($1 . "GlobalVar")

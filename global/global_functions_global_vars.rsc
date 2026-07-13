@@ -19,14 +19,15 @@
 # YOU NEED TO RUN THIS SCRIPT AT SYSTEM START!
 # OR IF YOU CHANGED SOMETHING IN THIS FILE!
 #
-# Add script named global_functions_vars and then add call to startup script:
-# /system script run global_functions_vars
+# Add script named global_functions_global_vars and then add call to startup script:
+# /system script run global_functions_global_vars
 
 # global functions
 :global DeclareGlobalVar
 :global GetGlobalVar
 :global GetGlobalVarOrDefault
 :global SetGlobalVar
+:global RemoveGlobalVar
 
 # Global dependencies:
 #   global_functions_array_str:
@@ -37,7 +38,7 @@
 #   $1 - Global variable name
 # Returns: Nothing
 :set DeclareGlobalVar do={
-  :local varName $1
+  :local varName ($1 . "GlobalVar")
   :execute (":global " . $varName)
 }
 
@@ -46,7 +47,13 @@
 #   $1 - Global variable name
 # Returns: The value of the global variable
 :set GetGlobalVar do={
-  :local varName $1
+  :local varName ($1 . "GlobalVar")
+
+  # Check if the variable exists in the environment
+  :if ([:len [/system script environment find name=$varName]] = 0) do={
+    :return ""
+  }
+
   :local get [:parse ":global $varName; :return \$$varName"]
   :return [$get]
 }
@@ -58,8 +65,13 @@
 #   $2 - Default value
 # Returns: The global variable value or the default value
 :set GetGlobalVarOrDefault do={
-  :local varName $1
+  :local varName ($1 . "GlobalVar")
   :local defaultValue $2
+
+  # Check if the variable exists in the environment
+  :if ([:len [/system script environment find name=$varName]] = 0) do={
+    :return $defaultValue
+  }
 
   :local get [:parse ":global $varName; :return \$$varName"]
   :local value [$get]
@@ -80,13 +92,30 @@
 # Returns: Nothing
 :set SetGlobalVar do={
   :global ReplaceStr
-  :local varName $1
+
+  :local varName ($1 . "GlobalVar")
   :local value $2
 
   :if ([:typeof $value] = "str") do={
-    :local escaped [$ReplaceStr $value "\"" "\\\""]
+    :local escaped [$ReplaceStr $value ("\"") ("\\\"")]
     :execute (":global " . $varName . "; :set " . $varName . " \"" . $escaped . "\"")
   } else={
-    :execute (":global " . $varName . "; :set " . $varName . " " . $value)
+    if ([:typeof $value] = "array") do={
+      :execute (":global " . $varName . "; :set " . $varName . " \"" . [:tostr $value] . "\"")
+    } else={
+      :execute (":global " . $varName . "; :set " . $varName . " " . $value)
+    }
+  }
+}
+
+# Purpose: Find a global variable by name in the Environment and completely remove it.
+# Parameters:
+#    $1 - Global variable name
+# Returns: Nothing
+:set RemoveGlobalVar do={
+  :local varName ($1 . "GlobalVar")
+  
+  :if ([:len $varName] > 0) do={
+    /system script environment remove [find name=$varName]
   }
 }

@@ -61,9 +61,15 @@
 :set ParseKeyValueStoreTest do={
     :global ParseKeyValueStore
 
+    :global testsPassedCount
+    :global testsFailedCount
+
     # Helper function to run a single test case for key-value parsing
     :local RunTestCase do={
         :global ParseKeyValueStore
+
+        :global testsPassedCount
+        :global testsFailedCount
 
         # Workaround for the MikroTik RouterOS interpreter bug (phantom execution)
         :if ([:len $0] = 0) do={
@@ -85,8 +91,10 @@
         :local actualStr [:tostr $actual]
 
         :if ($actualStr = $expectedStr) do={
+            :set testsPassedCount ($testsPassedCount + 1)
             :put ("\1B[32m  [PASS]\1B[0m " . $name . " -> [" . $actualStr . "]")
         } else={
+            :set testsFailedCount ($testsFailedCount + 1)
             :put ("\1B[31m  [FAIL]\1B[0m " . $name . " | Expected: [" . $expectedStr . "], Got: [" . $actualStr . "]")
         }
     }
@@ -154,9 +162,15 @@
 :set JoinArrayTest do={
     :global JoinArray
 
+    :global testsPassedCount
+    :global testsFailedCount
+
     # Helper function to run a single test case for array joining
     :local RunTestCase do={
         :global JoinArray
+
+        :global testsPassedCount
+        :global testsFailedCount
 
         # Workaround for the MikroTik RouterOS interpreter bug (phantom execution)
         :if ([:len $0] = 0) do={
@@ -173,8 +187,10 @@
         :local actualStr [:tostr $actual]
 
         :if ($actualStr = $expectedStr) do={
+            :set testsPassedCount ($testsPassedCount + 1)
             :put ("\1B[32m  [PASS]\1B[0m " . $name . " -> '" . $actualStr . "'")
         } else={
+            :set testsFailedCount ($testsFailedCount + 1)
             :put ("\1B[31m  [FAIL]\1B[0m " . $name . " | Expected: '" . $expectedStr . "', Got: '" . $actualStr . "'")
         }
     }
@@ -207,9 +223,15 @@
 :set SplitStrTest do={
     :global SplitStr
 
+    :global testsPassedCount
+    :global testsFailedCount
+
     # Helper function to run a single test case for array splitting
     :local RunTestCase do={
         :global SplitStr
+
+        :global testsPassedCount
+        :global testsFailedCount
 
         # Workaround for the MikroTik RouterOS interpreter bug (phantom execution)
         :if ([:len $0] = 0) do={
@@ -234,8 +256,10 @@
         :local expectedStr [:tostr $expected]
 
         :if ($actualStr = $expectedStr) do={
+            :set testsPassedCount ($testsPassedCount + 1)
             :put ("\1B[32m  [PASS]\1B[0m " . $name . ": '" . $str . "' del: '" . $delim . "' -> [" . $actualStr . "]")
         } else={
+            :set testsFailedCount ($testsFailedCount + 1)
             :put ("\1B[31m  [FAIL]\1B[0m " . $name . ": '" . $str . "' del: '" . $delim . "' | Expected: [" . $expectedStr . "], Got: [" . $actualStr . "]")
         }
     }
@@ -273,11 +297,17 @@
 }
 
 :set TrimStrTest do={
+    :global testsPassedCount
+    :global testsFailedCount
+
     # Helper function to run a single test case
     :local RunTestCase do={
         :global TrimStrLeft
         :global TrimStrRight
         :global TrimStr
+
+        :global testsPassedCount
+        :global testsFailedCount
 
         # Workaround for the MikroTik RouterOS interpreter bug (phantom execution)
         :if ([:len $0] = 0) do={
@@ -297,8 +327,10 @@
             :if ($targetFunc = "both")  do={ :set actual [$TrimStr $str $chars] }
 
             :if ($actual = $expected) do={
+                :set testsPassedCount ($testsPassedCount + 1)
                 :put ("\1B[32m  [PASS]\1B[0m [" . $targetFunc . "] " . $name . ": '" . $str . "' -> '" . $actual . "'")
             } else={
+                :set testsFailedCount ($testsFailedCount + 1)
                 :put ("\1B[31m  [FAIL]\1B[0m [" . $targetFunc . "] " . $name . ": '" . $str . "' | Expected: '" . $expected . "', Got: '" . $actual . "'")
             }
         }
@@ -350,9 +382,15 @@
 :set ReplaceStrTest do={
     :global ReplaceStr
 
+    :global testsPassedCount
+    :global testsFailedCount
+
     # Helper function to run a single test case
     :local RunTestCase do={
         :global ReplaceStr
+
+        :global testsPassedCount
+        :global testsFailedCount
 
         # Workaround for the MikroTik RouterOS interpreter bug (phantom execution)
         :if ([:len $0] = 0) do={
@@ -368,8 +406,10 @@
         :local actual [$ReplaceStr $str $from $to]
 
         :if ($actual = $expected) do={
+            :set testsPassedCount ($testsPassedCount + 1)
             :put ("\1B[32m  [PASS]\1B[0m " . $name . ": '" . $str . "' -> '" . $actual . "'")
         } else={
+            :set testsFailedCount ($testsFailedCount + 1)
             :put ("\1B[31m  [FAIL]\1B[0m " . $name . ": '" . $str . "' | Expected: '" . $expected . "', Got: '" . $actual . "'")
         }
     }
@@ -408,9 +448,15 @@
 :set RecursiveMergeSortTest do={
     :global RecursiveMergeSort
 
+    :global testsPassedCount
+    :global testsFailedCount
+
     # Helper function to run a single test case for numeric array sorting
     :local RunTestCase do={
         :global RecursiveMergeSort
+
+        :global testsPassedCount
+        :global testsFailedCount
 
         # Workaround for the MikroTik RouterOS interpreter bug (phantom execution)
         :if ([:len $0] = 0) do={
@@ -434,8 +480,10 @@
         :local expectedStr [:tostr $expected]
 
         :if ($actualStr = $expectedStr) do={
+            :set testsPassedCount ($testsPassedCount + 1)
             :put ("\1B[32m  [PASS]\1B[0m " . $name . ": [" . [:tostr $numInput] . "] -> [" . $actualStr . "]")
         } else={
+            :set testsFailedCount ($testsFailedCount + 1)
             :put ("\1B[31m  [FAIL]\1B[0m " . $name . ": [" . [:tostr $numInput] . "] | Expected: [" . $expectedStr . "], Got: [" . $actualStr . "]")
         }
     }
@@ -470,9 +518,15 @@
 :set RecursiveMergeSortStrTest do={
     :global RecursiveMergeSortStr
 
+    :global testsPassedCount
+    :global testsFailedCount
+
     # Helper function to run a single test case for array sorting
     :local RunTestCase do={
         :global RecursiveMergeSortStr
+
+        :global testsPassedCount
+        :global testsFailedCount
 
         # Workaround for the MikroTik RouterOS interpreter bug (phantom execution)
         :if ([:len $0] = 0) do={
@@ -490,8 +544,10 @@
         :local expectedStr [:tostr $expected]
 
         :if ($actualStr = $expectedStr) do={
+            :set testsPassedCount ($testsPassedCount + 1)
             :put ("\1B[32m  [PASS]\1B[0m " . $name . ": [" . [:tostr $input] . "] -> [" . $actualStr . "]")
         } else={
+            :set testsFailedCount ($testsFailedCount + 1)
             :put ("\1B[31m  [FAIL]\1B[0m " . $name . ": [" . [:tostr $input] . "] | Expected: [" . $expectedStr . "], Got: [" . $actualStr . "]")
         }
     }
@@ -540,8 +596,14 @@
 :set DivideIntAndRoundTest do={
     :global DivideIntAndRound
 
+    :global testsPassedCount
+    :global testsFailedCount
+
     :local RunTestCase do={
         :global DivideIntAndRound
+
+        :global testsPassedCount
+        :global testsFailedCount
 
         # Workaround for the MikroTik RouterOS interpreter bug (phantom execution)
         :if ([:len $0] = 0) do={
@@ -556,8 +618,10 @@
 
         :local actual [$DivideIntAndRound $num $den $places]
         :if ($actual = $expected) do={
+            :set testsPassedCount ($testsPassedCount + 1)
             :put ("  \1B[32m[PASS]\1B[0m " . $name . ": " . $num . "/" . $den . " (" . $places . " places) -> '" . $actual . "'")
         } else={
+            :set testsFailedCount ($testsFailedCount + 1)
             :put ("  \1B[31m[FAIL]\1B[0m " . $name . ": " . $num . "/" . $den . " (" . $places . " places) | Expected: '" . $expected . "', Got: '" . $actual . "'")
         }
     }
@@ -592,9 +656,15 @@
 :set ToUpperCaseTest do={
     :global ToUpperCase
 
+    :global testsPassedCount
+    :global testsFailedCount
+
     # Helper function to run a single test case
     :local RunTestCase do={
         :global ToUpperCase
+
+        :global testsPassedCount
+        :global testsFailedCount
 
         # Workaround for the MikroTik RouterOS interpreter bug (phantom execution)
         :if ([:len $0] = 0) do={
@@ -608,8 +678,10 @@
         :local actual [$ToUpperCase $input]
 
         :if ($actual = $expected) do={
+            :set testsPassedCount ($testsPassedCount + 1)
             :put ("\1B[32m  [PASS]\1B[0m " . $name . ": '" . $input . "' -> '" . $actual . "'")
         } else={
+            :set testsFailedCount ($testsFailedCount + 1)
             :put ("\1B[31m  [FAIL]\1B[0m " . $name . ": '" . $input . "' | Expected: '" . $expected . "', Got: '" . $actual . "'")
         }
     }
@@ -638,9 +710,15 @@
 :set ToLowerCaseTest do={
     :global ToLowerCase
 
+    :global testsPassedCount
+    :global testsFailedCount
+
     # Helper function to run a single test case
     :local RunTestCase do={
         :global ToLowerCase
+
+        :global testsPassedCount
+        :global testsFailedCount
 
         # Workaround for the MikroTik RouterOS interpreter bug (phantom execution)
         :if ([:len $0] = 0) do={
@@ -654,8 +732,10 @@
         :local actual [$ToLowerCase $input]
 
         :if ($actual = $expected) do={
+            :set testsPassedCount ($testsPassedCount + 1)
             :put ("\1B[32m  [PASS]\1B[0m " . $name . ": '" . $input . "' -> '" . $actual . "'")
         } else={
+            :set testsFailedCount ($testsFailedCount + 1)
             :put ("\1B[31m  [FAIL]\1B[0m " . $name . ": '" . $input . "' | Expected: '" . $expected . "', Got: '" . $actual . "'")
         }
     }
@@ -684,9 +764,15 @@
 :set HexToCharTest do={
     :global HexToChar
 
+    :global testsPassedCount
+    :global testsFailedCount
+
     # Helper function to run a single test case
     :local RunTestCase do={
         :global HexToChar
+
+        :global testsPassedCount
+        :global testsFailedCount
 
         # Workaround for the MikroTik RouterOS interpreter bug (phantom execution)
         :if ([:len $0] = 0) do={
@@ -700,8 +786,10 @@
         :local actual [$HexToChar $hexCode]
 
         :if ($actual = $expected) do={
+            :set testsPassedCount ($testsPassedCount + 1)
             :put ("\1B[32m  [PASS]\1B[0m " . $name . ": Hex " . $hexCode . " -> '" . $actual . "'")
         } else={
+            :set testsFailedCount ($testsFailedCount + 1)
             :put ("\1B[31m  [FAIL]\1B[0m " . $name . ": Hex " . $hexCode . " | Expected: '" . $expected . "', Got: '" . $actual . "'")
         }
     }
@@ -746,9 +834,15 @@
 :set DecToCharTest do={
     :global DecToChar
 
+    :global testsPassedCount
+    :global testsFailedCount
+
     # Helper function to run a single test case with explicit ANSI escape strings
     :local RunTestCase do={
         :global DecToChar
+
+        :global testsPassedCount
+        :global testsFailedCount
 
         # Workaround for the MikroTik RouterOS interpreter bug (phantom execution)
         :if ([:len $0] = 0) do={
@@ -762,8 +856,10 @@
         :local actual [$DecToChar $asciiCode]
 
         :if ($actual = $expected) do={
+            :set testsPassedCount ($testsPassedCount + 1)
             :put ("\1B[32m  [PASS]\1B[0m " . $name . ": Code " . $asciiCode . " -> '" . $actual . "'")
         } else={
+            :set testsFailedCount ($testsFailedCount + 1)
             :put ("\1B[31m  [FAIL]\1B[0m " . $name . ": Code " . $asciiCode . " | Expected: '" . $expected . "', Got: '" . $actual . "'")
         }
     }
@@ -809,9 +905,15 @@
 :set CompareStrTest do={
     :global CompareStr
 
+    :global testsPassedCount
+    :global testsFailedCount
+
     # Helper function to run a single test case with explicit ANSI escape strings
     :local RunTestCase do={
         :global CompareStr
+
+        :global testsPassedCount
+        :global testsFailedCount
 
         # Workaround for the MikroTik RouterOS interpreter bug (phantom execution)
         :if ([:len $0] = 0) do={
@@ -826,8 +928,10 @@
         :local actual [$CompareStr $str1 $str2]
 
         :if ($actual = $expected) do={
+            :set testsPassedCount ($testsPassedCount + 1)
             :put ("\1B[32m  [PASS]\1B[0m " . $name . ": '" . $str1 . "' vs '" . $str2 . "' -> " . $actual)
         } else={
+            :set testsFailedCount ($testsFailedCount + 1)
             :put ("\1B[31m  [FAIL]\1B[0m " . $name . ": '" . $str1 . "' vs '" . $str2 . "' | Expected: " . $expected . ", Got: " . $actual)
         }
     }

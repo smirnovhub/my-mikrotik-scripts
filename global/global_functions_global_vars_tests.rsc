@@ -118,29 +118,29 @@
     # --- Test 17: Empty String ---
     $SetGlobalVar "testVarEmpty" ""
     [$RunTestCase [$GetGlobalVar "testVarEmpty"] "" "Set and get empty string"]
-    
+
     # --- Test 18: Overwrite Existing Value ---
     $SetGlobalVar "testVarOverwrite" "first"
     $SetGlobalVar "testVarOverwrite" "second"
     [$RunTestCase [$GetGlobalVar "testVarOverwrite"] "second" "Overwrite existing global variable"]
-    
+
     # --- Test 19: Change Value Type ---
     $SetGlobalVar "testVarType" "text"
     $SetGlobalVar "testVarType" 555
     [$RunTestCase [$GetGlobalVar "testVarType"] "555" "Overwrite string with integer"]
-    
+
     # --- Test 20: Boolean False ---
     $SetGlobalVar "testVarFalse" false
     [$RunTestCase [$GetGlobalVar "testVarFalse"] "false" "Set and get boolean false"]
-    
+
     # --- Test 21: Integer Zero ---
     $SetGlobalVar "testVarZero" 0
     [$RunTestCase [$GetGlobalVar "testVarZero"] "0" "Set and get zero"]
-    
+
     # --- Test 22: Negative Integer ---
     $SetGlobalVar "testVarNegative" -123
     [$RunTestCase [$GetGlobalVar "testVarNegative"] "-123" "Set and get negative integer"]
-    
+
     # --- Test 23: Long String ---
     :local longString ""
     :for i from=1 to=500 do={
@@ -148,32 +148,32 @@
     }
     $SetGlobalVar "testVarLong" $longString
     [$RunTestCase [$GetGlobalVar "testVarLong"] $longString "Set and get long string"]
-    
+
     # --- Test 25: Special Characters ---
     $SetGlobalVar "testVarSpecial" ("\\/\$[]{}();,:|")
     [$RunTestCase [$GetGlobalVar "testVarSpecial"] ("\\/\$[]{}();,:|") "Set and get special characters"]
-    
+
     # --- Test 26: Multiple Updates ---
     :for i from=1 to=100 do={
         $SetGlobalVar "testVarLoop" $i
     }
     [$RunTestCase [$GetGlobalVar "testVarLoop"] "100" "Multiple sequential updates"]
-    
+
     # --- Test 27: Remove Twice ---
     $SetGlobalVar "testVarRemoveTwice" "x"
     $RemoveGlobalVar "testVarRemoveTwice"
     $RemoveGlobalVar "testVarRemoveTwice"
     [$RunTestCase [$GetGlobalVarOrDefault "testVarRemoveTwice" "ok"] "ok" "Remove already removed variable"]
-    
+
     # --- Test 28: Declare Existing Variable ---
     $SetGlobalVar "testVarDeclare" "value"
     $DeclareGlobalVar "testVarDeclare"
     [$RunTestCase [$GetGlobalVar "testVarDeclare"] "value" "Declare existing variable preserves value"]
-    
+
     # --- Test 29: Default Does Not Create Variable ---
     [$GetGlobalVarOrDefault "testVarDefault" "fallback"]
     [$RunTestCase [$GetGlobalVar "testVarDefault"] "" "GetGlobalVarOrDefault does not create variable"]
-    
+
     # --- Test 30: Variable Isolation ---
     $SetGlobalVar "testVarA" "AAA"
     $SetGlobalVar "testVarB" "BBB"
@@ -183,67 +183,67 @@
     # --- Test: Space ---
     $SetGlobalVar "testVarSpace" "Hello World"
     [$RunTestCase [$GetGlobalVar "testVarSpace"] "Hello World" "String with spaces"]
-    
+
     # --- Test: Leading and trailing spaces ---
     $SetGlobalVar "testVarSpaces" "  Hello World  "
     [$RunTestCase [$GetGlobalVar "testVarSpaces"] "  Hello World  " "Leading and trailing spaces"]
-    
+
     # --- Test: Tabs ---
     $SetGlobalVar "testVarTabs" ("A\tB\tC")
     [$RunTestCase [$GetGlobalVar "testVarTabs"] ("A\tB\tC") "String with tabs"]
-    
+
     # --- Test: New lines ---
     $SetGlobalVar "testVarNewLines" ("Line1\nLine2\nLine3")
     [$RunTestCase [$GetGlobalVar "testVarNewLines"] ("Line1\nLine2\nLine3") "String with new lines"]
-    
+
     # --- Test: Carriage return ---
     $SetGlobalVar "testVarCR" ("Line1\rLine2")
     [$RunTestCase [$GetGlobalVar "testVarCR"] ("Line1\rLine2") "String with carriage return"]
-    
+
     # --- Test: Quotes ---
     $SetGlobalVar "testVarQuotes2" ("\"Hello\"")
     [$RunTestCase [$GetGlobalVar "testVarQuotes2"] ("\"Hello\"") "Double quotes"]
-    
+
     # --- Test: Single quotes ---
     $SetGlobalVar "testVarSingleQuotes" "'Hello'"
     [$RunTestCase [$GetGlobalVar "testVarSingleQuotes"] "'Hello'" "Single quotes"]
-    
+
     # --- Test: Backslashes ---
     $SetGlobalVar "testVarBackslash" ("\\server\\share\\dir")
     [$RunTestCase [$GetGlobalVar "testVarBackslash"] ("\\server\\share\\dir") "Backslashes"]
-    
+
     # --- Test: Dollar sign ---
     $SetGlobalVar "testVarDollar" ("\$abc$123")
     [$RunTestCase [$GetGlobalVar "testVarDollar"] ("\$abc$123") "Dollar sign"]
-    
+
     # --- Test: Percent signs ---
     $SetGlobalVar "testVarPercent" "100% complete"
     [$RunTestCase [$GetGlobalVar "testVarPercent"] "100% complete" "Percent signs"]
-    
+
     # --- Test: URL characters ---
     $SetGlobalVar "testVarUrl" "https://example.com/test?a=1&b=2#fragment"
     [$RunTestCase [$GetGlobalVar "testVarUrl"] "https://example.com/test?a=1&b=2#fragment" "URL"]
-    
+
     # --- Test: File path ---
     $SetGlobalVar "testVarPath" ("C:\\Program Files\\RouterOS\\test.txt")
     [$RunTestCase [$GetGlobalVar "testVarPath"] ("C:\\Program Files\\RouterOS\\test.txt") "Windows path"]
-    
+
     # --- Test: Shell characters ---
     $SetGlobalVar "testVarShell" "&|;<>`(){}[]"
     [$RunTestCase [$GetGlobalVar "testVarShell"] "&|;<>`(){}[]" "Shell metacharacters"]
-    
+
     # --- Test: Math symbols ---
     $SetGlobalVar "testVarMath" "+-*/=%^"
     [$RunTestCase [$GetGlobalVar "testVarMath"] "+-*/=%^" "Math symbols"]
-    
+
     # --- Test: Punctuation ---
     $SetGlobalVar "testVarPunctuation" ".,:!?@#~"
     [$RunTestCase [$GetGlobalVar "testVarPunctuation"] ".,:!?@#~" "Punctuation"]
-    
+
     # --- Test: Mixed special characters ---
     $SetGlobalVar "testVarMixed" ("\"%\\\$&;=+?<>[]{}()\n\r\t")
     [$RunTestCase [$GetGlobalVar "testVarMixed"] ("\"%\\\$&;=+?<>[]{}()\n\r\t") "Mixed special characters"]
-    
+
     # --- Test: Empty string ---
     $SetGlobalVar "testVarEmpty2" ""
     [$RunTestCase [$GetGlobalVar "testVarEmpty2"] "" "Empty string"]

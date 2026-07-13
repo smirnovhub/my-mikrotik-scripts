@@ -132,6 +132,6 @@
   }
 
   :local varName ($1 . "GlobalVar")
-  
+
   /system script environment remove [find name=$varName]
 }

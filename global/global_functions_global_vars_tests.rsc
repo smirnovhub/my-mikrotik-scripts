@@ -17,12 +17,16 @@
     :global GetGlobalVarOrDefault
     :global SetGlobalVar
     :global RemoveGlobalVar
+    :global DecToChar
+    :global HasBinaryChars
 
     :global testsPassedCount
     :global testsFailedCount
 
     # Helper function to validate results and update counters
     :local RunTestCase do={
+        :global HasBinaryChars
+
         :global testsPassedCount
         :global testsFailedCount
 
@@ -35,12 +39,27 @@
         :local expected [:tostr $2]
         :local name [:tostr $3]
 
-        if ($actual = $expected) do={
+        :local inputDisplay $input
+        :if ([$HasBinaryChars $inputDisplay]) do={
+            :set inputDisplay "<binary string>"
+        }
+        
+        :local actualDisplay $actual
+        :if ([$HasBinaryChars $actualDisplay]) do={
+            :set actualDisplay "<binary string>"
+        }
+        
+        :local expectedDisplay $expected
+        :if ([$HasBinaryChars $expectedDisplay]) do={
+            :set expectedDisplay "<binary string>"
+        }
+
+        :if ($actual = $expected) do={
             :set testsPassedCount ($testsPassedCount + 1)
-            :put ("\1B[32m  [PASS]\1B[0m " . $name . " -> '" . $actual . "'")
+            :put ("  \1B[32m[PASS]\1B[0m " . $name . ": '" . $inputDisplay . "' -> '" . $actualDisplay . "'")
         } else={
             :set testsFailedCount ($testsFailedCount + 1)
-            :put ("\1B[31m  [FAIL]\1B[0m " . $name . " | Expected: '" . $expected . "', Got: '" . $actual . "'")
+            :put ("  \1B[31m[FAIL]\1B[0m " . $name . ": '" . $inputDisplay . "' | Expected: '" . $expectedDisplay . "', Got: '" . $actualDisplay . "'")
         }
     }
 
@@ -248,6 +267,16 @@
     $SetGlobalVar "testVarEmpty2" ""
     [$RunTestCase [$GetGlobalVar "testVarEmpty2"] "" "Empty string"]
 
+    # --- Test: All 256 Byte Values ---
+    :local allChars ""
+
+    :for i from=0 to=255 do={
+        :set allChars ($allChars . [$DecToChar $i])
+    }
+
+    $SetGlobalVar "testVarAllChars" $allChars
+    [$RunTestCase [$GetGlobalVar "testVarAllChars"] $allChars "String containing all byte values (0-255)"]
+
     # --- Cleanup environment ---
     # Removing environmental pollution from tests
     $RemoveGlobalVar "testVarUnset"
@@ -293,6 +322,7 @@
     $RemoveGlobalVar "testVarPunctuation"
     $RemoveGlobalVar "testVarMixed"
     $RemoveGlobalVar "testVarEmpty2"
+    $RemoveGlobalVar "testVarAllChars"
 
     :put "Testing completed."
 }

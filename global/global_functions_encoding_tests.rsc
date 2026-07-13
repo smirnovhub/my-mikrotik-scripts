@@ -312,7 +312,6 @@
         :for i from=0 to=255 do={
             :if ([:pick $input $i ($i + 1)] != [:pick $decoded $i ($i + 1)]) do={
                 :put ("First mismatch at byte index " . $i)
-                :break
             }
         }
     }
@@ -403,13 +402,17 @@
 }
 
 :set UrlDecodeTest do={
+    :global DecToChar
+    :global UrlEncode
     :global UrlDecode
+    :global HasBinaryChars
 
     :global testsPassedCount
     :global testsFailedCount
 
     :local RunTestCase do={
         :global UrlDecode
+        :global HasBinaryChars
 
         :global testsPassedCount
         :global testsFailedCount
@@ -424,12 +427,28 @@
         :local name [:tostr $3]
 
         :local actual [$UrlDecode $input]
+
+        :local inputDisplay $input
+        :if ([$HasBinaryChars $inputDisplay]) do={
+            :set inputDisplay "<binary string>"
+        }
+        
+        :local actualDisplay $actual
+        :if ([$HasBinaryChars $actualDisplay]) do={
+            :set actualDisplay "<binary string>"
+        }
+        
+        :local expectedDisplay $expected
+        :if ([$HasBinaryChars $expectedDisplay]) do={
+            :set expectedDisplay "<binary string>"
+        }
+
         :if ($actual = $expected) do={
             :set testsPassedCount ($testsPassedCount + 1)
-            :put ("  \1B[32m[PASS]\1B[0m " . $name . ": '" . $input . "' -> '" . $actual . "'")
+            :put ("  \1B[32m[PASS]\1B[0m " . $name . ": '" . $inputDisplay . "' -> '" . $actualDisplay . "'")
         } else={
             :set testsFailedCount ($testsFailedCount + 1)
-            :put ("  \1B[31m[FAIL]\1B[0m " . $name . ": '" . $input . "' | Expected: '" . $expected . "', Got: '" . $actual . "'")
+            :put ("  \1B[31m[FAIL]\1B[0m " . $name . ": '" . $inputDisplay . "' | Expected: '" . $expectedDisplay . "', Got: '" . $actualDisplay . "'")
         }
     }
 
@@ -480,6 +499,14 @@
 
     # Lowercase hexadecimal
     [$RunTestCase "%2b%3a%3b%2c" "+:;," "Lowercase hexadecimal reserved character decoding validation"]
+
+    # --- Test: All 256 byte values ---
+    :local allChars ""
+
+    :for i from=0 to=255 do={
+        :set allChars ($allChars . [$DecToChar $i])
+    }
+    [$RunTestCase [$UrlEncode $allChars] $allChars "All 256 byte values"]
 
     :put "Testing completed."
 }

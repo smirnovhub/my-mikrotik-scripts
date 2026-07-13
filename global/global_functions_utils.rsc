@@ -57,9 +57,6 @@
 #       :global SplitStr
 #   global_functions_datetime:
 #       :global GetCurrentDateTime
-#   global_functions_vars:
-#       :global DeclareGlobalVar
-#       :global GetGlobalVar
 
 :set LogAndExit do={
   :local severity [:tostr $1]
@@ -284,8 +281,6 @@
 # Unknown    = 0
 :set SilentPing do={
     :global GetRandom20CharHex
-    :global DeclareGlobalVar
-    :global GetGlobalVar
 
     :local input $1
     :local count 1
@@ -307,7 +302,7 @@
         :local varName ($varPrefix . $rnd)
 
         # Create temporary global variable
-        $DeclareGlobalVar $varName
+        :execute (":global " . $varName)
 
         # Run ping in background with error handling
         :local jobCode (":do { \
@@ -326,7 +321,8 @@
         }
 
         # Read the result
-        :local result [$GetGlobalVar $varName]
+        :local script [:parse ":global $varName; :return \$$varName"]
+        :local result [$script]
 
         # Remove the temporary global variable
         /system script environment remove [find name=$varName]
@@ -349,7 +345,7 @@
         :set ($varsList->([:len $varsList])) $varName
 
         # Create temporary global variable
-        $DeclareGlobalVar $varName
+        :execute (":global " . $varName)
 
         # Job code for each host
         :local jobCode (":do { \
@@ -378,7 +374,8 @@
             :if ([:len [/system script job find where .id=$j]] = 0) do={
                 # Job finished, fetch result
                 :local varName ($vars->$k)
-                :local result [$GetGlobalVar $varName]
+                :local script [:parse ":global $varName; :return \$$varName"]
+                :local result [$script]
 
                 # Save result into return array
                 :set ($results->$k) $result

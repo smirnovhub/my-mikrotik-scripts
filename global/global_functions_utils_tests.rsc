@@ -20,8 +20,14 @@
 :set GetArgOrDefaultTest do={
     :global GetArgOrDefault
 
+    :global testsPassedCount
+    :global testsFailedCount
+
     :local RunTestCase do={
         :global GetArgOrDefault
+
+        :global testsPassedCount
+        :global testsFailedCount
 
         # Workaround for the MikroTik RouterOS interpreter bug (phantom execution)
         :if ([:len $0] = 0) do={
@@ -48,8 +54,10 @@
         # Validate negative scenarios where error/exit is mandated
         :if ($expectError = true) do={
             :if ($scriptCrashed = true) do={
+                :set testsPassedCount ($testsPassedCount + 1)
                 :put ("  \1B[32m[PASS]\1B[0m " . $name . " (Execution crash successfully intercepted)")
             } else={
+                :set testsFailedCount ($testsFailedCount + 1)
                 :put ("  \1B[31m[FAIL]\1B[0m " . $name . " | Expected LogAndExit call but function returned code execution normally")
             }
             :return ""
@@ -57,6 +65,7 @@
 
         # Guard check if function crashed unexpectedly during standard data retrieval
         :if ($scriptCrashed = true) do={
+            :set testsFailedCount ($testsFailedCount + 1)
             :put ("  \1B[31m[FAIL]\1B[0m " . $name . " | Function crashed unexpectedly via on-error boundary trap")
             :return ""
         }
@@ -71,8 +80,10 @@
 
         # Validate matching types along with values
         :if (($actual = $expected) && ([:typeof $actual] = [:typeof $expected])) do={
+            :set testsPassedCount ($testsPassedCount + 1)
             :put ("  \1B[32m[PASS]\1B[0m " . $name . " -> Got: '" . [:tostr $actual] . "' (" . [:typeof $actual] . ")")
         } else={
+            :set testsFailedCount ($testsFailedCount + 1)
             :put ("  \1B[31m[FAIL]\1B[0m " . $name . " | Expected: '" . [:tostr $expected] . "' (" . [:typeof $expected] . "), Got: '" . [:tostr $actual] . "' (" . [:typeof $actual] . ")")
         }
     }
@@ -165,8 +176,10 @@
     :if (($sampleMap->"strFalse") != "false") do={ :set modified true }
 
     :if ($modified = true) do={
+        :set testsFailedCount ($testsFailedCount + 1)
         :put "  \1B[31m[FAIL]\1B[0m Source argument map was modified"
     } else={
+        :set testsPassedCount ($testsPassedCount + 1)
         :put "  \1B[32m[PASS]\1B[0m Source argument map remains unchanged"
     }
 
@@ -176,8 +189,14 @@
 :set GetArgOrExitTest do={
     :global GetArgOrExit
 
+    :global testsPassedCount
+    :global testsFailedCount
+
     :local RunTestCase do={
         :global GetArgOrExit
+
+        :global testsPassedCount
+        :global testsFailedCount
 
         # Workaround for the MikroTik RouterOS interpreter bug (phantom execution)
         :if ([:len $0] = 0) do={
@@ -204,8 +223,10 @@
         # Validate negative scenarios where error/exit is mandated
         :if ($expectError = true) do={
             :if ($scriptCrashed = true) do={
+                :set testsPassedCount ($testsPassedCount + 1)
                 :put ("  \1B[32m[PASS]\1B[0m " . $name . " (Execution crash successfully intercepted)")
             } else={
+                :set testsFailedCount ($testsFailedCount + 1)
                 :put ("  \1B[31m[FAIL]\1B[0m " . $name . " | Expected LogAndExit call but function returned code execution normally")
             }
             :return ""
@@ -213,6 +234,7 @@
 
         # Guard check if function crashed unexpectedly during standard data retrieval
         :if ($scriptCrashed = true) do={
+            :set testsFailedCount ($testsFailedCount + 1)
             :put ("  \1B[31m[FAIL]\1B[0m " . $name . " | Function crashed unexpectedly via on-error boundary trap")
             :return ""
         }
@@ -228,8 +250,10 @@
 
         # Validate matching types along with values
         :if (($actual = $expected) && ([:typeof $actual] = [:typeof $expected])) do={
+            :set testsPassedCount ($testsPassedCount + 1)
             :put ("  \1B[32m[PASS]\1B[0m " . $name . " -> Got: '" . [:tostr $actual] . "' (" . [:typeof $actual] . ")")
         } else={
+            :set testsFailedCount ($testsFailedCount + 1)
             :put ("  \1B[31m[FAIL]\1B[0m " . $name . " | Expected: '" . [:tostr $expected] . "' (" . [:typeof $expected] . "), Got: '" . [:tostr $actual] . "' (" . [:typeof $actual] . ")")
         }
     }
@@ -316,8 +340,10 @@
     :if (($sampleMap->"strFalse") != "false") do={ :set modified true }
 
     :if ($modified = true) do={
+        :set testsFailedCount ($testsFailedCount + 1)
         :put "  \1B[31m[FAIL]\1B[0m Source argument map was modified"
     } else={
+        :set testsPassedCount ($testsPassedCount + 1)
         :put "  \1B[32m[PASS]\1B[0m Source argument map remains unchanged"
     }
 
@@ -327,8 +353,14 @@
 :set SilentPingTest do={
     :global SilentPing
 
+    :global testsPassedCount
+    :global testsFailedCount
+
     :local RunTestCase do={
         :global SilentPing
+
+        :global testsPassedCount
+        :global testsFailedCount
 
         # Workaround for the MikroTik RouterOS interpreter bug (phantom execution)
         :if ([:len $0] = 0) do={
@@ -354,8 +386,10 @@
         # Validate negative scenarios where execution crash is expected
         :if ($expectError = true) do={
             :if ($scriptCrashed = true) do={
+                :set testsPassedCount ($testsPassedCount + 1)
                 :put ("  \1B[32m[PASS]\1B[0m " . $name . " (Execution crash successfully intercepted)")
             } else={
+                :set testsFailedCount ($testsFailedCount + 1)
                 :put ("  \1B[31m[FAIL]\1B[0m " . $name . " | Expected function crash but it returned normally")
             }
             :return ""
@@ -363,6 +397,7 @@
 
         # Guard check if function crashed unexpectedly
         :if ($scriptCrashed = true) do={
+            :set testsFailedCount ($testsFailedCount + 1)
             :put ("  \1B[31m[FAIL]\1B[0m " . $name . " | Function crashed unexpectedly via on-error boundary trap")
             :return ""
         }
@@ -393,8 +428,10 @@
             }
 
             :if ($arraysMatch = true) do={
+                :set testsPassedCount ($testsPassedCount + 1)
                 :put ("  \1B[32m[PASS]\1B[0m " . $name . " -> Got matching array response")
             } else={
+                :set testsFailedCount ($testsFailedCount + 1)
                 :put ("  \1B[31m[FAIL]\1B[0m " . $name . " | Expected: '" . [:tostr $expected] . "', Got: '" . [:tostr $actual] . "'")
             }
             :return ""
@@ -402,8 +439,10 @@
 
         # Validate matching types along with values for single host (scalars)
         :if (($actual = $expected) && ([:typeof $actual] = [:typeof $expected])) do={
+            :set testsPassedCount ($testsPassedCount + 1)
             :put ("  \1B[32m[PASS]\1B[0m " . $name . " -> Got: '" . [:tostr $actual] . "' (" . [:typeof $actual] . ")")
         } else={
+            :set testsFailedCount ($testsFailedCount + 1)
             :put ("  \1B[31m[FAIL]\1B[0m " . $name . " | Expected: '" . [:tostr $expected] . "' (" . [:typeof $expected] . "), Got: '" . [:tostr $actual] . "' (" . [:typeof $actual] . ")")
         }
     }
@@ -472,14 +511,18 @@
     :if (($targetMap->"badhost") != "broken..ip") do={ :set modified true }
 
     :if ($modified = true) do={
+        :set testsFailedCount ($testsFailedCount + 1)
         :put "  \1B[31m[FAIL]\1B[0m Source host dictionary was modified during execution"
     } else={
+        :set testsPassedCount ($testsPassedCount + 1)
         :put "  \1B[32m[PASS]\1B[0m Source host dictionary remains unchanged"
     }
 
     :if ($leakDetected = true) do={
+        :set testsFailedCount ($testsFailedCount + 1)
         :put "  \1B[31m[FAIL]\1B[0m Environment leak: temporary global result variables were not cleaned up"
     } else={
+        :set testsPassedCount ($testsPassedCount + 1)
         :put "  \1B[32m[PASS]\1B[0m Environment clean: no temporary variable leaks detected"
     }
 

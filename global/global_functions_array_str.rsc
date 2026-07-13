@@ -49,6 +49,7 @@
 :global HexToChar
 :global DecToChar
 :global CompareStr
+:global HasBinaryChars
 
 # Automatically generated ASCII code table
 :global asciiCodeTable
@@ -740,4 +741,35 @@
     :if ($l1 > $l2) do={ :return 1 }
 
     :return 0
+}
+
+# Purpose: Check whether a string contains binary or non-printable characters.
+# Parameters:
+#   $1 - Input string to examine.
+# Returns: true if the string contains at least one character in the ranges 0x00-0x1F or 0x7F-0xFF; otherwise false.
+:set HasBinaryChars do={
+    :global DecToChar
+
+    # Workaround for the MikroTik RouterOS interpreter bug (phantom execution)
+    :if ([:len $0] = 0) do={
+        :return false
+    }
+
+    :local input [:tostr $1]
+
+    # Check ASCII control characters (0x00-0x1F)
+    :for i from=0 to=31 do={
+        :if ([:find $input [$DecToChar $i]] != nil) do={
+            :return true
+        }
+    }
+
+    # Check DEL and extended characters (0x7F-0xFF)
+    :for i from=127 to=255 do={
+        :if ([:find $input [$DecToChar $i]] != nil) do={
+            :return true
+        }
+    }
+
+    :return false
 }

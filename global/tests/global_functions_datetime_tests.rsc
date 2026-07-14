@@ -212,6 +212,11 @@
     [$RunTestCase "feb/28/2024 23:59:59" "2024-02-28 23:59:59" "End of day leap year February"]
     [$RunTestCase "jul/09/2026 15:45:21" "2026-07-09 15:45:21" "Standard afternoon daytime string"]
 
+    # Different month letter case
+    [$RunTestCase "mAy/15/2026 00:00:01" "2026-05-15 00:00:01" "Midnight start of the year"]
+    [$RunTestCase "Sep/07/2024 23:59:59" "2024-09-07 23:59:59" "End of day leap year February"]
+    [$RunTestCase "MAR/04/2026 15:45:21" "2026-03-04 15:45:21" "Standard afternoon daytime string"]
+
     # Extended month mapping tests (RouterOS format)
     [$RunTestCase "mar/15/2025 08:30:00" "2025-03-15 08:30:00" "March date format conversion"]
     [$RunTestCase "apr/30/2025 12:00:00" "2025-04-30 12:00:00" "April date format conversion"]
@@ -702,6 +707,16 @@
     [$RunTestCase "jun/30/2025 23:59:59" "1751327999" "End of June"]
     [$RunTestCase "jul/01/2025 00:00:00" "1751328000" "Start of July"]
     [$RunTestCase "dec/31/2025 23:59:59" "1767225599" "End of 2025"]
+
+    # =========================================================================
+    # Different month letter case
+    # =========================================================================
+    [$RunTestCase "jAn/01/2025 00:00:00" "1735689600" "Start of 2025"]
+    [$RunTestCase "feB/28/2025 23:59:59" "1740787199" "End of February in a standard year"]
+    [$RunTestCase "Mar/01/2025 00:00:00" "1740787200" "Start of March in a standard year"]
+    [$RunTestCase "APR/30/2025 23:59:59" "1746057599" "End of April"]
+    [$RunTestCase "mAY/01/2025 00:00:00" "1746057600" "Start of May"]
+    [$RunTestCase "JUn/30/2025 23:59:59" "1751327999" "End of June"]
 
     # =========================================================================
     # Arbitrary dates

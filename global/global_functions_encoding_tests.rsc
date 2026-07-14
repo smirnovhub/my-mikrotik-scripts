@@ -405,14 +405,14 @@
     :global DecToChar
     :global UrlEncode
     :global UrlDecode
-    :global HasBinaryChars
+    :global IsPrintableStr
 
     :global testsPassedCount
     :global testsFailedCount
 
     :local RunTestCase do={
         :global UrlDecode
-        :global HasBinaryChars
+        :global IsPrintableStr
 
         :global testsPassedCount
         :global testsFailedCount
@@ -429,17 +429,17 @@
         :local actual [$UrlDecode $input]
 
         :local inputDisplay $input
-        :if ([$HasBinaryChars $inputDisplay]) do={
+        :if (![$IsPrintableStr $inputDisplay]) do={
             :set inputDisplay "<binary string>"
         }
         
         :local actualDisplay $actual
-        :if ([$HasBinaryChars $actualDisplay]) do={
+        :if (![$IsPrintableStr $actualDisplay]) do={
             :set actualDisplay "<binary string>"
         }
         
         :local expectedDisplay $expected
-        :if ([$HasBinaryChars $expectedDisplay]) do={
+        :if (![$IsPrintableStr $expectedDisplay]) do={
             :set expectedDisplay "<binary string>"
         }
 

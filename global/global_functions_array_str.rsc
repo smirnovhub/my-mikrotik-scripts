@@ -49,7 +49,7 @@
 :global HexToChar
 :global DecToChar
 :global CompareStr
-:global HasBinaryChars
+:global IsPrintableStr
 
 # Automatically generated ASCII code table
 :global asciiCodeTable
@@ -743,11 +743,11 @@
     :return 0
 }
 
-# Purpose: Check whether a string contains binary or non-printable characters.
+# Purpose: Check whether a string contains only printable characters.
 # Parameters:
 #   $1 - Input string to examine.
-# Returns: true if the string contains at least one character in the ranges 0x00-0x1F or 0x7F-0xFF; otherwise false.
-:set HasBinaryChars do={
+# Returns: true if the string contains no characters in the ranges 0x00-0x1F or 0x7F-0xFF; otherwise false.
+:set IsPrintableStr do={
     :global DecToChar
 
     # Workaround for the MikroTik RouterOS interpreter bug (phantom execution)
@@ -760,16 +760,16 @@
     # Check ASCII control characters (0x00-0x1F)
     :for i from=0 to=31 do={
         :if ([:find $input [$DecToChar $i]] != nil) do={
-            :return true
+            :return false
         }
     }
 
     # Check DEL and extended characters (0x7F-0xFF)
     :for i from=127 to=255 do={
         :if ([:find $input [$DecToChar $i]] != nil) do={
-            :return true
+            :return false
         }
     }
 
-    :return false
+    :return true
 }

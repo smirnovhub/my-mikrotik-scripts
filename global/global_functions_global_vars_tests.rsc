@@ -18,14 +18,14 @@
     :global SetGlobalVar
     :global RemoveGlobalVar
     :global DecToChar
-    :global HasBinaryChars
+    :global IsPrintableStr
 
     :global testsPassedCount
     :global testsFailedCount
 
     # Helper function to validate results and update counters
     :local RunTestCase do={
-        :global HasBinaryChars
+        :global IsPrintableStr
 
         :global testsPassedCount
         :global testsFailedCount
@@ -40,17 +40,17 @@
         :local name [:tostr $3]
 
         :local inputDisplay $input
-        :if ([$HasBinaryChars $inputDisplay]) do={
+        :if (![$IsPrintableStr $inputDisplay]) do={
             :set inputDisplay "<binary string>"
         }
         
         :local actualDisplay $actual
-        :if ([$HasBinaryChars $actualDisplay]) do={
+        :if (![$IsPrintableStr $actualDisplay]) do={
             :set actualDisplay "<binary string>"
         }
         
         :local expectedDisplay $expected
-        :if ([$HasBinaryChars $expectedDisplay]) do={
+        :if (![$IsPrintableStr $expectedDisplay]) do={
             :set expectedDisplay "<binary string>"
         }
 

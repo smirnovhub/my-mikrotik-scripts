@@ -8,7 +8,7 @@
 
     $GetMd5SumTest
 
-    :put "\1B[35m=== ALL HASHES TESTS EXECUTED ===\1B[0m"
+    :put "\1B[35m=== ALL HASHES TESTS COMPLETED ===\1B[0m"
 }
 
 :set GetMd5SumTest do={

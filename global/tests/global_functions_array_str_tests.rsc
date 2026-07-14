@@ -55,7 +55,7 @@
     # Execute storage parser tests
     $ParseKeyValueStoreTest
 
-    :put "\1B[35m=== ALL ARRAY AND STRING TESTS EXECUTED ===\1B[0m"
+    :put "\1B[35m=== ALL ARRAY AND STRING TESTS COMPLETED ===\1B[0m"
 }
 
 :set ParseKeyValueStoreTest do={

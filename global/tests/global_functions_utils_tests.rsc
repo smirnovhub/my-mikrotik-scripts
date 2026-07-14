@@ -14,7 +14,7 @@
     $GetArgOrExitTest
     $SilentPingTest
 
-    :put "\1B[35m=== ALL UTILS TESTS EXECUTED ===\1B[0m"
+    :put "\1B[35m=== ALL UTILS TESTS COMPLETED ===\1B[0m"
 }
 
 :set GetArgOrDefaultTest do={

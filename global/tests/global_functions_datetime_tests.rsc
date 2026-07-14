@@ -18,7 +18,7 @@
     :global FormatSecondsShortTest
     :global FormatSecondsLongTest
 
-    :put "\1B[35m=== STARTING ALL DATETIME TESTS ===\1B[0m"
+    :put "\1B[35m=== STARTING ALL DATE AND TIME TESTS ===\1B[0m"
 
     # Execute conversion and parsing tests
     $GetWeekdayTest
@@ -32,7 +32,7 @@
     # Execute runtime clock tracking tests
     $GetUnixTimestampTest
 
-    :put "\1B[35m=== ALL DATETIME TESTS EXECUTED ===\1B[0m"
+    :put "\1B[35m=== ALL DATE AND TIME TESTS COMPLETED ===\1B[0m"
 }
 
 :set GetWeekdayTest do={

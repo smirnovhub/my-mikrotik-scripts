@@ -17,7 +17,7 @@
     $UrlEncodeTest
     $UrlDecodeTest
 
-    :put "\1B[35m=== ALL ENCODING TESTS EXECUTED ===\1B[0m"
+    :put "\1B[35m=== ALL ENCODING TESTS COMPLETED ===\1B[0m"
 }
 
 :set Base64EncodeTest do={

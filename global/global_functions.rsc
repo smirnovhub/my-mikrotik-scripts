@@ -105,7 +105,7 @@
         :return false
     } on-error={
       # RouterOS 7.x
-      :if ([ /system/ntp/client/get status ] = "synchronized") do={
+      :if ([/system ntp client get status] = "synchronized") do={
         :return true
       }
 

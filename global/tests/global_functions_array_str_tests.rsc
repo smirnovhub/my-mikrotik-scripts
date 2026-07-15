@@ -30,11 +30,9 @@
 
     :put "\1B[35m=== STARTING ALL ARRAY AND STRING TESTS ===\1B[0m"
 
-    :local res {"passed"=0; "failed"=0}
+    :local res [:toarray ""]
     :if ([:typeof $1] = "array") do={
         :set res $1
-    } else={
-        :error "Need to call with an empty array as parameter [:toarray {\"passed\"=0; \"failed\"=0}]]"
     }
 
     # Execute all test suites sequentially, passing and updating the same accumulator array
@@ -60,11 +58,9 @@
 :set ParseKeyValueStoreTest do={
     :global ParseKeyValueStore
 
-    :local res {"passed"=0; "failed"=0}
+    :local res [:toarray ""]
     :if ([:typeof $1] = "array") do={
         :set res $1
-    } else={
-        :error "Need to call with an empty array as parameter [:toarray {\"passed\"=0; \"failed\"=0}]]"
     }
 
     :local RunTestCase do={
@@ -164,11 +160,9 @@
 :set JoinArrayTest do={
     :global JoinArray
 
-    :local res {"passed"=0; "failed"=0}
+    :local res [:toarray ""]
     :if ([:typeof $1] = "array") do={
         :set res $1
-    } else={
-        :error "Need to call with an empty array as parameter [:toarray {\"passed\"=0; \"failed\"=0}]]"
     }
 
     :local RunTestCase do={
@@ -228,11 +222,9 @@
 :set SplitStrTest do={
     :global SplitStr
 
-    :local res {"passed"=0; "failed"=0}
+    :local res [:toarray ""]
     :if ([:typeof $1] = "array") do={
         :set res $1
-    } else={
-        :error "Need to call with an empty array as parameter [:toarray {\"passed\"=0; \"failed\"=0}]]"
     }
 
     :local RunTestCase do={
@@ -305,11 +297,9 @@
 }
 
 :set TrimStrTest do={
-    :local res {"passed"=0; "failed"=0}
+    :local res [:toarray ""]
     :if ([:typeof $1] = "array") do={
         :set res $1
-    } else={
-        :error "Need to call with an empty array as parameter [:toarray {\"passed\"=0; \"failed\"=0}]]"
     }
 
     :local RunTestCase do={
@@ -387,11 +377,9 @@
 :set ReplaceStrTest do={
     :global ReplaceStr
 
-    :local res {"passed"=0; "failed"=0}
+    :local res [:toarray ""]
     :if ([:typeof $1] = "array") do={
         :set res $1
-    } else={
-        :error "Need to call with an empty array as parameter [:toarray {\"passed\"=0; \"failed\"=0}]]"
     }
 
     :local RunTestCase do={
@@ -456,11 +444,9 @@
 :set RecursiveMergeSortTest do={
     :global RecursiveMergeSort
 
-    :local res {"passed"=0; "failed"=0}
+    :local res [:toarray ""]
     :if ([:typeof $1] = "array") do={
         :set res $1
-    } else={
-        :error "Need to call with an empty array as parameter [:toarray {\"passed\"=0; \"failed\"=0}]]"
     }
 
     :local RunTestCase do={
@@ -529,11 +515,9 @@
 :set RecursiveMergeSortStrTest do={
     :global RecursiveMergeSortStr
 
-    :local res {"passed"=0; "failed"=0}
+    :local res [:toarray ""]
     :if ([:typeof $1] = "array") do={
         :set res $1
-    } else={
-        :error "Need to call with an empty array as parameter [:toarray {\"passed\"=0; \"failed\"=0}]]"
     }
 
     :local RunTestCase do={
@@ -610,11 +594,9 @@
 :set DivideIntAndRoundTest do={
     :global DivideIntAndRound
 
-    :local res {"passed"=0; "failed"=0}
+    :local res [:toarray ""]
     :if ([:typeof $1] = "array") do={
         :set res $1
-    } else={
-        :error "Need to call with an empty array as parameter [:toarray {\"passed\"=0; \"failed\"=0}]]"
     }
 
     :local RunTestCase do={
@@ -674,11 +656,9 @@
 :set ToUpperCaseTest do={
     :global ToUpperCase
 
-    :local res {"passed"=0; "failed"=0}
+    :local res [:toarray ""]
     :if ([:typeof $1] = "array") do={
         :set res $1
-    } else={
-        :error "Need to call with an empty array as parameter [:toarray {\"passed\"=0; \"failed\"=0}]]"
     }
 
     :local RunTestCase do={
@@ -731,11 +711,9 @@
 :set ToLowerCaseTest do={
     :global ToLowerCase
 
-    :local res {"passed"=0; "failed"=0}
+    :local res [:toarray ""]
     :if ([:typeof $1] = "array") do={
         :set res $1
-    } else={
-        :error "Need to call with an empty array as parameter [:toarray {\"passed\"=0; \"failed\"=0}]]"
     }
 
     :local RunTestCase do={
@@ -788,11 +766,9 @@
 :set HexToCharTest do={
     :global HexToChar
 
-    :local res {"passed"=0; "failed"=0}
+    :local res [:toarray ""]
     :if ([:typeof $1] = "array") do={
         :set res $1
-    } else={
-        :error "Need to call with an empty array as parameter [:toarray {\"passed\"=0; \"failed\"=0}]]"
     }
 
     :local RunTestCase do={
@@ -856,11 +832,9 @@
 :set DecToCharTest do={
     :global DecToChar
 
-    :local res {"passed"=0; "failed"=0}
+    :local res [:toarray ""]
     :if ([:typeof $1] = "array") do={
         :set res $1
-    } else={
-        :error "Need to call with an empty array as parameter [:toarray {\"passed\"=0; \"failed\"=0}]]"
     }
 
     :local RunTestCase do={
@@ -924,11 +898,9 @@
 :set CompareStrTest do={
     :global CompareStr
 
-    :local res {"passed"=0; "failed"=0}
+    :local res [:toarray ""]
     :if ([:typeof $1] = "array") do={
         :set res $1
-    } else={
-        :error "Need to call with an empty array as parameter [:toarray {\"passed\"=0; \"failed\"=0}]]"
     }
 
     :local RunTestCase do={

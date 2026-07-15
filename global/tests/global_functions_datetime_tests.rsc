@@ -18,11 +18,9 @@
     :global FormatSecondsShortTest
     :global FormatSecondsLongTest
 
-    :local res {"passed"=0; "failed"=0}
+    :local res [:toarray ""]
     :if ([:typeof $1] = "array") do={
         :set res $1
-    } else={
-        :error "Need to call with an empty array as parameter [:toarray {\"passed\"=0; \"failed\"=0}]]"
     }
 
     :put "\1B[35m=== STARTING ALL DATE AND TIME TESTS ===\1B[0m"
@@ -44,11 +42,9 @@
 }
 
 :set GetWeekdayTest do={
-    :local res {"passed"=0; "failed"=0}
+    :local res [:toarray ""]
     :if ([:typeof $1] = "array") do={
         :set res $1
-    } else={
-        :error "Need to call with an empty array as parameter [:toarray {\"passed\"=0; \"failed\"=0}]]"
     }
 
     :local RunTestCase do={
@@ -151,11 +147,9 @@
     :global FromUnixTimestamp
     :global ToUnixTimestamp
 
-    :local res {"passed"=0; "failed"=0}
+    :local res [:toarray ""]
     :if ([:typeof $1] = "array") do={
         :set res $1
-    } else={
-        :error "Need to call with an empty array as parameter [:toarray {\"passed\"=0; \"failed\"=0}]]"
     }
 
     :put "Starting GetCurrentDateTime runtime tests..."
@@ -186,11 +180,9 @@
 }
 
 :set ParseDateTimeTest do={
-    :local res {"passed"=0; "failed"=0}
+    :local res [:toarray ""]
     :if ([:typeof $1] = "array") do={
         :set res $1
-    } else={
-        :error "Need to call with an empty array as parameter [:toarray {\"passed\"=0; \"failed\"=0}]]"
     }
 
     :local RunTestCase do={
@@ -268,11 +260,9 @@
 }
 
 :set FromUnixTimestampTest do={
-    :local res {"passed"=0; "failed"=0}
+    :local res [:toarray ""]
     :if ([:typeof $1] = "array") do={
         :set res $1
-    } else={
-        :error "Need to call with an empty array as parameter [:toarray {\"passed\"=0; \"failed\"=0}]]"
     }
 
     :local RunTestCase do={
@@ -483,11 +473,9 @@
 }
 
 :set ToUnixTimestampTest do={
-    :local res {"passed"=0; "failed"=0}
+    :local res [:toarray ""]
     :if ([:typeof $1] = "array") do={
         :set res $1
-    } else={
-        :error "Need to call with an empty array as parameter [:toarray {\"passed\"=0; \"failed\"=0}]]"
     }
 
     :local RunTestCase do={
@@ -861,11 +849,9 @@
 }
 
 :set FormatSecondsLongTest do={
-    :local res {"passed"=0; "failed"=0}
+    :local res [:toarray ""]
     :if ([:typeof $1] = "array") do={
         :set res $1
-    } else={
-        :error "Need to call with an empty array as parameter [:toarray {\"passed\"=0; \"failed\"=0}]]"
     }
 
     :local RunTestCase do={
@@ -990,11 +976,9 @@
 }
 
 :set FormatSecondsShortTest do={
-    :local res {"passed"=0; "failed"=0}
+    :local res [:toarray ""]
     :if ([:typeof $1] = "array") do={
         :set res $1
-    } else={
-        :error "Need to call with an empty array as parameter [:toarray {\"passed\"=0; \"failed\"=0}]]"
     }
 
     :local RunTestCase do={
@@ -1043,11 +1027,9 @@
     :global FromUnixTimestamp
     :global ToUnixTimestamp
 
-    :local res {"passed"=0; "failed"=0}
+    :local res [:toarray ""]
     :if ([:typeof $1] = "array") do={
         :set res $1
-    } else={
-        :error "Need to call with an empty array as parameter [:toarray {\"passed\"=0; \"failed\"=0}]]"
     }
 
     :put "Starting GetUnixTimestamp runtime tests..."

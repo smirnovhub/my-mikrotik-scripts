@@ -4,11 +4,9 @@
 :set RunAllGlobalVarTests do={
     :global GlobalVarTest
 
-    :local res {"passed"=0; "failed"=0}
+    :local res [:toarray ""]
     :if ([:typeof $1] = "array") do={
         :set res $1
-    } else={
-        :error "Need to call with an empty array as parameter [:toarray {\"passed\"=0; \"failed\"=0}]]"
     }
 
     :put "\1B[35m=== STARTING ALL GLOBAL VAR TESTS ===\1B[0m"
@@ -29,11 +27,9 @@
     :global DecToChar
     :global IsPrintableStr
 
-    :local res {"passed"=0; "failed"=0}
+    :local res [:toarray ""]
     :if ([:typeof $1] = "array") do={
         :set res $1
-    } else={
-        :error "Need to call with an empty array as parameter [:toarray {\"passed\"=0; \"failed\"=0}]]"
     }
 
     # Helper function to validate results and update counters

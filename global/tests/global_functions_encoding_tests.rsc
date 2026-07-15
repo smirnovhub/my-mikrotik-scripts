@@ -10,11 +10,9 @@
     :global UrlEncodeTest
     :global UrlDecodeTest
 
-    :local res {"passed"=0; "failed"=0}
+    :local res [:toarray ""]
     :if ([:typeof $1] = "array") do={
         :set res $1
-    } else={
-        :error "Need to call with an empty array as parameter [:toarray {\"passed\"=0; \"failed\"=0}]]"
     }
 
     :put "\1B[35m=== STARTING ALL ENCODING TESTS ===\1B[0m"
@@ -32,11 +30,9 @@
 :set Base64EncodeTest do={
     :global Base64Encode
 
-    :local res {"passed"=0; "failed"=0}
+    :local res [:toarray ""]
     :if ([:typeof $1] = "array") do={
         :set res $1
-    } else={
-        :error "Need to call with an empty array as parameter [:toarray {\"passed\"=0; \"failed\"=0}]]"
     }
 
     :local RunTestCase do={
@@ -121,11 +117,9 @@
     :global Base64Encode
     :global Base64Decode
 
-    :local res {"passed"=0; "failed"=0}
+    :local res [:toarray ""]
     :if ([:typeof $1] = "array") do={
         :set res $1
-    } else={
-        :error "Need to call with an empty array as parameter [:toarray {\"passed\"=0; \"failed\"=0}]]"
     }
 
     :local RunTestCase do={
@@ -339,11 +333,9 @@
 :set UrlEncodeTest do={
     :global UrlEncode
 
-    :local res {"passed"=0; "failed"=0}
+    :local res [:toarray ""]
     :if ([:typeof $1] = "array") do={
         :set res $1
-    } else={
-        :error "Need to call with an empty array as parameter [:toarray {\"passed\"=0; \"failed\"=0}]]"
     }
 
     :local RunTestCase do={
@@ -428,11 +420,9 @@
     :global UrlDecode
     :global IsPrintableStr
 
-    :local res {"passed"=0; "failed"=0}
+    :local res [:toarray ""]
     :if ([:typeof $1] = "array") do={
         :set res $1
-    } else={
-        :error "Need to call with an empty array as parameter [:toarray {\"passed\"=0; \"failed\"=0}]]"
     }
 
     :local RunTestCase do={

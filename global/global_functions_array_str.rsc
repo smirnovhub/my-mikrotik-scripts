@@ -759,14 +759,14 @@
 
     # Check ASCII control characters (0x00-0x1F)
     :for i from=0 to=31 do={
-        :if ([:len [:find $input [$DecToChar $i]]] > 0) do={
+        :if ([:find $input [$DecToChar $i]] >= 0) do={
             :return false
         }
     }
 
     # Check DEL and extended characters (0x7F-0xFF)
     :for i from=127 to=255 do={
-        :if ([:len [:find $input [$DecToChar $i]]] > 0) do={
+        :if ([:find $input [$DecToChar $i]] >= 0) do={
             :return false
         }
     }

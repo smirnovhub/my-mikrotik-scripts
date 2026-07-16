@@ -16,6 +16,7 @@
 :global DecToCharTest
 :global CompareStrTest
 :global IsPrintableStrTest
+:global ExtractFileNameTest
 
 :set RunAllArrayStrTests do={
     :global ParseKeyValueStoreTest
@@ -35,6 +36,7 @@
     :global DecToCharTest
     :global CompareStrTest
     :global IsPrintableStrTest
+    :global ExtractFileNameTest
 
     :put "\1B[35m=== STARTING ALL ARRAY AND STRING TESTS ===\1B[0m"
 
@@ -61,6 +63,7 @@
     :set res [$ParseKeyValueStoreTest $res]
     :set res [$RandomTest $res]
     :set res [$IsPrintableStrTest $res]
+    :set res [$ExtractFileNameTest $res]
 
     :put "\1B[35m=== ALL ARRAY AND STRING TESTS COMPLETED ===\1B[0m"
 
@@ -1395,6 +1398,131 @@
     :set res [$RunTestCase $res ("CleanText" . [$DecToChar 127]) false "String containing Delete character (DEL, 0x7F)"]
     :set res [$RunTestCase $res ([$DecToChar 128] . "Extended") false "Boundary extended ASCII character (0x80)"]
     :set res [$RunTestCase $res ("BadChar_" . [$DecToChar 255]) false "Max ASCII range character (0xFF)"]
+
+    :put "Testing completed."
+    :return $res
+}
+
+:set ExtractFileNameTest do={
+    :local res [:toarray ""]
+    :if ([:typeof $1] = "array") do={
+        :set res $1
+    }
+
+    :local RunTestCase do={
+        # Workaround for the MikroTik RouterOS interpreter bug (phantom execution)
+        :if ([:len $0] = 0) do={
+            :return $1
+        }
+
+        :local state [:toarray $1]
+        :local actual $2
+        :local expected $3
+        :local name [:tostr $4]
+
+        # Convert both to string to avoid RouterOS type mismatch bugs
+        :if ([:tostr $actual] = [:tostr $expected]) do={
+            :put ("\1B[32m  [PASS]\1B[0m " . $name . " -> '" . [:tostr $actual] . "'")
+            :set ($state->"passed") (($state->"passed") + 1)
+        } else={
+            :put ("\1B[31m  [FAIL]\1B[0m " . $name . " | Expected: '" . [:tostr $expected] . "', Got: '" . [:tostr $actual] . "'")
+            :set ($state->"failed") (($state->"failed") + 1)
+        }
+
+        :return $state
+    }
+
+    :put "Starting ExtractFileName tests..."
+    :global ExtractFileName
+
+    # --- Test Case 1: Standard path with extension (Strip extension) ---
+    :local r1 [$ExtractFileName "flash/backups/router-config.rsc"]
+    :set res [$RunTestCase $res $r1 "router-config" "Standard path with extension (Strip extension)"]
+
+    # --- Test Case 2: Standard path with extension (Keep extension) ---
+    :local r2 [$ExtractFileName "flash/backups/router-config.rsc" true]
+    :set res [$RunTestCase $res $r2 "router-config.rsc" "Standard path with extension (Keep extension)"]
+
+    # --- Test Case 3: File in root directory (Strip extension) ---
+    :local r3 [$ExtractFileName "system.backup"]
+    :set res [$RunTestCase $res $r3 "system" "File in root (Strip extension)"]
+
+    # --- Test Case 4: File in root directory (Keep extension) ---
+    :local r4 [$ExtractFileName "system.backup" true]
+    :set res [$RunTestCase $res $r4 "system.backup" "File in root (Keep extension)"]
+
+    # --- Test Case 5: Path with no extension ---
+    :local r5 [$ExtractFileName "flash/backups/my-file"]
+    :set res [$RunTestCase $res $r5 "my-file" "Path with no extension"]
+
+    # --- Test Case 6: Dot inside directory name, but no extension in file ---
+    # The dot is in the folder name, the actual file 'script' has no extension.
+    :local r6 [$ExtractFileName "flash.backups/my-folder/script"]
+    :set res [$RunTestCase $res $r6 "script" "Dot in directory name, file has no extension"]
+
+    # --- Test Case 7: Dot inside directory name, and file has extension ---
+    :local r7 [$ExtractFileName "flash.backups/my-folder/script.txt"]
+    :set res [$RunTestCase $res $r7 "script" "Dot in directory name, file has extension (Strip)"]
+
+    # --- Test Case 8: File starting with dot (Hidden style) ---
+    :local r8 [$ExtractFileName "flash/configs/.env"]
+    :set res [$RunTestCase $res $r8 "" "Hidden style file starting with dot (Strip extension)"]
+
+    # --- Test Case 9: File starting with dot (Hidden style, Keep extension) ---
+    :local r9 [$ExtractFileName "flash/configs/.env" true]
+    :set res [$RunTestCase $res $r9 ".env" "Hidden style file starting with dot (Keep extension)"]
+
+    # --- File with multiple dots (Strip extension) ---
+    :local r10 [$ExtractFileName "flash/archive/router.config.backup"]
+    :set res [$RunTestCase $res $r10 "router.config" "Multiple dots in file name (Strip extension)"]
+
+    # --- File with multiple dots (Keep extension) ---
+    :local r11 [$ExtractFileName "flash/archive/router.config.backup" true]
+    :set res [$RunTestCase $res $r11 "router.config.backup" "Multiple dots in file name (Keep extension)"]
+
+    # --- File ending with a dot ---
+    :local r12 [$ExtractFileName "flash/test/file."]
+    :set res [$RunTestCase $res $r12 "file" "File ending with dot"]
+
+    # --- File consisting only of an extension separator ---
+    :local r13 [$ExtractFileName "."]
+    :set res [$RunTestCase $res $r13 "" "Single dot as file name"]
+
+    # --- File consisting of two dots ---
+    :local r14 [$ExtractFileName ".."]
+    :set res [$RunTestCase $res $r14 "" "Double dot as file name"]
+
+    # --- Empty path ---
+    :local r15 [$ExtractFileName ""]
+    :set res [$RunTestCase $res $r15 "" "Empty path"]
+
+    # --- Path ending with slash ---
+    :local r16 [$ExtractFileName "flash/backups/"]
+    :set res [$RunTestCase $res $r16 "" "Path ending with slash"]
+
+    # --- Root slash only ---
+    :local r17 [$ExtractFileName "/"]
+    :set res [$RunTestCase $res $r17 "" "Root slash only"]
+
+    # --- Multiple consecutive slashes ---
+    :local r18 [$ExtractFileName "flash//configs///script.rsc"]
+    :set res [$RunTestCase $res $r18 "script" "Multiple consecutive slashes"]
+
+    # --- Hidden file with multiple dots ---
+    :local r19 [$ExtractFileName ".config.json"]
+    :set res [$RunTestCase $res $r19 ".config" "Hidden file with multiple dots"]
+
+    # --- Directory names containing many dots ---
+    :local r20 [$ExtractFileName "dir.v1/archive.v2/file.txt"]
+    :set res [$RunTestCase $res $r20 "file" "Directories containing dots"]
+
+    # --- File without path and without extension ---
+    :local r21 [$ExtractFileName "README"]
+    :set res [$RunTestCase $res $r21 "README" "Root file without extension"]
+
+    # --- File with trailing spaces ---
+    :local r22 [$ExtractFileName "flash/file.txt "]
+    :set res [$RunTestCase $res $r22 "file" "Trailing spaces in file name"]
 
     :put "Testing completed."
     :return $res

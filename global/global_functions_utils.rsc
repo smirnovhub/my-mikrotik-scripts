@@ -34,6 +34,7 @@
 :global GetArgOrDefault
 :global GetArgOrExit
 :global GetHttpFileContent
+:global GetHttpFileContentWithRetry
 :global SilentPing
 :global RunScript
 :global ExportConfiguration
@@ -201,20 +202,19 @@
 # Purpose: Download and return the content of a file from a specified HTTP URL.
 # Parameters:
 #   $1 - The target URL of the file to fetch (string, required)
-#   $2 - Optional TCP port number for the HTTP request (default is 80)
 # Returns: The downloaded file content as a string; returns an empty string if an error occurs.
 :set GetHttpFileContent do={
   :local url $1
 
-  :local port 80
-  :if ([:typeof $2] != "nothing") do={
-    :set port [:tonum $2]
+  :if ([:len $url] < 7) do={
+    :log warning "Url is empty or too short"
+    :return ""
   }
 
   :local result [:toarray ""]
 
   :do {
-    :set result [/tool fetch url="$url" mode=http port=$port output=user as-value]
+    :set result [/tool fetch url="$url" output=user as-value]
   } on-error={
     :log error "An error occurred while downloading file: $url"
     :return ""
@@ -223,11 +223,71 @@
   :local maxFileSize 64512
 
   :local str ($result->"data")
-  :if ([:len $str] = $maxFileSize) do={
+  :if ([:len $str] >= $maxFileSize) do={
     :log warning "File is too big. Max file size is $maxFileSize bytes: $url "
   }
 
   :return $str
+}
+
+# Purpose: Fetches HTTP file content with automatic retries and incremental delay.
+# Parameters:
+#   $1 - Target URL
+#   $2 - Maximum retry attempts (optional, default: 3)
+# Returns: The downloaded file content as a string or empty string if all attempts failed
+:set GetHttpFileContentWithRetry do={
+  :local url $1
+
+  :if ([:len $url] < 7) do={
+    :log warning "Url is empty or too short"
+    :return ""
+  }
+
+  # Default to 3 retries if not specified
+  :local retries 3
+  :if ([:typeof $2] != "nothing") do={
+    :set retries [:tonum $2]
+  }
+
+  :if ($retries < 1) do={
+    :set retries 1
+  }
+
+  # Delay between retries in seconds
+  :local retryDelay 1
+
+  :local result ""
+  :local success false
+
+  :local maxFileSize 64512
+
+  :for i from=1 to=$retries do={
+    :do {
+      # Attempt to fetch the file content
+      :set result [/tool fetch url="$url" output=user as-value]
+      :set success true
+    } on-error={
+      :log warning "Attempt $i of $retries failed to download file: $url"
+      :if ($i < $retries) do={
+        :delay $retryDelay
+        :set retryDelay ($retryDelay + 1)
+      }
+    }
+
+    # Exit loop early if download succeeded
+    :if ($success) do={
+      :local str ($result->"data")
+
+      :if ([:len $str] >= $maxFileSize) do={
+        :log warning "File is too big. Max file size is $maxFileSize bytes: $url"
+      }
+
+      :return $str
+    }
+  }
+
+  :log error "All $retries attempts failed for: $url"
+  :return ""
 }
 
 # Purpose: Perform "silent ping" operations in RouterOS to either:

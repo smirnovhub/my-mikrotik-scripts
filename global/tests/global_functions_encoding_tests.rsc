@@ -445,12 +445,12 @@
         :if (![$IsPrintableStr $inputDisplay]) do={
             :set inputDisplay "<binary string>"
         }
-        
+
         :local actualDisplay $actual
         :if (![$IsPrintableStr $actualDisplay]) do={
             :set actualDisplay "<binary string>"
         }
-        
+
         :local expectedDisplay $expected
         :if (![$IsPrintableStr $expectedDisplay]) do={
             :set expectedDisplay "<binary string>"

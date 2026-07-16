@@ -1,5 +1,6 @@
 :global RunAllArrayStrTests
 :global ParseKeyValueStoreTest
+:global RandomTest
 :global HexToNumTest
 :global MapArrayTest
 :global JoinArrayTest
@@ -18,6 +19,7 @@
 
 :set RunAllArrayStrTests do={
     :global ParseKeyValueStoreTest
+    :global RandomTest
     :global HexToNumTest
     :global MapArrayTest
     :global JoinArrayTest
@@ -57,10 +59,11 @@
     :set res [$RecursiveMergeSortStrTest $res]
     :set res [$DivideIntAndRoundTest $res]
     :set res [$ParseKeyValueStoreTest $res]
+    :set res [$RandomTest $res]
     :set res [$IsPrintableStrTest $res]
 
     :put "\1B[35m=== ALL ARRAY AND STRING TESTS COMPLETED ===\1B[0m"
-    
+
     :return $res
 }
 
@@ -166,6 +169,160 @@
     :return $res
 }
 
+:set RandomTest do={
+    :local res [:toarray ""]
+    :if ([:typeof $1] = "array") do={
+        :set res $1
+    }
+
+    :local RunTestCase do={
+        # Workaround for the MikroTik RouterOS interpreter bug (phantom execution)
+        :if ([:len $0] = 0) do={
+            :return $1
+        }
+
+        :local state [:toarray $1]
+        :local actual $2
+        :local expected $3
+        :local name [:tostr $4]
+
+        # Convert both to string to avoid RouterOS boolean/numeric type comparison issues
+        :if ([:tostr $actual] = [:tostr $expected]) do={
+            :put ("\1B[32m  [PASS]\1B[0m " . $name . " -> " . [:tostr $actual])
+            :set ($state->"passed") (($state->"passed") + 1)
+        } else={
+            :put ("\1B[31m  [FAIL]\1B[0m " . $name . " | Expected: " . [:tostr $expected] . ", Got: " . [:tostr $actual])
+            :set ($state->"failed") (($state->"failed") + 1)
+        }
+
+        :return $state
+    }
+
+    :put "Starting Randomness & Generation tests..."
+    :global GetRandom20CharHex
+    :global GetRandomNumber
+    :global IsPrintableStr
+
+    # --- Part 1: GetRandom20CharHex Tests ---
+    :local hexStr [$GetRandom20CharHex]
+    :local hexStrLen [:len $hexStr]
+
+    # Test 1: Verify exact string length
+    :set res [$RunTestCase $res $hexStrLen 20 "Verify random hex string length is exactly 20 chars"]
+
+    :local lenOk true
+
+    :for i from=1 to=100 do={
+        :local s [$GetRandom20CharHex]
+
+        :if ([:len $s] != 20) do={
+            :set lenOk false
+        }
+    }
+
+    :set res [$RunTestCase $res $lenOk true "Verify 100 generated hex strings have correct length"]
+
+    # Test 2: Verify it contains only printable characters
+    :local isPrintable [$IsPrintableStr $hexStr]
+    :set res [$RunTestCase $res $isPrintable true "Verify random hex string consists only of printable characters"]
+
+    # Test 3: Uniqueness check (two consecutive calls must not yield the exact same string)
+    :local hexStr2 [$GetRandom20CharHex]
+    :local isUnique ($hexStr != $hexStr2)
+    :set res [$RunTestCase $res $isUnique true "Verify consecutive SCEP OTP calls produce unique tokens"]
+
+    :local generated [:toarray ""]
+    :local unique true
+
+    :for i from=1 to=100 do={
+        :local s [$GetRandom20CharHex]
+
+        :if ([:typeof ($generated->$s)] != "nothing") do={
+            :set unique false
+        }
+
+        :set ($generated->$s) true
+    }
+
+    :set res [$RunTestCase $res $unique true "Verify no duplicate hex strings in 100 generations"]
+
+    # Test 4: Hexadecimal character validation
+    :local validHex "0123456789abcdefABCDEF"
+    :local isStrictHex true
+    :for i from=0 to=($hexStrLen - 1) do={
+        :local char [:pick $hexStr $i]
+        :if ([:find $validHex $char] < 0) do={
+            :set isStrictHex false
+        }
+    }
+    :set res [$RunTestCase $res $isStrictHex true "Verify random string contains only valid hexadecimal characters"]
+
+    # --- Part 2: GetRandomNumber Bounds Tests ---
+
+    # Test 4: Default behavior (no arguments passed)
+    :local numDefault [$GetRandomNumber]
+    :local withinDefaultRange ($numDefault >= 0 && $numDefault <= 4294967295)
+    :set res [$RunTestCase $res $withinDefaultRange true "Verify default random number is within 32-bit unsigned range"]
+
+    # Test 5: Custom maximum boundary (range 0 to 9)
+    :local maxTen 10
+    :local numTen [$GetRandomNumber ($maxTen - 1)]
+    :local withinTenRange ($numTen >= 0 && $numTen < $maxTen)
+    :set res [$RunTestCase $res $withinTenRange true "Verify random number is within custom range [0, 9]"]
+
+    # Test 6: Extremely narrow boundary (range 0 to 1)
+    :local maxTwo 2
+    :local numTwo [$GetRandomNumber ($maxTwo - 1)]
+    :local withinTwoRange ($numTwo >= 0 && $numTwo < $maxTwo)
+    :set res [$RunTestCase $res $withinTwoRange true "Verify binary random boundary [0, 1]"]
+    :set res [$RunTestCase $res ([$GetRandomNumber 0]) 0 "Verify max=0 always returns 0"]
+
+    # --- Part 3: Distribution & Multi-run Validation ---
+    # Running a loop to ensure dynamic changes and boundaries hold over multiple iterations
+    :local distributionPass true
+    :for i from=1 to=50 do={
+        :local val [$GetRandomNumber 99]
+        :if ($val < 0 || $val > 99) do={
+            :set distributionPass false
+        }
+    }
+    :set res [$RunTestCase $res $distributionPass true "Verify 50 consecutive iterations respect bounds [0, 99]"]
+
+    # Test: Verify approximate uniform distribution for range [0,9]
+    :local buckets [:toarray ""]
+    :for i from=0 to=9 do={
+        :set ($buckets->$i) 0
+    }
+
+    :local samples 1000
+
+    :for i from=1 to=$samples do={
+        :local value [$GetRandomNumber 9]
+        :set ($buckets->$value) (($buckets->$value) + 1)
+    }
+
+    :local distributionOk true
+
+    :for i from=0 to=9 do={
+        :local count ($buckets->$i)
+
+        :if (($count < 60) || ($count > 140)) do={
+            :set distributionOk false
+        }
+    }
+
+    :set res [$RunTestCase $res $distributionOk true "Verify approximate uniform distribution over range [0,9]"]
+
+    # Optional: print histogram
+    :put "Distribution:"
+    :for i from=0 to=9 do={
+        :put ("  " . $i . ": " . ($buckets->$i))
+    }
+
+    :put "Testing completed."
+    :return $res
+}
+
 :set HexToNumTest do={
     :local res [:toarray ""]
     :if ([:typeof $1] = "array") do={
@@ -194,7 +351,7 @@
             :put ("\1B[31m  [FAIL]\1B[0m " . $name . ": '" . $input . "' | Expected: " . $expected . ", Got: " . $actual)
             :set ($state->"failed") (($state->"failed") + 1)
         }
-        
+
         :return $state
     }
 
@@ -270,10 +427,10 @@
         :local name [:tostr $5]
 
         :local actual [$MapArray $input $transformFunc]
-        
+
         # Array comparison logic since RouterOS does not support direct array1 = array2
         :local isMatch true
-        
+
         # Verify sizes match first
         :if ([:len $actual] != [:len $expected]) do={
             :set isMatch false
@@ -301,7 +458,7 @@
             :put ("\1B[31m  [FAIL]\1B[0m " . $name . " | Expected: " . [:tostr $expected] . ", Got: " . [:tostr $actual])
             :set ($state->"failed") (($state->"failed") + 1)
         }
-        
+
         :return $state
     }
 
@@ -352,6 +509,15 @@
     # Testing map execution with huge numbers and special string formats
     :local clearValue do={ :return 0 }
     :set res [$RunTestCase $res ({"maxInt"=2147483647; "hexStr"="7"}) $clearValue ({"maxInt"=0; "hexStr"=0}) "Reset complex or large value formats to zero"]
+
+    # --- Simultaneous Key and Value Usage ---
+    # Testing that the transformation function can correctly access and combine
+    # both the current key ($n) and its corresponding value ($v) during mapping
+    :local combine do={
+        :return ($n . "=" . $v)
+    }
+
+    :set res [$RunTestCase $res ({a=10; b=20}) $combine ({a="a=10"; b="b=20"}) "Use both key and value"]
 
     :put "Testing completed."
     :return $res
@@ -1202,7 +1368,7 @@
             :put ("\1B[31m  [FAIL]\1B[0m " . $name . " | Expected: " . [:tostr $expected] . ", Got: " . [:tostr $actual])
             :set ($state->"failed") (($state->"failed") + 1)
         }
-        
+
         :return $state
     }
 

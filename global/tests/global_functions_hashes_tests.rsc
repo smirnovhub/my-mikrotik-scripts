@@ -14,7 +14,7 @@
     :set res [$GetMd5SumTest $res]
 
     :put "\1B[35m=== ALL HASHES TESTS COMPLETED ===\1B[0m"
-    
+
     :return $res
 }
 

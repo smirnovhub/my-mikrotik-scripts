@@ -101,7 +101,7 @@
         :if ([:typeof [/system ntp client get last-adjustment]] = "time") do={
             :return true
         }
-    
+
         :return false
     } on-error={
       # RouterOS 7.x

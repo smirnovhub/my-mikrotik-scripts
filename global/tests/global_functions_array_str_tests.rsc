@@ -1,5 +1,7 @@
 :global RunAllArrayStrTests
 :global ParseKeyValueStoreTest
+:global HexToNumTest
+:global MapArrayTest
 :global JoinArrayTest
 :global SplitStrTest
 :global TrimStrTest
@@ -12,9 +14,12 @@
 :global HexToCharTest
 :global DecToCharTest
 :global CompareStrTest
+:global IsPrintableStrTest
 
 :set RunAllArrayStrTests do={
     :global ParseKeyValueStoreTest
+    :global HexToNumTest
+    :global MapArrayTest
     :global JoinArrayTest
     :global SplitStrTest
     :global TrimStrTest
@@ -27,6 +32,7 @@
     :global HexToCharTest
     :global DecToCharTest
     :global CompareStrTest
+    :global IsPrintableStrTest
 
     :put "\1B[35m=== STARTING ALL ARRAY AND STRING TESTS ===\1B[0m"
 
@@ -38,6 +44,8 @@
     # Execute all test suites sequentially, passing and updating the same accumulator array
     :set res [$TrimStrTest $res]
     :set res [$SplitStrTest $res]
+    :set res [$HexToNumTest $res]
+    :set res [$MapArrayTest $res]
     :set res [$JoinArrayTest $res]
     :set res [$ReplaceStrTest $res]
     :set res [$ToUpperCaseTest $res]
@@ -49,6 +57,7 @@
     :set res [$RecursiveMergeSortStrTest $res]
     :set res [$DivideIntAndRoundTest $res]
     :set res [$ParseKeyValueStoreTest $res]
+    :set res [$IsPrintableStrTest $res]
 
     :put "\1B[35m=== ALL ARRAY AND STRING TESTS COMPLETED ===\1B[0m"
     
@@ -152,6 +161,197 @@
 
     :local onlyEmptyArgs {""; ""; ""}
     :set res [$RunTestCase $res $onlyEmptyArgs nothing "" "Array containing only empty strings"]
+
+    :put "Testing completed."
+    :return $res
+}
+
+:set HexToNumTest do={
+    :local res [:toarray ""]
+    :if ([:typeof $1] = "array") do={
+        :set res $1
+    }
+
+    :local RunTestCase do={
+        :global HexToNum
+
+        # Workaround for the MikroTik RouterOS interpreter bug (phantom execution)
+        :if ([:len $0] = 0) do={
+            :return $1
+        }
+
+        :local state [:toarray $1]
+        :local input [:tostr $2]
+        :local expected [:tonum $3]
+        :local name [:tostr $4]
+
+        :local actual [$HexToNum $input]
+
+        :if ($actual = $expected) do={
+            :put ("\1B[32m  [PASS]\1B[0m " . $name . ": '" . $input . "' -> " . $actual)
+            :set ($state->"passed") (($state->"passed") + 1)
+        } else={
+            :put ("\1B[31m  [FAIL]\1B[0m " . $name . ": '" . $input . "' | Expected: " . $expected . ", Got: " . $actual)
+            :set ($state->"failed") (($state->"failed") + 1)
+        }
+        
+        :return $state
+    }
+
+    :put "Starting HexToNum tests..."
+
+    # --- Basic Single Digit Tests ---
+    :set res [$RunTestCase $res "0" 0 "Zero case"]
+    :set res [$RunTestCase $res "5" 5 "Single low digit"]
+    :set res [$RunTestCase $res "9" 9 "Single high digit"]
+
+    # --- Letter Digits (Case Sensitivity) ---
+    :set res [$RunTestCase $res "a" 10 "Lowercase A"]
+    :set res [$RunTestCase $res "A" 10 "Uppercase A"]
+    :set res [$RunTestCase $res "f" 15 "Lowercase F"]
+    :set res [$RunTestCase $res "F" 15 "Uppercase F"]
+
+    # --- Multi-digit Numbers ---
+    :set res [$RunTestCase $res "10" 16 "Hex sixteen"]
+    :set res [$RunTestCase $res "1A" 26 "Mixed digits and uppercase"]
+    :set res [$RunTestCase $res "ff" 255 "Max byte lowercase"]
+    :set res [$RunTestCase $res "FF" 255 "Max byte uppercase"]
+
+    # --- Complex Mixed Case & Large Values ---
+    :set res [$RunTestCase $res "7aB4" 31412 "Mixed case complex string"]
+    :set res [$RunTestCase $res "1000" 4096 "Power of sixteen"]
+    :set res [$RunTestCase $res "FFFF" 65535 "Two byte max value"]
+
+    # --- Edge Cases ---
+    :set res [$RunTestCase $res "" 0 "Empty input string"]
+
+    # --- Leading Zeros ---
+    :set res [$RunTestCase $res "000" 0 "Multiple zeros"]
+    :set res [$RunTestCase $res "00FF" 255 "Leading zeros with value"]
+    :set res [$RunTestCase $res "01" 1 "Single leading zero"]
+
+    # --- Large Values (32-bit & 64-bit Boundaries) ---
+    :set res [$RunTestCase $res "7FFFFFFF" 2147483647 "Max signed 32-bit integer"]
+    :set res [$RunTestCase $res "80000000" 2147483648 "Boundary above 32-bit signed"]
+    :set res [$RunTestCase $res "FFFFFFFF" 4294967295 "Max unsigned 32-bit integer"]
+    :set res [$RunTestCase $res "100000000" 4294967296 "Value requiring 64-bit storage"]
+
+    # --- Alternative Input Formats (Type Conversion) ---
+    :set res [$RunTestCase $res "0x1A" 26 "Prefix handling check (Note: if function does not strip 0x, actual value will be wrong)"]
+
+    # --- Invalid Hex Characters (Robustness Check) ---
+    # Note: Depending on the HexToNum logic, invalid characters like 'G' or 'Z' 
+    # might cause fallback behavior, negative values, or return 0.
+    :set res [$RunTestCase $res "G" 0 "Invalid single letter"]
+    :set res [$RunTestCase $res "1Z" 16 "Invalid trailing character"]
+
+    :put "Testing completed."
+    :return $res
+}
+
+:set MapArrayTest do={
+    :local res [:toarray ""]
+    :if ([:typeof $1] = "array") do={
+        :set res $1
+    }
+
+    :local RunTestCase do={
+        :global MapArray
+
+        # Workaround for the MikroTik RouterOS interpreter bug (phantom execution)
+        :if ([:len $0] = 0) do={
+            :return $1
+        }
+
+        :local state [:toarray $1]
+        :local input [:toarray $2]
+        :local transformFunc $3
+        :local expected [:toarray $4]
+        :local name [:tostr $5]
+
+        :local actual [$MapArray $input $transformFunc]
+        
+        # Array comparison logic since RouterOS does not support direct array1 = array2
+        :local isMatch true
+        
+        # Verify sizes match first
+        :if ([:len $actual] != [:len $expected]) do={
+            :set isMatch false
+        } else={
+            # Check every key and value from expected array inside actual array
+            :foreach k,expectedVal in=$expected do={
+                :local actualVal ($actual->$k)
+                :if ($actualVal != $expectedVal) do={
+                    :set isMatch false
+                }
+            }
+            # Double check for extra keys in actual array
+            :foreach k,actualVal in=$actual do={
+                :local expectedVal ($expected->$k)
+                :if ($expectedVal != $actualVal) do={
+                    :set isMatch false
+                }
+            }
+        }
+
+        :if ($isMatch = true) do={
+            :put ("\1B[32m  [PASS]\1B[0m " . $name . ": Input size " . [:len $input] . " processed successfully")
+            :set ($state->"passed") (($state->"passed") + 1)
+        } else={
+            :put ("\1B[31m  [FAIL]\1B[0m " . $name . " | Expected: " . [:tostr $expected] . ", Got: " . [:tostr $actual])
+            :set ($state->"failed") (($state->"failed") + 1)
+        }
+        
+        :return $state
+    }
+
+    :put "Starting MapArray tests..."
+
+    # --- Helper Transformation Functions for Testing ---
+    :local square do={ :return ($v * $v) }
+    :local identity do={ :return $v }
+    :local useKeyOnly do={ :return ("key_" . $n) }
+    :local concatString do={ :return ($v . "_suffix") }
+
+    # --- Basic Indexed Array Tests ---
+    :set res [$RunTestCase $res ({7; 5; 10}) $square ({49; 25; 100}) "Square numbers in indexed array"]
+    :set res [$RunTestCase $res ({"apple"; "banana"}) $concatString ({"apple_suffix"; "banana_suffix"}) "Concatenate strings in indexed array"]
+
+    # --- Associative Array (Map) Tests ---
+    :set res [$RunTestCase $res ({a=4; b=7; c=15}) $square ({a=16; b=49; c=225}) "Square values in associative map"]
+    :set res [$RunTestCase $res ({host="mikrotik"; ip="10.0.0.1"}) $concatString ({host="mikrotik_suffix"; ip="10.0.0.1_suffix"}) "Modify string values in associative map"]
+
+    # --- Tests Using the Key Parameter ($n) ---
+    :set res [$RunTestCase $res ({first=""; second=""}) $useKeyOnly ({first="key_first"; second="key_second"}) "Transform values using their array keys"]
+
+    # --- Edge Cases ---
+    :set res [$RunTestCase $res ({}) $square ({}) "Empty array input"]
+    :set res [$RunTestCase $res ({x=10}) $identity ({x=10}) "Single element array with identity function"]
+
+    # --- Mixed Types in Array ---
+    # Testing how the function handles an array containing different types simultaneously
+    :local stringifyAll do={ :return [:tostr $v] }
+    :set res [$RunTestCase $res ({num=42; text="status"; logic=true}) $stringifyAll ({num="42"; text="status"; logic="true"}) "Convert mixed data types to strings"]
+
+    # --- Boolean Inversion ---
+    # Testing logical inversion of boolean values within a map
+    :local invertBool do={ :return (!$v) }
+    :set res [$RunTestCase $res ({up=true; down=false; active=true}) $invertBool ({up=false; down=true; active=false}) "Invert boolean states"]
+
+    # --- Numeric Offset Modification ---
+    # Testing mathematical adjustments (subtraction/addition) on metrics
+    :local decrementOffset do={ :return ($v - 1) }
+    :set res [$RunTestCase $res ({port1=81; port2=82; port3=444}) $decrementOffset ({port1=80; port2=81; port3=443}) "Apply negative offset to port numbers"]
+
+    # --- Numeric Keys Handling ---
+    # Testing that keys explicitly defined as numbers are processed correctly without being converted or lost
+    :local doubleValue do={ :return ($v * 2) }
+    :set res [$RunTestCase $res ({10=5; 20=15}) $doubleValue ({10=10; 20=30}) "Process map with explicitly numeric keys"]
+
+    # --- Extreme Values Handling ---
+    # Testing map execution with huge numbers and special string formats
+    :local clearValue do={ :return 0 }
+    :set res [$RunTestCase $res ({"maxInt"=2147483647; "hexStr"="7"}) $clearValue ({"maxInt"=0; "hexStr"=0}) "Reset complex or large value formats to zero"]
 
     :put "Testing completed."
     :return $res
@@ -969,6 +1169,66 @@
     :set res [$RunTestCase $res "abc" "abc " -1 "String vs string with trailing space"]
     :set res [$RunTestCase $res "abc!" "abc?" -1 "Special chars (! is 33, ? is 63)"]
     :set res [$RunTestCase $res "abc" "abc_def" -1 "String vs string with underscore"]
+
+    :put "Testing completed."
+    :return $res
+}
+
+:set IsPrintableStrTest do={
+    :local res [:toarray ""]
+    :if ([:typeof $1] = "array") do={
+        :set res $1
+    }
+
+    :local RunTestCase do={
+        :global IsPrintableStr
+
+        # Workaround for the MikroTik RouterOS interpreter bug (phantom execution)
+        :if ([:len $0] = 0) do={
+            :return $1
+        }
+
+        :local state [:toarray $1]
+        :local input [:tostr $2]
+        :local expected $3
+        :local name [:tostr $4]
+
+        :local actual [$IsPrintableStr $input]
+
+        :if ([:tostr $actual] = [:tostr $expected]) do={
+            :put ("\1B[32m  [PASS]\1B[0m " . $name . " -> " . [:tostr $actual])
+            :set ($state->"passed") (($state->"passed") + 1)
+        } else={
+            :put ("\1B[31m  [FAIL]\1B[0m " . $name . " | Expected: " . [:tostr $expected] . ", Got: " . [:tostr $actual])
+            :set ($state->"failed") (($state->"failed") + 1)
+        }
+        
+        :return $state
+    }
+
+    :put "Starting IsPrintableStr tests..."
+    :global DecToChar
+
+    # --- Standard Printable Strings ---
+    :set res [$RunTestCase $res ("Hello World") true "Standard text with space"]
+    :set res [$RunTestCase $res ("RouterOS-123!") true "Alphanumeric and standard punctuation"]
+    :set res [$RunTestCase $res ("~`@#\$%^&*()_+{}|:<>?-=[]\\;',./") true "All standard keyboard symbols"]
+
+    # --- Edge Cases (Empty and Short) ---
+    :set res [$RunTestCase $res ("") true "Empty string is technically free of control characters"]
+    :set res [$RunTestCase $res ("A") true "Single printable character"]
+
+    # --- Low Control Characters (0x00 - 0x1F) ---
+    :set res [$RunTestCase $res ("Line1" . [$DecToChar 10] . "Line2") false "String containing Line Feed (LF, 0x0A)"]
+    :set res [$RunTestCase $res ("Data" . [$DecToChar 13]) false "String ending with Carriage Return (CR, 0x0D)"]
+    :set res [$RunTestCase $res ("Text" . [$DecToChar 9] . "Aligned") false "String containing Tab character (0x09)"]
+    :set res [$RunTestCase $res ([$DecToChar 0] . "NullStart") false "String starting with Null character (0x00)"]
+    :set res [$RunTestCase $res ([$DecToChar 31]) false "Boundary low control character (0x1F)"]
+
+    # --- High Control and Extended Characters (0x7F - 0xFF) ---
+    :set res [$RunTestCase $res ("CleanText" . [$DecToChar 127]) false "String containing Delete character (DEL, 0x7F)"]
+    :set res [$RunTestCase $res ([$DecToChar 128] . "Extended") false "Boundary extended ASCII character (0x80)"]
+    :set res [$RunTestCase $res ("BadChar_" . [$DecToChar 255]) false "Max ASCII range character (0xFF)"]
 
     :put "Testing completed."
     :return $res

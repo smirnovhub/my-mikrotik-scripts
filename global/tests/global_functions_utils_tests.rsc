@@ -3,12 +3,14 @@
 :global GetArgOrExitTest
 :global SilentPingTest
 :global RunScriptTest
+:global ExportConfigurationTest
 
 :set RunAllUtilsTests do={
     :global GetArgOrDefaultTest
     :global GetArgOrExitTest
     :global SilentPingTest
     :global RunScriptTest
+    :global ExportConfigurationTest
 
     :local res [:toarray ""]
     :if ([:typeof $1] = "array") do={
@@ -21,6 +23,7 @@
     :set res [$GetArgOrExitTest $res]
     :set res [$SilentPingTest $res]
     :set res [$RunScriptTest $res]
+    :set res [$ExportConfigurationTest $res]
 
     :put "\1B[35m=== ALL UTILS TESTS COMPLETED ===\1B[0m"
 
@@ -570,7 +573,7 @@
             :put ("\1B[31m  [FAIL]\1B[0m " . $name . " | Expected: " . [:tostr $expected] . ", Got: " . [:tostr $actual])
             :set ($state->"failed") (($state->"failed") + 1)
         }
-        
+
         :return $state
     }
 
@@ -618,7 +621,6 @@
     # Clean up the script used for positive tests
     /system script remove [find name=$tempScriptName]
 
-
     # --- Test Case 3: Error Handling (Non-existent script) ---
     # RunScript should handle non-existent scripts gracefully via on-error block without crashing the execution
     :local errorHandled true
@@ -633,7 +635,7 @@
     # --- Test Case 4: Syntax Error inside Target Script ---
     # Create a script with broken syntax that will fail compilation during :parse
     /system script add name=$tempScriptName source="[:global runScriptTestResult; :set runScriptTestResult"
-    
+
     :local parseErrorHandled true
     do {
         [$RunScript $tempScriptName]
@@ -643,10 +645,74 @@
 
     :set res [$RunTestCase $res $parseErrorHandled true "Verify target script compilation failure is intercepted gracefully"]
 
-
     # --- Final Cleanup ---
     /system script remove [find name=$tempScriptName]
     :set runScriptTestResult
+
+    :put "Testing completed."
+    :return $res
+}
+
+:set ExportConfigurationTest do={
+    :local res [:toarray ""]
+    :if ([:typeof $1] = "array") do={
+        :set res $1
+    }
+
+    :local RunTestCase do={
+        # Workaround for the MikroTik RouterOS interpreter bug (phantom execution)
+        :if ([:len $0] = 0) do={
+            :return $1
+        }
+
+        :local state [:toarray $1]
+        :local actual $2
+        :local expected $3
+        :local name [:tostr $4]
+
+        # Convert both to string to avoid RouterOS type mismatch bugs
+        :if ([:tostr $actual] = [:tostr $expected]) do={
+            :put ("\1B[32m  [PASS]\1B[0m " . $name . " -> '" . [:tostr $actual] . "'")
+            :set ($state->"passed") (($state->"passed") + 1)
+        } else={
+            :put ("\1B[31m  [FAIL]\1B[0m " . $name . " | Expected: '" . [:tostr $expected] . "', Got: '" . [:tostr $actual] . "'")
+            :set ($state->"failed") (($state->"failed") + 1)
+        }
+
+        :return $state
+    }
+
+    :put "Starting ExportConfiguration tests..."
+    :global ExportConfiguration
+
+    # --- Test Case 1: Verify Physical File Creation ---
+    # Export to root to ensure it succeeds
+    :local actualFilename [$ExportConfiguration ""]
+
+    :delay 1s
+
+    :local fileExists false
+    :if ([:len $actualFilename] > 0) do={
+        :local checkFile [/file find name=$actualFilename]
+        :if ([:len $checkFile] > 0) do={
+            :set fileExists true
+        }
+    }
+
+    :set res [$RunTestCase $res $fileExists true "Verify configuration file physically exists on the storage"]
+
+    # --- Test Case 2: Error Handling (Non-existent Directory) ---
+    # Attempt to write to an invalid path and check that it returns an empty string
+    :local invalidPath "non_existent_directory_xyz"
+    :local errorResult [$ExportConfiguration $invalidPath]
+
+    :set res [$RunTestCase $res $errorResult "" "Verify function returns empty string on invalid path error"]
+
+    # --- Cleanup ---
+    # Remove the created backup file if it exists
+    :if ([:len $actualFilename] > 0) do={
+        /file remove [find name=$actualFilename]
+    }
 
     :put "Testing completed."
     :return $res

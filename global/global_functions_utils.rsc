@@ -415,14 +415,20 @@
 # Purpose: Export the current RouterOS configuration to a file
 #          with a standardized name containing the router identity and current date-time.
 # Parameters:
-#   $1 - Path where the backup file should be saved
-# Returns: None (creates an export file at the specified path)
+#    $1 - Path where the backup file should be saved (e.g. "backups" or "flash")
+# Returns: The final filename with its path and extension (e.g. "backups/mikrotik-backup-2026-07-16-14-30-00.rsc")
+#          or empty string "" if the export fails (e.g. directory does not exist).
 :set ExportConfiguration do={
     :global TrimStrLeft
     :global TrimStrRight
     :global ToLowerCase
     :global ReplaceStr
     :global GetCurrentDateTime
+
+    # Workaround for the MikroTik RouterOS interpreter bug (phantom execution)
+    :if ([:len $0] = 0) do={
+        :return ""
+    }
 
     :local path [:tostr $1]
 
@@ -434,7 +440,18 @@
     :set path [$TrimStrRight $path "/"]
     :set path "$path/$routerName-backup-$curDate"
     :set path [$TrimStrLeft $path "/"]
-    /export file=$path
+
+    :local result ""
+
+    do {
+        # Execute actual configuration export
+        /export file=$path
+        :set result ($path . ".rsc")
+    } on-error={
+        :log error "ExportConfiguration failed: unable to write file $path"
+    }
+
+    :return $result
 }
 
 # Purpose: Ensure a file exists with the given name and content, and return its file ID.

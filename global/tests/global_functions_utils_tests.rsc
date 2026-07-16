@@ -2,11 +2,13 @@
 :global GetArgOrDefaultTest
 :global GetArgOrExitTest
 :global SilentPingTest
+:global RunScriptTest
 
 :set RunAllUtilsTests do={
     :global GetArgOrDefaultTest
     :global GetArgOrExitTest
     :global SilentPingTest
+    :global RunScriptTest
 
     :local res [:toarray ""]
     :if ([:typeof $1] = "array") do={
@@ -18,6 +20,7 @@
     :set res [$GetArgOrDefaultTest $res]
     :set res [$GetArgOrExitTest $res]
     :set res [$SilentPingTest $res]
+    :set res [$RunScriptTest $res]
 
     :put "\1B[35m=== ALL UTILS TESTS COMPLETED ===\1B[0m"
 
@@ -537,6 +540,113 @@
         :set ($res->"passed") (($res->"passed") + 1)
         :put "  \1B[32m[PASS]\1B[0m Environment clean: no temporary variable leaks detected"
     }
+
+    :put "Testing completed."
+    :return $res
+}
+
+:set RunScriptTest do={
+    :local res [:toarray ""]
+    :if ([:typeof $1] = "array") do={
+        :set res $1
+    }
+
+    :local RunTestCase do={
+        # Workaround for the MikroTik RouterOS interpreter bug (phantom execution)
+        :if ([:len $0] = 0) do={
+            :return $1
+        }
+
+        :local state [:toarray $1]
+        :local actual $2
+        :local expected $3
+        :local name [:tostr $4]
+
+        # Convert both to string to avoid RouterOS type mismatch bugs
+        :if ([:tostr $actual] = [:tostr $expected]) do={
+            :put ("\1B[32m  [PASS]\1B[0m " . $name . " -> " . [:tostr $actual])
+            :set ($state->"passed") (($state->"passed") + 1)
+        } else={
+            :put ("\1B[31m  [FAIL]\1B[0m " . $name . " | Expected: " . [:tostr $expected] . ", Got: " . [:tostr $actual])
+            :set ($state->"failed") (($state->"failed") + 1)
+        }
+        
+        :return $state
+    }
+
+    :put "Starting RunScript tests..."
+    :global RunScript
+
+    # --- Setup: Define names for temporary test scripts ---
+    :local tempScriptName "tmp_test_runscript_target"
+
+    # Ensure no leftover scripts exist before starting
+    /system script remove [find name=$tempScriptName]
+
+    # --- Test Case 1: Parameter Passing Verification ---
+    # We create a script that writes its arguments to a global variable so we can verify them
+    :global runScriptTestResult [:toarray ""]
+    /system script add name=$tempScriptName source=":global runScriptTestResult; :set runScriptTestResult {\"arg1\"=\$1; \"arg2\"=\$2; \"arg3\"=\$3; \"arg4\"=\$4; \"arg5\"=\$5; \"arg6\"=\$6}"
+
+    # Execute with 6 parameters
+    [$RunScript $tempScriptName "val1" "val2" "val3" "val4" "val5" "val6"]
+
+    # Verify that the arguments reached the script correctly
+    :local paramMatch true
+    :if (($runScriptTestResult->"arg1") != "val1") do={ :set paramMatch false }
+    :if (($runScriptTestResult->"arg2") != "val2") do={ :set paramMatch false }
+    :if (($runScriptTestResult->"arg3") != "val3") do={ :set paramMatch false }
+    :if (($runScriptTestResult->"arg4") != "val4") do={ :set paramMatch false }
+    :if (($runScriptTestResult->"arg5") != "val5") do={ :set paramMatch false }
+    :if (($runScriptTestResult->"arg6") != "val6") do={ :set paramMatch false }
+
+    :set res [$RunTestCase $res $paramMatch true "Verify all 6 parameters are correctly passed to target script"]
+
+    # --- Test Case 2: Partial Parameters Handling ---
+    # Reset test variable and test with only 2 parameters
+    :set runScriptTestResult [:toarray ""]
+    [$RunScript $tempScriptName "only_one" "only_two"]
+
+    :local partialMatch true
+    :if (($runScriptTestResult->"arg1") != "only_one") do={ :set partialMatch false }
+    :if (($runScriptTestResult->"arg2") != "only_two") do={ :set partialMatch false }
+    # Unpassed arguments should resolve to empty/nil (represented as empty string in tostr)
+    :if ([:len ($runScriptTestResult->"arg3")] > 0) do={ :set partialMatch false }
+
+    :set res [$RunTestCase $res $partialMatch true "Verify partial parameters are handled and rest are empty"]
+
+    # Clean up the script used for positive tests
+    /system script remove [find name=$tempScriptName]
+
+
+    # --- Test Case 3: Error Handling (Non-existent script) ---
+    # RunScript should handle non-existent scripts gracefully via on-error block without crashing the execution
+    :local errorHandled true
+    do {
+        [$RunScript "non_existent_script_name_xyz"]
+    } on-error={
+        :set errorHandled false
+    }
+
+    :set res [$RunTestCase $res $errorHandled true "Verify calling a non-existent script does not crash the environment"]
+
+    # --- Test Case 4: Syntax Error inside Target Script ---
+    # Create a script with broken syntax that will fail compilation during :parse
+    /system script add name=$tempScriptName source="[:global runScriptTestResult; :set runScriptTestResult"
+    
+    :local parseErrorHandled true
+    do {
+        [$RunScript $tempScriptName]
+    } on-error={
+        :set parseErrorHandled false
+    }
+
+    :set res [$RunTestCase $res $parseErrorHandled true "Verify target script compilation failure is intercepted gracefully"]
+
+
+    # --- Final Cleanup ---
+    /system script remove [find name=$tempScriptName]
+    :set runScriptTestResult
 
     :put "Testing completed."
     :return $res

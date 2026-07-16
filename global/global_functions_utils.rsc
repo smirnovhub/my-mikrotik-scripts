@@ -418,6 +418,7 @@
 #   $1 - Path where the backup file should be saved
 # Returns: None (creates an export file at the specified path)
 :set ExportConfiguration do={
+    :global TrimStrLeft
     :global TrimStrRight
     :global ToLowerCase
     :global ReplaceStr
@@ -432,6 +433,7 @@
     :set curDate [$ReplaceStr $curDate " " "-"]
     :set path [$TrimStrRight $path "/"]
     :set path "$path/$routerName-backup-$curDate"
+    :set path [$TrimStrLeft $path "/"]
     /export file=$path
 }
 

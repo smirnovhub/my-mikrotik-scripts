@@ -41,6 +41,7 @@
 :global EnsureFileWithIdExists
 :global GetDhcpClientAddress
 :global GetDhcpClientGateway
+:global GetRouterOSVersion
 :global SendPublicTelegramMessage
 :global SendPrivateTelegramMessage
 
@@ -605,6 +606,25 @@
     :local gw [/ip dhcp-client get $dhcpId gateway]
 
     :return $gw
+}
+
+# Purpose: Get the RouterOS version string, stripping out any release
+# channel or build details after the space.
+# Parameters: None
+# Returns: String - The cleaned RouterOS version (e.g., "7.21.5")
+:set GetRouterOSVersion do={
+    # Get the raw version string from system resources
+    :local rawVersion [/system resource get version]
+
+    # Find the position of the first space
+    :local spacePos [:find $rawVersion " "]
+
+    # Strip everything after the space if it exists
+    :if ($spacePos >= 0) do={
+        :return [:pick $rawVersion 0 $spacePos]
+    }
+
+    :return $rawVersion
 }
 
 # Purpose: Send a message to the public Telegram chat using a bot token.

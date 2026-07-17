@@ -4,6 +4,7 @@
 :global SilentPingTest
 :global RunScriptTest
 :global ExportConfigurationTest
+:global GetRouterOSVersionTest
 
 :set RunAllUtilsTests do={
     :global GetArgOrDefaultTest
@@ -11,6 +12,7 @@
     :global SilentPingTest
     :global RunScriptTest
     :global ExportConfigurationTest
+    :global GetRouterOSVersionTest
 
     :local res [:toarray ""]
     :if ([:typeof $1] = "array") do={
@@ -24,6 +26,7 @@
     :set res [$SilentPingTest $res]
     :set res [$RunScriptTest $res]
     :set res [$ExportConfigurationTest $res]
+    :set res [$GetRouterOSVersionTest $res]
 
     :put "\1B[35m=== ALL UTILS TESTS COMPLETED ===\1B[0m"
 
@@ -713,6 +716,70 @@
     :if ([:len $actualFilename] > 0) do={
         /file remove [find name=$actualFilename]
     }
+
+    :put "Testing completed."
+    :return $res
+}
+
+:set GetRouterOSVersionTest do={
+    :local res [:toarray ""]
+    :if ([:typeof $1] = "array") do={
+        :set res $1
+    }
+
+    :local RunTestCase do={
+        # Workaround for the MikroTik RouterOS interpreter bug (phantom execution)
+        :if ([:len $0] = 0) do={
+            :return $1
+        }
+
+        :local state [:toarray $1]
+        :local actual $2
+        :local expected $3
+        :local name [:tostr $4]
+
+        # Convert both to string to avoid RouterOS type mismatch bugs
+        :if ([:tostr $actual] = [:tostr $expected]) do={
+            :put ("\1B[32m  [PASS]\1B[0m " . $name . " -> '" . [:tostr $actual] . "'")
+            :set ($state->"passed") (($state->"passed") + 1)
+        } else={
+            :put ("\1B[31m  [FAIL]\1B[0m " . $name . " | Expected: '" . [:tostr $expected] . "', Got: '" . [:tostr $actual] . "'")
+            :set ($state->"failed") (($state->"failed") + 1)
+        }
+        
+        :return $state
+    }
+
+    :put "Starting GetRouterOSVersion tests..."
+    :global GetRouterOSVersion
+
+    # Get the system raw version directly to compare with the function output
+    :local rawSystemVersion [/system resource get version]
+    :local parsedVersion [$GetRouterOSVersion]
+
+    # --- Test Case 1: Verify version is not empty ---
+    :local isNotEmpty false
+    :if ([:len $parsedVersion] > 0) do={
+        :set isNotEmpty true
+    }
+    :set res [$RunTestCase $res $isNotEmpty true "Verify returned version string is not empty"]
+
+
+    # --- Test Case 2: Verify no spaces in parsed version ---
+    # The output must be stripped of any channel/build information (like "7.15 (stable)")
+    :local hasSpace ([:find $parsedVersion " "] >= 0)
+    :set res [$RunTestCase $res $hasSpace false "Verify there are no spaces in the extracted version"]
+
+
+    # --- Test Case 3: Verify correct parsing behavior based on raw system string ---
+    # We replicate the extraction logic directly on the raw value to verify the function's internal path
+    :local expectedParsed $rawSystemVersion
+    :local spacePos [:find $rawSystemVersion " "]
+    :if ($spacePos >= 0) do={
+        :set expectedParsed [:pick $rawSystemVersion 0 $spacePos]
+    }
+
+    :set res [$RunTestCase $res $parsedVersion $expectedParsed "Verify function output matches expected slice of raw system version"]
 
     :put "Testing completed."
     :return $res

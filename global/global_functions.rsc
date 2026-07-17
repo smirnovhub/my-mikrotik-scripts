@@ -41,7 +41,6 @@
 :global TimeIsSync
 :global WaitTimeSync
 :global WaitFullyConnected
-:global GetRouterOSVersion
 
 # check if DNS is resolving
 :set DNSIsResolving do={
@@ -146,22 +145,6 @@
   :set totalTime ($totalTime + [$WaitTimeSync])
 
   :return $totalTime
-}
-
-# Function to get RouterOS version like 7.21.5
-:set GetRouterOSVersion do={
-    # Get the raw version string from system resources
-    :local rawVersion [/system resource get version]
-
-    # Find the position of the first space
-    :local spacePos [:find $rawVersion " "]
-
-    # Strip everything after the space if it exists
-    :if ($spacePos >= 0) do={
-        :return [:pick $rawVersion 0 $spacePos]
-    }
-
-    :return $rawVersion
 }
 
 # Signal we are ready

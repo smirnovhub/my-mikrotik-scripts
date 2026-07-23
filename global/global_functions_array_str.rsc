@@ -49,6 +49,8 @@
 :global HexToChar
 :global DecToChar
 :global CompareStr
+:global IsPrintableStr
+:global ExtractFileName
 
 # Automatically generated ASCII code table
 :global asciiCodeTable
@@ -740,4 +742,78 @@
     :if ($l1 > $l2) do={ :return 1 }
 
     :return 0
+}
+
+# Purpose: Check whether a string contains only printable characters.
+# Parameters:
+#   $1 - Input string to examine.
+# Returns: true if the string contains no characters in the ranges 0x00-0x1F or 0x7F-0xFF; otherwise false.
+:set IsPrintableStr do={
+    :global DecToChar
+
+    # Workaround for the MikroTik RouterOS interpreter bug (phantom execution)
+    :if ([:len $0] = 0) do={
+        :return false
+    }
+
+    :local input [:tostr $1]
+
+    # Check ASCII control characters (0x00-0x1F)
+    :for i from=0 to=31 do={
+        :if ([:find $input [$DecToChar $i]] >= 0) do={
+            :return false
+        }
+    }
+
+    # Check DEL and extended characters (0x7F-0xFF)
+    :for i from=127 to=255 do={
+        :if ([:find $input [$DecToChar $i]] >= 0) do={
+            :return false
+        }
+    }
+
+    :return true
+}
+
+# Purpose: Extract and return the file name from a given file path, with an option to keep or remove the file extension.
+# Parameters:
+#    $1 - The full file path (string, required)
+#    $2 - Flag to keep the file extension (boolean, optional, default: false/nil)
+# Returns: The extracted file name as a string (with or without the extension)
+:set ExtractFileName do={
+    :local file $1
+    :local keepExtension $2
+
+    # Find the last slash to strip the directory path
+    :local lastSlash -1
+    :local pos [:find $file "/"]
+    :while ($pos >= 0) do={
+        :set lastSlash $pos
+        :set pos [:find $file "/" ($pos + 1)]
+    }
+
+    :local startPin ($lastSlash + 1)
+
+    # If keepExtension is true, we just grab everything from the last slash to the end
+    :if ($keepExtension = true) do={
+        :return [:pick $file $startPin [:len $file]]
+    }
+
+    # Find the last dot to strip the extension
+    :local lastDot -1
+    :local posDot [:find $file "."]
+
+    :while ($posDot >= 0) do={
+        :set lastDot $posDot
+        :set posDot [:find $file "." ($posDot + 1)]
+    }
+
+    # Handle cases with no extension or when the dot is part of the directory path
+    :local endPin $lastDot
+
+    :if ($endPin < 0 or $endPin < $startPin) do={
+        :set endPin [:len $file]
+    }
+
+    :return [:pick $file $startPin $endPin]
 }

@@ -83,7 +83,9 @@
         :return 0
     }
 
-    :local input $1
+    :global ToLowerCase
+
+    :local input [$ToLowerCase [:tostr $1]]
 
     # Regex patterns
     :local regexISO "^[0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2}\$"

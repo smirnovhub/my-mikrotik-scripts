@@ -95,11 +95,21 @@
 # check if system time is sync
 :set TimeIsSync do={
   :if ([/system ntp client get enabled] = true) do={
-    :if ([:typeof [/system ntp client get last-adjustment]] = "time") do={
-      :return true
-    }
+    :do {
+        # RouterOS 6.x
+        :if ([:typeof [/system ntp client get last-adjustment]] = "time") do={
+            :return true
+        }
 
-    :return false
+        :return false
+    } on-error={
+      # RouterOS 7.x
+      :if ([/system ntp client get status] = "synchronized") do={
+        :return true
+      }
+
+      :return false
+    }
   }
 
   :log error "TimeIsSync: NTP client is not enabled!"

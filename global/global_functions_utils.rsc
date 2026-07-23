@@ -34,12 +34,14 @@
 :global GetArgOrDefault
 :global GetArgOrExit
 :global GetHttpFileContent
+:global GetHttpFileContentWithRetry
 :global SilentPing
 :global RunScript
 :global ExportConfiguration
 :global EnsureFileWithIdExists
 :global GetDhcpClientAddress
 :global GetDhcpClientGateway
+:global GetRouterOSVersion
 :global SendPublicTelegramMessage
 :global SendPrivateTelegramMessage
 
@@ -57,9 +59,6 @@
 #       :global SplitStr
 #   global_functions_datetime:
 #       :global GetCurrentDateTime
-#   global_functions_vars:
-#       :global DeclareGlobalVar
-#       :global GetGlobalVar
 
 :set LogAndExit do={
   :local severity [:tostr $1]
@@ -204,20 +203,19 @@
 # Purpose: Download and return the content of a file from a specified HTTP URL.
 # Parameters:
 #   $1 - The target URL of the file to fetch (string, required)
-#   $2 - Optional TCP port number for the HTTP request (default is 80)
 # Returns: The downloaded file content as a string; returns an empty string if an error occurs.
 :set GetHttpFileContent do={
   :local url $1
 
-  :local port 80
-  :if ([:typeof $2] != "nothing") do={
-    :set port [:tonum $2]
+  :if ([:len $url] < 7) do={
+    :log warning "Url is empty or too short"
+    :return ""
   }
 
   :local result [:toarray ""]
 
   :do {
-    :set result [/tool fetch url="$url" mode=http port=$port output=user as-value]
+    :set result [/tool fetch url="$url" output=user as-value]
   } on-error={
     :log error "An error occurred while downloading file: $url"
     :return ""
@@ -226,11 +224,71 @@
   :local maxFileSize 64512
 
   :local str ($result->"data")
-  :if ([:len $str] = $maxFileSize) do={
+  :if ([:len $str] >= $maxFileSize) do={
     :log warning "File is too big. Max file size is $maxFileSize bytes: $url "
   }
 
   :return $str
+}
+
+# Purpose: Fetches HTTP file content with automatic retries and incremental delay.
+# Parameters:
+#   $1 - Target URL
+#   $2 - Maximum retry attempts (optional, default: 3)
+# Returns: The downloaded file content as a string or empty string if all attempts failed
+:set GetHttpFileContentWithRetry do={
+  :local url $1
+
+  :if ([:len $url] < 7) do={
+    :log warning "Url is empty or too short"
+    :return ""
+  }
+
+  # Default to 3 retries if not specified
+  :local retries 3
+  :if ([:typeof $2] != "nothing") do={
+    :set retries [:tonum $2]
+  }
+
+  :if ($retries < 1) do={
+    :set retries 1
+  }
+
+  # Delay between retries in seconds
+  :local retryDelay 1
+
+  :local result ""
+  :local success false
+
+  :local maxFileSize 64512
+
+  :for i from=1 to=$retries do={
+    :do {
+      # Attempt to fetch the file content
+      :set result [/tool fetch url="$url" output=user as-value]
+      :set success true
+    } on-error={
+      :log warning "Attempt $i of $retries failed to download file: $url"
+      :if ($i < $retries) do={
+        :delay $retryDelay
+        :set retryDelay ($retryDelay + 1)
+      }
+    }
+
+    # Exit loop early if download succeeded
+    :if ($success) do={
+      :local str ($result->"data")
+
+      :if ([:len $str] >= $maxFileSize) do={
+        :log warning "File is too big. Max file size is $maxFileSize bytes: $url"
+      }
+
+      :return $str
+    }
+  }
+
+  :log error "All $retries attempts failed for: $url"
+  :return ""
 }
 
 # Purpose: Perform "silent ping" operations in RouterOS to either:
@@ -284,8 +342,6 @@
 # Unknown    = 0
 :set SilentPing do={
     :global GetRandom20CharHex
-    :global DeclareGlobalVar
-    :global GetGlobalVar
 
     :local input $1
     :local count 1
@@ -307,7 +363,7 @@
         :local varName ($varPrefix . $rnd)
 
         # Create temporary global variable
-        $DeclareGlobalVar $varName
+        :execute (":global " . $varName)
 
         # Run ping in background with error handling
         :local jobCode (":do { \
@@ -326,7 +382,8 @@
         }
 
         # Read the result
-        :local result [$GetGlobalVar $varName]
+        :local script [:parse ":global $varName; :return \$$varName"]
+        :local result [$script]
 
         # Remove the temporary global variable
         /system script environment remove [find name=$varName]
@@ -349,7 +406,7 @@
         :set ($varsList->([:len $varsList])) $varName
 
         # Create temporary global variable
-        $DeclareGlobalVar $varName
+        :execute (":global " . $varName)
 
         # Job code for each host
         :local jobCode (":do { \
@@ -378,7 +435,8 @@
             :if ([:len [/system script job find where .id=$j]] = 0) do={
                 # Job finished, fetch result
                 :local varName ($vars->$k)
-                :local result [$GetGlobalVar $varName]
+                :local script [:parse ":global $varName; :return \$$varName"]
+                :local result [$script]
 
                 # Save result into return array
                 :set ($results->$k) $result
@@ -418,13 +476,20 @@
 # Purpose: Export the current RouterOS configuration to a file
 #          with a standardized name containing the router identity and current date-time.
 # Parameters:
-#   $1 - Path where the backup file should be saved
-# Returns: None (creates an export file at the specified path)
+#    $1 - Path where the backup file should be saved (e.g. "backups" or "flash")
+# Returns: The final filename with its path and extension (e.g. "backups/mikrotik-backup-2026-07-16-14-30-00.rsc")
+#          or empty string "" if the export fails (e.g. directory does not exist).
 :set ExportConfiguration do={
+    :global TrimStrLeft
     :global TrimStrRight
     :global ToLowerCase
     :global ReplaceStr
     :global GetCurrentDateTime
+
+    # Workaround for the MikroTik RouterOS interpreter bug (phantom execution)
+    :if ([:len $0] = 0) do={
+        :return ""
+    }
 
     :local path [:tostr $1]
 
@@ -435,7 +500,19 @@
     :set curDate [$ReplaceStr $curDate " " "-"]
     :set path [$TrimStrRight $path "/"]
     :set path "$path/$routerName-backup-$curDate"
-    /export file=$path
+    :set path [$TrimStrLeft $path "/"]
+
+    :local result ""
+
+    do {
+        # Execute actual configuration export
+        /export file=$path
+        :set result ($path . ".rsc")
+    } on-error={
+        :log error "ExportConfiguration failed: unable to write file $path"
+    }
+
+    :return $result
 }
 
 # Purpose: Ensure a file exists with the given name and content, and return its file ID.
@@ -529,6 +606,25 @@
     :local gw [/ip dhcp-client get $dhcpId gateway]
 
     :return $gw
+}
+
+# Purpose: Get the RouterOS version string, stripping out any release
+# channel or build details after the space.
+# Parameters: None
+# Returns: String - The cleaned RouterOS version (e.g., "7.21.5")
+:set GetRouterOSVersion do={
+    # Get the raw version string from system resources
+    :local rawVersion [/system resource get version]
+
+    # Find the position of the first space
+    :local spacePos [:find $rawVersion " "]
+
+    # Strip everything after the space if it exists
+    :if ($spacePos >= 0) do={
+        :return [:pick $rawVersion 0 $spacePos]
+    }
+
+    :return $rawVersion
 }
 
 # Purpose: Send a message to the public Telegram chat using a bot token.

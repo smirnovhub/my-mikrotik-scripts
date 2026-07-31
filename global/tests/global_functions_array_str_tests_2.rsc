@@ -559,7 +559,7 @@
     :set res [$RunTestCase $res $r15 ("text\"with\"quotes") "Double quotes handling"]
 
     # Test Case 16: Backslashes filtering
-    :local r16 [$CleanStr ("path\\to\\file") "abcdefghijklmnopqrstuvwxyz\\"]
+    :local r16 [$CleanStr ("path\\to\\file") ("abcdefghijklmnopqrstuvwxyz\\")]
     :set res [$RunTestCase $res $r16 ("path\\to\\file") "Backslashes filtering"]
 
     # Test Case 17: Punctuation and network symbols filtering

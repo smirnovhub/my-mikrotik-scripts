@@ -41,6 +41,9 @@
 :global TrimStrLeft
 :global TrimStrRight
 :global ReplaceStr
+:global ContainsStr
+:global StartsWithStr
+:global CleanStr
 :global RecursiveMergeSort
 :global RecursiveMergeSortStr
 :global DivideIntAndRound
@@ -62,8 +65,8 @@
 #          - A string of space-separated key-value pairs (requires SplitStr function, delimiter defaults to " ")
 #   $2 - (Optional) Delimiter to split a single string into tokens (default: space)
 # Returns: An associative array where:
-#            "key=value" → Result["key"] = "value"
-#            "key"       → Result["key"] = true
+#            "key=value" -> Result["key"] = "value"
+#            "key"       -> Result["key"] = true
 # Notes:
 #   - Requires a helper function SplitStr to split strings by a delimiter.
 #   - Useful for parsing script arguments or configuration strings into structured data.
@@ -440,6 +443,81 @@
   }
 
   :return ($result . $string)
+}
+
+# Purpose: Check if a substring exists within a string.
+# Parameters:
+#   $1 - Original string to search in
+#   $2 - Substring to search for
+# Returns: true if substring is found, false otherwise
+# Example: :put [$ContainsStr "Hello World" "World"]
+# Output:
+#   true
+:set ContainsStr do={
+  :local string [:tostr $1]
+  :local findStr [:tostr $2]
+
+  # Empty search string is always considered present
+  :if ($findStr = "") do={
+    :return true
+  }
+
+  :return ([:typeof [:find $string $findStr]] = "num")
+}
+
+# Purpose: Check if a string starts with a specified substring.
+# Parameters:
+#   $1 - Original string
+#   $2 - Substring to check at the beginning
+# Returns: true if string starts with the substring, false otherwise
+# Example: :put [$StartsWithStr "HelloWorld" "Hello"]
+# Output:
+#   true
+:set StartsWithStr do={
+  :local string [:tostr $1]
+  :local prefix [:tostr $2]
+  :local prefixLen [:len $prefix]
+
+  # Empty prefix is always considered a valid start
+  :if ($prefixLen = 0) do={
+    :return true
+  }
+
+  # If prefix is longer than the string, it cannot match
+  :if ($prefixLen > [:len $string]) do={
+    :return false
+  }
+
+  :return ([:pick $string 0 $prefixLen] = $prefix)
+}
+
+# Purpose: Keep only specified allowed characters in a string, removing all others.
+# Parameters:
+#   $1 - Original string
+#   $2 - String containing allowed characters
+# Returns: A new string with all unallowed characters removed
+# Example: :put [$CleanStr "my-var@name!#123" "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"]
+# Output:
+#   myvarname123
+:set CleanStr do={
+  :local string [:tostr $1]
+  :local allowedChars [:tostr $2]
+  :local result ""
+
+  # If allowedChars is empty, return empty string
+  :if ($allowedChars = "") do={
+    :return ""
+  }
+
+  :local len [:len $string]
+  :for i from=0 to=($len - 1) do={
+    :local char [:pick $string $i ($i + 1)]
+    :if ([:typeof [:find $allowedChars $char]] != "nil") do={
+      :set result ($result . $char)
+    }
+  }
+
+  :return $result
 }
 
 # Purpose: Perform a merge sort on a simple array of items that can be compared using '<'.

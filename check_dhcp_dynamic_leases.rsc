@@ -1,17 +1,13 @@
 :global SendPrivateTelegramMessage
 :global GetUnixTimestamp
-:global lastDhcpDynamicLeaseWarningTime
+:global GetGlobalVarOrDefault
+:global SetGlobalVar
 :global warningSignEmoji
 
 # Author: Dmitry Smirnov 2025
 # Purpose: Detect dynamic (unapproved) DHCP leases and send an alert via Telegram.
 # Parameters:
 #   (none) - Works directly with the DHCP lease table.
-# Globals:
-#   SendPrivateTelegramMessage       - Function to send messages through the Telegram Bot API.
-#   GetUnixTimestamp                 - Function returning the current UNIX timestamp (seconds since 1970).
-#   lastDhcpDynamicLeaseWarningTime  - Timestamp of the last sent warning (used for rate limiting).
-#   warningSignEmoji                 - Emoji used as a prefix in the Telegram message.
 # Constants:
 #   warningSendPeriodSec = 900  (minimum interval in seconds between repeated alerts)
 # Returns:
@@ -27,6 +23,8 @@
 
 # Send repeated warnings every N seconds
 :local warningSendPeriodSec 900
+
+:local lastDhcpDynamicLeaseWarningTimeVarName "last-dhcp-dynamic-lease-warning-time"
 
 # Initialize a variable to track if any dynamic lease exists
 :local foundDynamic false
@@ -69,9 +67,10 @@
 
 :if ($foundDynamic) do={
   :local needSendMessage false
-  :if ([:len [$lastDhcpDynamicLeaseWarningTime]] > 0) do={
+  :local lastTime [$GetGlobalVarOrDefault $lastDhcpDynamicLeaseWarningTimeVarName ""]
+  :if ([:len [$lastTime]] > 0) do={
     :local curTime [$GetUnixTimestamp]
-    :local diff ($curTime - $lastDhcpDynamicLeaseWarningTime)
+    :local diff ($curTime - [:tonum $lastTime])
     :if ($diff > $warningSendPeriodSec) do={
       :set needSendMessage true
     }
@@ -87,6 +86,6 @@
     $SendPrivateTelegramMessage $message
 
     # Update time
-    :set lastDhcpDynamicLeaseWarningTime [$GetUnixTimestamp]
+    $SetGlobalVar $lastDhcpDynamicLeaseWarningTimeVarName [$GetUnixTimestamp]
   }
 }

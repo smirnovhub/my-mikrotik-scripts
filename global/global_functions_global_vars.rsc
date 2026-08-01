@@ -36,6 +36,7 @@
 #
 #   global_functions_array_str:
 #       :global CleanStr
+#       :global TrimStr
 
 # Purpose: Get the value of a global variable.
 # Parameters:
@@ -140,8 +141,11 @@
 #   globalVarmyvar1
 :set CreateGlobalVarName do={
   :global CleanStr
-  
+  :global TrimStr
+
   :local name [$CleanStr $1 "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-"]
+  :set name [$TrimStr $name "-"]
+
   :if ([:len $name] = 0) do={
     :log error "Global variable name is empty"
     :return ""

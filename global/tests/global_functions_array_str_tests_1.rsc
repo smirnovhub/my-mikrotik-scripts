@@ -32,7 +32,7 @@
     :global HexToCharTest
     :global DecToCharTest
 
-    :put "\1B[35m=== STARTING ALL ARRAY AND STRING TESTS ===\1B[0m"
+    :put "\1B[35m=== STARTING ALL ARRAY AND STRING TESTS 1 ===\1B[0m"
 
     :local res [:toarray ""]
     :if ([:typeof $1] = "array") do={
@@ -56,7 +56,7 @@
     :set res [$ParseKeyValueStoreTest $res]
     :set res [$RandomTest $res]
 
-    :put "\1B[35m=== ALL ARRAY AND STRING TESTS COMPLETED ===\1B[0m"
+    :put "\1B[35m=== ALL ARRAY AND STRING TESTS 1 COMPLETED ===\1B[0m"
 
     :return $res
 }

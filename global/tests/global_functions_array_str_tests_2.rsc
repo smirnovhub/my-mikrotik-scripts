@@ -14,7 +14,7 @@
     :global StartsWithStrTest
     :global CleanStrTest
 
-    :put "\1B[35m=== STARTING ALL ARRAY AND STRING TESTS ===\1B[0m"
+    :put "\1B[35m=== STARTING ALL ARRAY AND STRING TESTS 2 ===\1B[0m"
 
     :local res [:toarray ""]
     :if ([:typeof $1] = "array") do={
@@ -29,7 +29,7 @@
     :set res [$StartsWithStrTest $res]
     :set res [$CleanStrTest $res]
 
-    :put "\1B[35m=== ALL ARRAY AND STRING TESTS COMPLETED ===\1B[0m"
+    :put "\1B[35m=== ALL ARRAY AND STRING TESTS 2 COMPLETED ===\1B[0m"
 
     :return $res
 }

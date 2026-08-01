@@ -44,6 +44,8 @@
 :global GetRouterOSVersion
 :global SendPublicTelegramMessage
 :global SendPrivateTelegramMessage
+:global DownloadAndImportScript
+:global DownloadAndImportScriptsFromList
 
 # Global dependencies:
 #   Telegram (if you want to use SendPublicTelegramMessage or SendPrivateTelegramMessage)
@@ -669,4 +671,122 @@
 
     /tool fetch url=$url http-method=post http-data=$payload keep-result=no
     :log info "Send private Telegram message: $messageText"
+}
+
+# Function to download and import/update RouterOS script from URL
+:set DownloadAndImportScript do={
+    :global EndsWithStr
+
+    # Workaround for the MikroTik RouterOS interpreter bug (phantom execution)
+    :if ([:len $0] = 0) do={
+        :return false
+    }
+
+    :local rawUrl [:tostr $1]
+
+    :if ([:len $rawUrl] = 0) do={
+        :log error "DownloadAndImportScript: URL parameter is missing."
+        :return false
+    }
+
+    :if ([$EndsWithStr $rawUrl ".rsc"] = false) do={
+        :log error "DownloadAndImportScript: file name should end with .rsc"
+        :return false
+    }
+
+    # Extract script name from URL (filename without extension)
+    :local fileName ""
+    :local lastSlash 0
+    :for i from=0 to=([:len $rawUrl] - 1) do={
+        :if ([:pick $rawUrl $i ($i + 1)] = "/") do={
+            :set lastSlash $i
+        }
+    }
+    :set fileName [:pick $rawUrl ($lastSlash + 1) [:len $rawUrl]]
+    
+    # Remove .rsc extension if present
+    :local scriptName $fileName
+    :if ([:pick $fileName ([:len $fileName] - 4) [:len $fileName]] = ".rsc") do={
+        :set scriptName [:pick $fileName 0 ([:len $fileName] - 4)]
+    }
+
+    :do {
+        :local fetchResult [/tool fetch url=$rawUrl output=user as-value]
+        :if ($fetchResult->"status" = "finished") do={
+            :local newSource ($fetchResult->"data")
+            
+            :if ([:len [/system script find name=$scriptName]] > 0) do={
+                /system script set [find name=$scriptName] source=$newSource
+            } else={
+                /system script add name=$scriptName source=$newSource
+            }
+            
+            :log info "DownloadAndImportScript: Script '$scriptName' updated successfully."
+            
+            # Execute/load the downloaded script into memory immediately
+            /system script run $scriptName
+            :return true
+        }
+    } on-error={
+        :log error ("DownloadAndImportScript: Failed to download from " . $rawUrl)
+        :return false
+    }
+}
+
+# Global function to download a file list and import each script using DownloadAndImportScript
+:set DownloadAndImportScriptsFromList do={
+    :global SplitStr
+    :global TrimStr
+    :global EndsWithStr
+    :global DownloadAndImportScript
+
+    # Workaround for the MikroTik RouterOS interpreter bug (phantom execution)
+    :if ([:len $0] = 0) do={
+        :return false
+    }
+
+    :local listUrl [:tostr $1]
+
+    :if ([:len $listUrl] = 0) do={
+        :log error "DownloadAndImportScriptsFromList: List URL parameter is missing."
+        :return false
+    }
+
+    :if ([$EndsWithStr $listUrl ".txt"] = false) do={
+        :log error "DownloadAndImportScript: file name should end with .txt"
+        :return false
+    }
+
+    :do {
+        :local fetchResult [/tool fetch url=$listUrl output=user as-value]
+        :if ($fetchResult->"status" = "finished") do={
+            :local content ($fetchResult->"data")
+            :local lines [$SplitStr $content ("\n")]
+            :local successCount 0
+            :local failCount 0
+
+            :foreach rawLine in=$lines do={
+                # Remove spaces, carriage returns, line feeds, and tabs from both ends
+                :local cleanUrl [$TrimStr $rawLine ("\r\n \t")]
+
+                # Ignore empty lines and comment lines (starting with #)
+                :if ([:len $cleanUrl] > 0 and [:pick $cleanUrl 0 1] != "#") do={
+                    :local res [$DownloadAndImportScript $cleanUrl]
+                    :if ($res = true) do={
+                        :log info ($cleanUrl . " downloaded successfully")
+                        :set successCount ($successCount + 1)
+                    } else={
+                        :log error ($cleanUrl . " download error")
+                        :set failCount ($failCount + 1)
+                    }
+                }
+            }
+
+            :log info ("DownloadAndImportScriptsFromList: Processed list. Success: " . $successCount . ", Failed: " . $failCount)
+            :return true
+        }
+    } on-error={
+        :log error ("DownloadAndImportScriptsFromList: Failed to download list from " . $listUrl)
+        :return false
+    }
 }

@@ -43,6 +43,7 @@
 :global ReplaceStr
 :global ContainsStr
 :global StartsWithStr
+:global EndsWithStr
 :global CleanStr
 :global RecursiveMergeSort
 :global RecursiveMergeSortStr
@@ -52,6 +53,7 @@
 :global HexToChar
 :global DecToChar
 :global CompareStr
+:global ReverseStr
 :global IsPrintableStr
 :global ExtractFileName
 
@@ -491,6 +493,33 @@
   :return ([:pick $string 0 $prefixLen] = $prefix)
 }
 
+# Purpose: Check if a string ends with a specified substring.
+# Parameters:
+#   $1 - Original string
+#   $2 - Substring to check at the end
+# Returns: true if string ends with the substring, false otherwise
+# Example: :put [$EndsWithStr "Hello World" "World"]
+# Output:
+#   true
+:set EndsWithStr do={
+  :local string [:tostr $1]
+  :local suffix [:tostr $2]
+  :local stringLen [:len $string]
+  :local suffixLen [:len $suffix]
+
+  # Empty suffix is always considered a valid end
+  :if ($suffixLen = 0) do={
+    :return true
+  }
+
+  # If suffix is longer than the string, it cannot match
+  :if ($suffixLen > $stringLen) do={
+    :return false
+  }
+
+  :return ([:pick $string ($stringLen - $suffixLen) $stringLen] = $suffix)
+}
+
 # Purpose: Keep only specified allowed characters in a string, removing all others.
 # Parameters:
 #   $1 - Original string
@@ -607,6 +636,29 @@
     }
   }
   :return $out
+}
+
+# Purpose: Reverse the characters in a string.
+# Parameters:
+#    $1 - Original string
+# Returns: A new string with characters in reverse order
+# Example: :put [$ReverseStr "hello"]
+# Output:
+#    olleh
+:set ReverseStr do={
+  :local string [:tostr $1]
+  :local len [:len $string]
+  :local result ""
+
+  :if ($len = 0) do={
+    :return ""
+  }
+
+  :for i from=($len - 1) to=0 step=-1 do={
+    :set result ($result . [:pick $string $i ($i + 1)])
+  }
+
+  :return $result
 }
 
 # Purpose: Perform division of two integers and round the result to a specified number of decimal places.

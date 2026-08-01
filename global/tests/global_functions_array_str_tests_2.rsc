@@ -1,17 +1,21 @@
 :global RunAllArrayStrTests2
 :global CompareStrTest
+:global ReverseStrTest
 :global IsPrintableStrTest
 :global ExtractFileNameTest
 :global ContainsStrTest
 :global StartsWithStrTest
+:global EndsWithStrTest
 :global CleanStrTest
 
 :set RunAllArrayStrTests2 do={
     :global CompareStrTest
+    :global ReverseStrTest
     :global IsPrintableStrTest
     :global ExtractFileNameTest
     :global ContainsStrTest
     :global StartsWithStrTest
+    :global EndsWithStrTest
     :global CleanStrTest
 
     :put "\1B[35m=== STARTING ALL ARRAY AND STRING TESTS 2 ===\1B[0m"
@@ -23,10 +27,12 @@
 
     # Execute all test suites sequentially, passing and updating the same accumulator array
     :set res [$CompareStrTest $res]
+    :set res [$ReverseStrTest $res]
     :set res [$IsPrintableStrTest $res]
     :set res [$ExtractFileNameTest $res]
     :set res [$ContainsStrTest $res]
     :set res [$StartsWithStrTest $res]
+    :set res [$EndsWithStrTest $res]
     :set res [$CleanStrTest $res]
 
     :put "\1B[35m=== ALL ARRAY AND STRING TESTS 2 COMPLETED ===\1B[0m"
@@ -108,6 +114,102 @@
     :set res [$RunTestCase $res "abc" "abc " -1 "String vs string with trailing space"]
     :set res [$RunTestCase $res "abc!" "abc?" -1 "Special chars (! is 33, ? is 63)"]
     :set res [$RunTestCase $res "abc" "abc_def" -1 "String vs string with underscore"]
+
+    :put "Testing completed."
+    :return $res
+}
+
+:set ReverseStrTest do={
+    :local res [:toarray ""]
+    :if ([:typeof $1] = "array") do={
+        :set res $1
+    }
+
+    :local RunTestCase do={
+        # Workaround for the MikroTik RouterOS interpreter bug (phantom execution)
+        :if ([:len $0] = 0) do={
+            :return $1
+        }
+
+        :local state [:toarray $1]
+        :local actual $2
+        :local expected $3
+        :local name [:tostr $4]
+
+        # Convert both to string to avoid RouterOS type mismatch bugs
+        :if ([:tostr $actual] = [:tostr $expected]) do={
+            :put ("\1B[32m  [PASS]\1B[0m " . $name . " -> '" . [:tostr $actual] . "'")
+            :set ($state->"passed") (($state->"passed") + 1)
+        } else={
+            :put ("\1B[31m  [FAIL]\1B[0m " . $name . " | Expected: '" . [:tostr $expected] . "', Got: '" . [:tostr $actual] . "'")
+            :set ($state->"failed") (($state->"failed") + 1)
+        }
+
+        :return $state
+    }
+
+    :put "Starting ReverseStr tests..."
+    :global ReverseStr
+
+    # --- Base & Standard Cases ---
+
+    # Test Case 1: Standard word reversal
+    :local r1 [$ReverseStr "hello"]
+    :set res [$RunTestCase $res $r1 "olleh" "Standard word reversal"]
+
+    # Test Case 2: Multi-word string reversal
+    :local r2 [$ReverseStr "hello world"]
+    :set res [$RunTestCase $res $r2 "dlrow olleh" "Multi-word string reversal"]
+
+    # Test Case 3: Palindrome reversal
+    :local r3 [$ReverseStr "radar"]
+    :set res [$RunTestCase $res $r3 "radar" "Palindrome reversal"]
+
+    # --- Edge Cases & Boundaries ---
+
+    # Test Case 4: Empty string
+    :local r4 [$ReverseStr ""]
+    :set res [$RunTestCase $res $r4 "" "Empty string"]
+
+    # Test Case 5: Single character string
+    :local r5 [$ReverseStr "a"]
+    :set res [$RunTestCase $res $r5 "a" "Single character string"]
+
+    # Test Case 6: Two character string
+    :local r6 [$ReverseStr "ab"]
+    :set res [$RunTestCase $res $r6 "ba" "Two character string"]
+
+    # --- Formatting & Special Characters ---
+
+    # Test Case 7: Mixed case string
+    :local r7 [$ReverseStr "RouterOS"]
+    :set res [$RunTestCase $res $r7 "SOretuoR" "Mixed case string"]
+
+    # Test Case 8: File path reversal
+    :local r8 [$ReverseStr "flash/backups/cfg.rsc"]
+    :set res [$RunTestCase $res $r8 "csr.gfc/spukcab/hsalf" "File path reversal"]
+
+    # Test Case 9: String with spaces and tabs
+    :local r9 [$ReverseStr ("a b\tc")]
+    :set res [$RunTestCase $res $r9 ("c\tb a") "String with spaces and tabs"]
+
+    # Test Case 10: Punctuation and symbols
+    :local r10 [$ReverseStr "192.168.88.1/24"]
+    :set res [$RunTestCase $res $r10 "42/1.88.861.291" "Punctuation and symbols"]
+
+    # --- Non-string Parameters ---
+
+    # Test Case 11: Non-string parameters (Numeric types)
+    :local r11 [$ReverseStr 12345]
+    :set res [$RunTestCase $res $r11 "54321" "Non-string parameters (Numeric types)"]
+
+    # Test Case 12: Boolean parameter
+    :local r12 [$ReverseStr true]
+    :set res [$RunTestCase $res $r12 "eurt" "Boolean parameter"]
+
+    # Test Case 13: IP address type parameter
+    :local r13 [$ReverseStr 10.0.0.1]
+    :set res [$RunTestCase $res $r13 "1.0.0.01" "IP address type parameter"]
 
     :put "Testing completed."
     :return $res
@@ -453,6 +555,110 @@
     # --- Test Case 11: Single character match ---
     :local r11 [$StartsWithStr "router" "r"]
     :set res [$RunTestCase $res $r11 true "Single character match"]
+
+    :put "Testing completed."
+    :return $res
+}
+
+:set EndsWithStrTest do={
+    :local res [:toarray ""]
+    :if ([:typeof $1] = "array") do={
+        :set res $1
+    }
+
+    :local RunTestCase do={
+        # Workaround for the MikroTik RouterOS interpreter bug (phantom execution)
+        :if ([:len $0] = 0) do={
+            :return $1
+        }
+
+        :local state [:toarray $1]
+        :local actual $2
+        :local expected $3
+        :local name [:tostr $4]
+
+        # Convert both to string to avoid RouterOS type mismatch bugs
+        :if ([:tostr $actual] = [:tostr $expected]) do={
+            :put ("\1B[32m  [PASS]\1B[0m " . $name . " -> '" . [:tostr $actual] . "'")
+            :set ($state->"passed") (($state->"passed") + 1)
+        } else={
+            :put ("\1B[31m  [FAIL]\1B[0m " . $name . " | Expected: '" . [:tostr $expected] . "', Got: '" . [:tostr $actual] . "'")
+            :set ($state->"failed") (($state->"failed") + 1)
+        }
+
+        :return $state
+    }
+
+    :put "Starting EndsWithStr tests..."
+    :global EndsWithStr
+
+    # --- Base & Standard Cases ---
+
+    # Test Case 1: Standard matching suffix
+    :local r1 [$EndsWithStr "Hello World" "World"]
+    :set res [$RunTestCase $res $r1 true "Standard matching suffix"]
+
+    # Test Case 2: Non-matching suffix
+    :local r2 [$EndsWithStr "Hello World" "Hello"]
+    :set res [$RunTestCase $res $r2 false "Non-matching suffix"]
+
+    # Test Case 3: Empty suffix
+    :local r3 [$EndsWithStr "Hello World" ""]
+    :set res [$RunTestCase $res $r3 true "Empty suffix"]
+
+    # Test Case 4: Suffix equals target string
+    :local r4 [$EndsWithStr "exact" "exact"]
+    :set res [$RunTestCase $res $r4 true "Suffix equals target string"]
+
+    # Test Case 5: Suffix longer than target string
+    :local r5 [$EndsWithStr "short" "longer_suffix"]
+    :set res [$RunTestCase $res $r5 false "Suffix longer than target string"]
+
+    # --- Edge Cases & Boundaries ---
+
+    # Test Case 6: Both parameters are empty strings
+    :local r6 [$EndsWithStr "" ""]
+    :set res [$RunTestCase $res $r6 true "Both parameters are empty strings"]
+
+    # Test Case 7: Target string is empty, suffix is not
+    :local r7 [$EndsWithStr "" "suffix"]
+    :set res [$RunTestCase $res $r7 false "Target string is empty, suffix is not"]
+
+    # Test Case 8: Single character match at the end
+    :local r8 [$EndsWithStr "router" "r"]
+    :set res [$RunTestCase $res $r8 true "Single character match at the end"]
+
+    # Test Case 9: Case sensitivity check
+    :local r9 [$EndsWithStr "Hello World" "world"]
+    :set res [$RunTestCase $res $r9 false "Case sensitivity check"]
+
+    # --- Formatting & Path Cases ---
+
+    # Test Case 10: File extension matching
+    :local r10 [$EndsWithStr "flash/backups/script.rsc" ".rsc"]
+    :set res [$RunTestCase $res $r10 true "File extension matching"]
+
+    # Test Case 11: Matching trailing slash
+    :local r11 [$EndsWithStr "flash/backups/" "/"]
+    :set res [$RunTestCase $res $r11 true "Matching trailing slash"]
+
+    # Test Case 12: Matching trailing space
+    :local r12 [$EndsWithStr "hello " " "]
+    :set res [$RunTestCase $res $r12 true "Matching trailing space"]
+
+    # Test Case 13: Partial match before end (should fail)
+    :local r13 [$EndsWithStr "config.rsc.backup" ".rsc"]
+    :set res [$RunTestCase $res $r13 false "Partial match before end"]
+
+    # --- Non-string Parameters ---
+
+    # Test Case 14: Non-string parameters (Numeric types)
+    :local r14 [$EndsWithStr 12345 45]
+    :set res [$RunTestCase $res $r14 true "Non-string parameters (Numeric types)"]
+
+    # Test Case 15: IP address object type passed as input
+    :local r15 [$EndsWithStr 192.168.88.1 ".88.1"]
+    :set res [$RunTestCase $res $r15 true "IP address type input parameter"]
 
     :put "Testing completed."
     :return $res

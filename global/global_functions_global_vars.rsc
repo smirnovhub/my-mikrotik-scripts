@@ -23,29 +23,20 @@
 # /system script run global_functions_global_vars
 
 # global functions
-:global DeclareGlobalVar
 :global GetGlobalVar
 :global GetGlobalVarOrDefault
 :global SetGlobalVar
 :global RemoveGlobalVar
+:global CreateGlobalVarName
 
 # Global dependencies:
 #   global_functions_encoding:
 #       :global UrlEncode
 #       :global UrlDecode
-
-# Purpose: Declare a global variable in the RouterOS environment.
-# Parameters:
-#   $1 - Global variable name
-# Returns: Nothing
-:set DeclareGlobalVar do={
-  :if ([:len $0] = 0 or [:len $1] = 0) do={
-    :return ""
-  }
-
-  :local varName ($1 . "GlobalVar")
-  :execute (":global " . $varName)
-}
+#
+#   global_functions_array_str:
+#       :global CleanStr
+#       :global TrimStr
 
 # Purpose: Get the value of a global variable.
 # Parameters:
@@ -53,19 +44,20 @@
 # Returns: The value of the global variable
 :set GetGlobalVar do={
   :global UrlDecode
+  :global CreateGlobalVarName
 
   :if ([:len $0] = 0 or [:len $1] = 0) do={
     :return ""
   }
 
-  :local varName ($1 . "GlobalVar")
+  :local varName [$CreateGlobalVarName $1]
 
   # Check if the variable exists in the environment
   :if ([:len [/system script environment find name=$varName]] = 0) do={
     :return ""
   }
 
-  :local get [:parse ":global $varName; :return \$$varName"]
+  :local get [:parse ":global \"$varName\"; :return \$\"$varName\""]
   :return [$UrlDecode [$get]]
 }
 
@@ -77,6 +69,7 @@
 # Returns: The global variable value or the default value
 :set GetGlobalVarOrDefault do={
   :global UrlDecode
+  :global CreateGlobalVarName
 
   :local defaultValue $2
 
@@ -84,14 +77,14 @@
     :return $defaultValue
   }
 
-  :local varName ($1 . "GlobalVar")
+  :local varName [$CreateGlobalVarName $1]
 
   # Check if the variable exists in the environment
   :if ([:len [/system script environment find name=$varName]] = 0) do={
     :return $defaultValue
   }
 
-  :local get [:parse ":global $varName; :return \$$varName"]
+  :local get [:parse ":global \"$varName\"; :return \$\"$varName\""]
   :local value [$get]
 
   :local t [:typeof $value]
@@ -110,16 +103,17 @@
 # Returns: Nothing
 :set SetGlobalVar do={
   :global UrlEncode
+  :global CreateGlobalVarName
 
   :if ([:len $0] = 0 or [:len $1] = 0) do={
     :return ""
   }
 
-  :local varName ($1 . "GlobalVar")
+  :local varName [$CreateGlobalVarName $1]
   :local value $2
 
   :local encoded [$UrlEncode [:tostr $value]]
-  :execute (":global " . $varName . "; :set " . $varName . " \"" . $encoded . "\"")
+  :execute (":global \"" . $varName . "\"; :set \"" . $varName . "\" \"" . $encoded . "\"")
 }
 
 # Purpose: Find a global variable by name in the Environment and completely remove it.
@@ -127,11 +121,35 @@
 #    $1 - Global variable name
 # Returns: Nothing
 :set RemoveGlobalVar do={
+  :global CreateGlobalVarName
+
   :if ([:len $0] = 0 or [:len $1] = 0) do={
     :return ""
   }
 
-  :local varName ($1 . "GlobalVar")
+  :local varName [$CreateGlobalVarName $1]
 
   /system script environment remove [find name=$varName]
+}
+
+# Purpose: Clean a global variable name by appending a prefix and retaining only alphanumeric characters.
+# Parameters:
+#   $1 - Base string for the global variable name
+# Returns: A sanitized string with non-alphanumeric characters removed
+# Example: :put [$CreateGlobalVarName "my-var@1"]
+# Output:
+#   globalVarmyvar1
+:set CreateGlobalVarName do={
+  :global CleanStr
+  :global TrimStr
+
+  :local name [$CleanStr $1 "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-"]
+  :set name [$TrimStr $name "-"]
+
+  :if ([:len $name] = 0) do={
+    :log error "Global variable name is empty"
+    :return ""
+  }
+
+  :return ("globalVar-" . $name)
 }

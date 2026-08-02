@@ -864,13 +864,15 @@
     }
 }
 
-# Purpose: Download a text file containing script URLs line-by-line, clear global
-#          environment variables starting with uppercase letters, download/import
-#          each script into RouterOS, and execute all downloaded scripts.
+# Purpose: Download a text file containing script URLs line-by-line, parse valid
+#          entries, and import each script into RouterOS. Optionally cleans up
+#          uppercase environment variables and executes all imported scripts.
 # Parameters:
 #   $1 - URL to the text file ending with .txt containing list of script URLs
+#   $2 - (Optional) Boolean flag. If true, removes uppercase environment variables
+#        and runs all newly imported scripts after downloading (default: false)
 # Returns: true on successful list processing, or false on error
-# Example: $DownloadAndImportScriptsFromList "https://example.com/scripts/list.txt"
+# Example: $DownloadAndImportScriptsFromList "https://example.com/scripts/list.txt" true
 :set DownloadAndImportScriptsFromList do={
     :global SplitStr
     :global TrimStr
@@ -894,6 +896,8 @@
         :log error "DownloadAndImportScriptsFromList: file name should end with .txt"
         :return false
     }
+
+    :local cleanupAndRun $2
 
     :do {
         :local content [$FetchWithRedirect $listUrl]
@@ -939,29 +943,31 @@
 
             :log info ("DownloadAndImportScriptsFromList: Processed list. Success: " . $successCount . ", Failed: " . $failCount)
 
-            :delay 1s
+            :if ($cleanupAndRun = true) do={
+                :delay 1s
 
-            # Clean up global environment variables starting with an uppercase letter
-            :log info "DownloadAndImportScriptsFromList: Removing environment variables..."
+                # Clean up global environment variables starting with an uppercase letter
+                :log info "DownloadAndImportScriptsFromList: Removing environment variables..."
 
-            :local upper "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
-            :foreach id in=[/system script environment find] do={
-                :local envName [/system script environment get $id name]
-                :if ([:len $envName] > 0) do={
-                    :local firstChar [:pick $envName 0 1]
-                    :if ([:type [:find $upper $firstChar]] = "num") do={
-                        /system script environment remove $id
+                :local upper "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+                :foreach id in=[/system script environment find] do={
+                    :local envName [/system script environment get $id name]
+                    :if ([:len $envName] > 0) do={
+                        :local firstChar [:pick $envName 0 1]
+                        :if ([:type [:find $upper $firstChar]] = "num") do={
+                            /system script environment remove $id
+                        }
                     }
                 }
-            }
 
-            :delay 1s
+                :delay 1s
 
-            # Execute all successfully imported scripts
-            :foreach scriptName in=$importedScripts do={
-                :if ([:len [/system script find name=$scriptName]] > 0) do={
-                    :log info ("DownloadAndImportScriptsFromList: Running script " . $scriptName)
-                    /system script run $scriptName
+                # Execute all successfully imported scripts
+                :foreach scriptName in=$importedScripts do={
+                    :if ([:len [/system script find name=$scriptName]] > 0) do={
+                        :log info ("DownloadAndImportScriptsFromList: Running script " . $scriptName)
+                        /system script run $scriptName
+                    }
                 }
             }
 

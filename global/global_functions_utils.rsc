@@ -703,6 +703,11 @@
     # failure: Fetch failed with status 302 (Location: "https://mikrotik.com/") (/tool/fetch; line 1)
     :local redirectMarkers {" <30"; " 30"}
 
+    # RouterOS 6 failure output:
+    # failure: closing connection: <404 Not Found> 172.17.17.2:443 (4)
+    #
+    # RouterOS 7 failure output:
+    # failure: Fetch failed with status 404 (/tool/fetch; line 1)
     :local failureMarker "failure:"
 
     :local maxRedirects 5

@@ -681,6 +681,7 @@
 # Returns: String with downloaded content on success, or empty string on failure
 # Example: :put [$FetchWithRedirect "https://github.com/smirnovhub/my-mikrotik-scripts/raw/refs/heads/master/global/list.txt"]
 :set FetchWithRedirect do={
+    :global TrimStr
     :global GetRandom20CharHex
 
     # Workaround for the MikroTik RouterOS interpreter bug (phantom execution)
@@ -701,6 +702,13 @@
     # " 30" for RouterOS 7
     # failure: Fetch failed with status 302 (Location: "https://mikrotik.com/") (/tool/fetch; line 1)
     :local redirectMarkers {" <30"; " 30"}
+
+    # RouterOS 6 failure output:
+    # failure: closing connection: <404 Not Found> 172.17.17.2:443 (4)
+    #
+    # RouterOS 7 failure output:
+    # failure: Fetch failed with status 404 (/tool/fetch; line 1)
+    :local failureMarker "failure:"
 
     :local maxRedirects 5
     :local redirectCount 0
@@ -778,12 +786,12 @@
                         }
                     }
                 } else={
-                    # Parse generic error message between '<' and '>' (e.g., '<500 Internal Server Error>')
-                    :local openBracket [:find $logContent "<"]
-                    :local closeBracket [:find $logContent ">"]
+                    # Parse generic error message
+                    :local failurePos [:find $logContent $failureMarker]
 
-                    :if ([:len $openBracket] > 0 and [:len $closeBracket] > 0 and $closeBracket > $openBracket) do={
-                        :set errorMessage [:pick $logContent ($openBracket + 1) $closeBracket]
+                    :if ([:type $failurePos] = "num") do={
+                        :set errorMessage [:pick $logContent ($failurePos + [:len $failureMarker]) [:len $logContent]]
+                        :set errorMessage [$TrimStr $errorMessage ("\r\n\t ")]
                     }
                 }
             }
@@ -909,9 +917,9 @@
         :return false
     }
 
-    :local cleanupAndRun false
+    :local runScripts false
     :if ([:tostr $2] = "true") do={
-        :set cleanupAndRun true
+        :set runScripts true
     }
 
     :do {
@@ -924,7 +932,7 @@
 
             :foreach rawLine in=$lines do={
                 # Remove spaces, carriage returns, line feeds, and tabs from both ends
-                :local cleanUrl [$TrimStr $rawLine ("\r\n \t")]
+                :local cleanUrl [$TrimStr $rawLine ("\r\n\t ")]
 
                 # Ignore empty lines and comment lines (starting with #)
                 :if ([:len $cleanUrl] > 0 and [:pick $cleanUrl 0 1] != "#") do={
@@ -958,30 +966,18 @@
 
             :log info ("DownloadAndImportScriptsFromList: Processed list. Success: " . $successCount . ", Failed: " . $failCount)
 
-            :if ($cleanupAndRun = true) do={
-                :delay 1s
-
-                # Clean up global environment variables starting with an uppercase letter
-                :log info "DownloadAndImportScriptsFromList: Removing environment variables..."
-
-                :local upper "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
-                :foreach id in=[/system script environment find] do={
-                    :local envName [/system script environment get $id name]
-                    :if ([:len $envName] > 0) do={
-                        :local firstChar [:pick $envName 0 1]
-                        :if ([:type [:find $upper $firstChar]] = "num") do={
-                            /system script environment remove $id
-                        }
-                    }
-                }
-
+            :if ($runScripts = true) do={
                 :delay 1s
 
                 # Execute all successfully imported scripts
                 :foreach scriptName in=$importedScripts do={
                     :if ([:len [/system script find name=$scriptName]] > 0) do={
                         :log info ("DownloadAndImportScriptsFromList: Running script " . $scriptName)
-                        /system script run $scriptName
+                        :do {
+                            /system script run $scriptName
+                        } on-error={
+                            :log error ("DownloadAndImportScriptsFromList: Error running " . $scriptName)
+                        }
                     }
                 }
             }

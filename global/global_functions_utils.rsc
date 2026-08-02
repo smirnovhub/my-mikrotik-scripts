@@ -819,14 +819,14 @@
             :local upper "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
 
             :foreach id in=[/system script environment find] do={
-                :local envName [/system script environment get $id name]
-                :if ([:len $envName] > 0) do={
-                    :local firstChar [:pick $envName 0 1]
-                    :if ([:type [:find $upper $firstChar]] = "num") do={
-                        :log info ("Removing environment variable: " . $envName)
-                        /system script environment remove $id
-                    }
-                }
+                :local envName [/system script environment get $id name]
+                :if ([:len $envName] > 0) do={
+                    :local firstChar [:pick $envName 0 1]
+                    :if ([:type [:find $upper $firstChar]] = "num") do={
+                        :log info ("Removing environment variable: " . $envName)
+                        /system script environment remove $id
+                    }
+                }
             }
 
             :delay 1s

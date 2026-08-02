@@ -62,5 +62,9 @@ def process_list(list_file_path: Path):
 
 
 if __name__ == "__main__":
-    target_path = Path(sys.argv[1]) if len(sys.argv) > 1 else Path("list.txt")
+    if len(sys.argv) < 2:
+        print(f"Usage: python {Path(sys.argv[0]).name} <path/to/list.txt>")
+        sys.exit(1)
+
+    target_path = Path(sys.argv[1])
     process_list(target_path)

@@ -674,7 +674,12 @@
     :log info "Send private Telegram message: $messageText"
 }
 
-# Function to download and import/update RouterOS script from URL
+# Purpose: Download a .rsc script from a URL, update or create it in RouterOS 
+#          system scripts, and execute it immediately.
+# Parameters:
+#   $1 - URL to the script file ending with .rsc
+# Returns: true on successful script update and execution, or false on failure
+# Example: $DownloadAndImportScript "https://example.com/scripts/my_script.rsc"
 :set DownloadAndImportScript do={
     :global EndsWithStr
     :global FetchWithRedirect
@@ -733,7 +738,12 @@
     }
 }
 
-# Global function to download a file list and import each script using DownloadAndImportScript
+# Purpose: Download a text file containing script URLs line-by-line, parse valid
+#          entries, and import each script into RouterOS using DownloadAndImportScript.
+# Parameters:
+#   $1 - URL to the text file ending with .txt containing list of script URLs
+# Returns: true on successful list processing, or false on error
+# Example: $DownloadAndImportScriptsFromList "https://example.com/scripts/list.txt"
 :set DownloadAndImportScriptsFromList do={
     :global SplitStr
     :global TrimStr
@@ -791,7 +801,12 @@
     }
 }
 
-# Global function to handle HTTP/HTTPS fetches with all 3xx Redirects support
+# Purpose: Download content from a URL with support for HTTP 3xx redirects
+#          and error logging, storing payload directly in memory via as-value.
+# Parameters:
+#   $1 - Target URL to fetch content from
+# Returns: String with downloaded content on success, or empty string on failure
+# Example: :put [$FetchWithRedirect "https://github.com/smirnovhub/my-mikrotik-scripts/raw/refs/heads/master/global/list.txt"]
 :set FetchWithRedirect do={
     :global GetRandom20CharHex
 

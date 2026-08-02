@@ -816,14 +816,14 @@
             :delay 1s
 
             # Clean up global environment variables starting with an uppercase letter
-            :local upper "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+            :log info "DownloadAndImportScriptsFromList: Removing environment variables..."
 
+            :local upper "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
             :foreach id in=[/system script environment find] do={
                 :local envName [/system script environment get $id name]
                 :if ([:len $envName] > 0) do={
                     :local firstChar [:pick $envName 0 1]
                     :if ([:type [:find $upper $firstChar]] = "num") do={
-                        :log info ("Removing environment variable: " . $envName)
                         /system script environment remove $id
                     }
                 }

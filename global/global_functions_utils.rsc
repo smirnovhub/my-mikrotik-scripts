@@ -853,9 +853,6 @@
             }
 
             :log info "DownloadAndImportScript: Script '$scriptName' updated successfully."
-
-            # Execute/load the downloaded script into memory immediately
-            /system script run $scriptName
             :return true
         }
     } on-error={
@@ -897,7 +894,10 @@
         :return false
     }
 
-    :local cleanupAndRun $2
+    :local cleanupAndRun false
+    :if ([:tostr $2] = "true") do={
+        :set cleanupAndRun true
+    }
 
     :do {
         :local content [$FetchWithRedirect $listUrl]

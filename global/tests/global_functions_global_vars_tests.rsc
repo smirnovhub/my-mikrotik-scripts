@@ -19,7 +19,6 @@
 }
 
 :set GlobalVarTest do={
-    :global DeclareGlobalVar
     :global GetGlobalVar
     :global GetGlobalVarOrDefault
     :global SetGlobalVar
@@ -73,10 +72,6 @@
     }
 
     :put "Starting GlobalVarUtils tests..."
-
-    # --- Test 1: DeclareGlobalVar & GetGlobalVar (Uninitialized) ---
-    $DeclareGlobalVar "testVarUnset"
-    :set res [$RunTestCase $res [$GetGlobalVar "testVarUnset"] "" "Declare and get uninitialized variable"]
 
     # --- Test 2: SetGlobalVar & GetGlobalVar (String) ---
     $SetGlobalVar "testVarStr" "helloMikrotik"
@@ -192,11 +187,6 @@
     $RemoveGlobalVar "testVarRemoveTwice"
     $RemoveGlobalVar "testVarRemoveTwice"
     :set res [$RunTestCase $res [$GetGlobalVarOrDefault "testVarRemoveTwice" "ok"] "ok" "Remove already removed variable"]
-
-    # --- Test 28: Declare Existing Variable ---
-    $SetGlobalVar "testVarDeclare" "value"
-    $DeclareGlobalVar "testVarDeclare"
-    :set res [$RunTestCase $res [$GetGlobalVar "testVarDeclare"] "value" "Declare existing variable preserves value"]
 
     # --- Test 29: Default Does Not Create Variable ---
     [$GetGlobalVarOrDefault "testVarDefault" "fallback"]

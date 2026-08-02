@@ -738,8 +738,9 @@
     }
 }
 
-# Purpose: Download a text file containing script URLs line-by-line, parse valid
-#          entries, and import each script into RouterOS using DownloadAndImportScript.
+# Purpose: Download a text file containing script URLs line-by-line, clear global
+#          environment variables starting with uppercase letters, download/import
+#          each script into RouterOS, and execute all downloaded scripts.
 # Parameters:
 #   $1 - URL to the text file ending with .txt containing list of script URLs
 # Returns: true on successful list processing, or false on error
@@ -764,7 +765,7 @@
     }
 
     :if ([$EndsWithStr $listUrl ".txt"] = false) do={
-        :log error "DownloadAndImportScript: file name should end with .txt"
+        :log error "DownloadAndImportScriptsFromList: file name should end with .txt"
         :return false
     }
 
@@ -774,6 +775,7 @@
             :local lines [$SplitStr $content ("\n")]
             :local successCount 0
             :local failCount 0
+            :local importedScripts [:toarray ""]
 
             :foreach rawLine in=$lines do={
                 # Remove spaces, carriage returns, line feeds, and tabs from both ends
@@ -785,6 +787,23 @@
                     :if ($res = true) do={
                         :log info ($cleanUrl . " downloaded successfully")
                         :set successCount ($successCount + 1)
+
+                        # Extract script name to add to the execution list
+                        :local fileName ""
+                        :local lastSlash 0
+                        :for i from=0 to=([:len $cleanUrl] - 1) do={
+                            :if ([:pick $cleanUrl $i ($i + 1)] = "/") do={
+                                :set lastSlash $i
+                            }
+                        }
+                        :set fileName [:pick $cleanUrl ($lastSlash + 1) [:len $cleanUrl]]
+
+                        :local scriptName $fileName
+                        :if ([:pick $fileName ([:len $fileName] - 4) [:len $fileName]] = ".rsc") do={
+                            :set scriptName [:pick $fileName 0 ([:len $fileName] - 4)]
+                        }
+
+                        :set importedScripts ($importedScripts , $scriptName)
                     } else={
                         :log error ($cleanUrl . " download error")
                         :set failCount ($failCount + 1)
@@ -793,6 +812,33 @@
             }
 
             :log info ("DownloadAndImportScriptsFromList: Processed list. Success: " . $successCount . ", Failed: " . $failCount)
+
+            :delay 1s
+
+            # Clean up global environment variables starting with an uppercase letter
+            :local upper "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+
+            :foreach id in=[/system script environment find] do={
+                :local envName [/system script environment get $id name]
+                :if ([:len $envName] > 0) do={
+                    :local firstChar [:pick $envName 0 1]
+                    :if ([:type [:find $upper $firstChar]] = "num") do={
+                        :log info ("Removing environment variable: " . $envName)
+                        /system script environment remove $id
+                    }
+                }
+            }
+
+            :delay 1s
+
+            # Execute all successfully imported scripts
+            :foreach scriptName in=$importedScripts do={
+                :if ([:len [/system script find name=$scriptName]] > 0) do={
+                    :log info ("DownloadAndImportScriptsFromList: Running script " . $scriptName)
+                    /system script run $scriptName
+                }
+            }
+
             :return true
         }
     } on-error={

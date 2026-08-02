@@ -755,12 +755,12 @@
 
                 :foreach marker in=$redirectMarkers do={
                     :local pos [:find $logContent $marker]
-                    :if ([:type $pos] = "num" and $markerPos = -1) do={
+                    :if ([:type $pos] = "num" && $markerPos = -1) do={
                         :set markerPos $pos
                     }
                 }
 
-                :if ([:len $markerPos] > 0) do={
+                :if ($markerPos >= 0) do={
                     :if ($redirectCount >= $maxRedirects) do={
                         :log error ("FetchWithRedirect: Too many redirects (max: " . $maxRedirects . ") for URL: " . $currentUrl)
                         :return ""

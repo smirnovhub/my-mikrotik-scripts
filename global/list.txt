@@ -1,5 +1,11 @@
 # Scripts list to automatically download
 # and install with DownloadAndImportScriptsFromList
+#
+# Add following lines to your Scheduler:
+#
+# :global DownloadAndImportScriptsFromList
+# $DownloadAndImportScriptsFromList https://github.com/smirnovhub/my-mikrotik-scripts/raw/refs/heads/master/global/list.txt
+#
 https://github.com/smirnovhub/my-mikrotik-scripts/raw/refs/heads/master/global/global_functions.rsc
 https://github.com/smirnovhub/my-mikrotik-scripts/raw/refs/heads/master/global/global_functions_array_str.rsc
 https://github.com/smirnovhub/my-mikrotik-scripts/raw/refs/heads/master/global/global_functions_datetime.rsc

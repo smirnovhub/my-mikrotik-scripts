@@ -917,9 +917,9 @@
         :return false
     }
 
-    :local cleanupAndRun false
+    :local runScripts false
     :if ([:tostr $2] = "true") do={
-        :set cleanupAndRun true
+        :set runScripts true
     }
 
     :do {
@@ -966,30 +966,18 @@
 
             :log info ("DownloadAndImportScriptsFromList: Processed list. Success: " . $successCount . ", Failed: " . $failCount)
 
-            :if ($cleanupAndRun = true) do={
-                :delay 1s
-
-                # Clean up global environment variables starting with an uppercase letter
-                :log info "DownloadAndImportScriptsFromList: Removing environment variables..."
-
-                :local upper "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
-                :foreach id in=[/system script environment find] do={
-                    :local envName [/system script environment get $id name]
-                    :if ([:len $envName] > 0) do={
-                        :local firstChar [:pick $envName 0 1]
-                        :if ([:type [:find $upper $firstChar]] = "num") do={
-                            /system script environment remove $id
-                        }
-                    }
-                }
-
+            :if ($runScripts = true) do={
                 :delay 1s
 
                 # Execute all successfully imported scripts
                 :foreach scriptName in=$importedScripts do={
                     :if ([:len [/system script find name=$scriptName]] > 0) do={
                         :log info ("DownloadAndImportScriptsFromList: Running script " . $scriptName)
-                        /system script run $scriptName
+                        :do {
+                            /system script run $scriptName
+                        } on-error={
+                            :log error ("DownloadAndImportScriptsFromList: Error running " . $scriptName)
+                        }
                     }
                 }
             }

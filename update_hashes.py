@@ -1,14 +1,11 @@
-import hashlib
 import re
 import sys
+import hashlib
+
 from pathlib import Path
 
-# Target branch name
-BRANCH_NAME = "master"
-
-# Match everything after /<BRANCH_NAME>/ as relative path
-URL_PATTERN = re.compile(
-    rf"^http.*/{re.escape(BRANCH_NAME)}/(?P<rel_path>.+)$")
+# Match everything after /refs/heads/<any_branch>/ as relative path
+URL_PATTERN = re.compile(r"^http.*/refs/heads/[^/]+/(?P<rel_path>.+)$")
 
 
 def calculate_md5(filepath: Path) -> str:
@@ -22,6 +19,8 @@ def process_list(list_file_path: Path):
 
     updated_lines = []
     repo_root = Path.cwd()
+
+    print(f"Updating {list_file_path} using MD5 hashes...")
 
     with open(list_file_path, "r", encoding="utf-8") as f:
         lines = f.readlines()
@@ -48,6 +47,7 @@ def process_list(list_file_path: Path):
             if local_file.exists() and local_file.is_file():
                 file_hash = calculate_md5(local_file)
                 updated_lines.append(f"{file_hash} {url}\n")
+                print(f"{file_hash} {url}")
                 continue
             else:
                 print(f"Warning: File missing at {local_file} for URL: {url}")

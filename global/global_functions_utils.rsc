@@ -694,11 +694,20 @@
         :return ""
     }
 
+    # Redirect markers for different RouterOS versions:
+    # " <30" for RouterOS 6
+    # failure: closing connection: <302 Found "https://mikrotik.com/"> 159.148.172.205:80 (4)
+    #
+    # " 30" for RouterOS 7
+    # failure: Fetch failed with status 302 (Location: "https://mikrotik.com/") (/tool/fetch; line 1)
+    :local redirectMarkers {" <30"; " 30"}
+
     :local maxRedirects 5
     :local redirectCount 0
 
-    :local timeoutSec 10
-    :local elapsedSec 0
+    :local timeoutMs 10000
+    :local checkIntervalMs 500
+    :local elapsedMs 0
 
     :log info ("FetchWithRedirect: Fetching " . $currentUrl)
 
@@ -720,11 +729,11 @@
             :local fetchCmd "/tool fetch url=\"$currentUrl\" keep-result=no"
             :local jobId [:execute file=$tmpLogFile script=$fetchCmd]
 
-            :set elapsedSec 0
+            :set elapsedMs 0
 
-            :while (([:len [/system script job find where .id=$jobId]] = 1) && ($elapsedSec < $timeoutSec)) do={
-                :set elapsedSec ($elapsedSec + 1)
-                :delay 500ms
+            :while (([:len [/system script job find where .id=$jobId]] = 1) && ($elapsedMs < $timeoutMs)) do={
+                :delay ($checkIntervalMs . "ms")
+                :set elapsedMs ($elapsedMs + $checkIntervalMs)
             }
 
             :if ([:len [/system script job find where .id=$jobId]] = 1) do={
@@ -742,9 +751,14 @@
                 :local logContent [/file get [find where name=$tmpLogFile] contents]
                 /file remove [find where name=$tmpLogFile]
 
-                # Look for 3xx status marker (e.g. '<301', '<302', '<307')
-                :local redirectMarker " <30"
-                :local markerPos [:find $logContent $redirectMarker]
+                :local markerPos -1
+
+                :foreach marker in=$redirectMarkers do={
+                    :local pos [:find $logContent $marker]
+                    :if ([:type $pos] = "num" and $markerPos = -1) do={
+                        :set markerPos $pos
+                    }
+                }
 
                 :if ([:len $markerPos] > 0) do={
                     :if ($redirectCount >= $maxRedirects) do={
@@ -752,6 +766,7 @@
                         :return ""
                     }
 
+                    # Extract target URL enclosed in quotes
                     :local quoteStart [:find $logContent "\"" $markerPos]
                     :if ([:len $quoteStart] > 0) do={
                         :local startPos ($quoteStart + 1)

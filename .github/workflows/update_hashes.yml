@@ -1,0 +1,31 @@
+name: Update MD5 Hashes
+
+on:
+  push:
+    paths:
+      - '**/*.rsc'
+      - '**/*.txt'
+
+jobs:
+  update-hashes:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.14'
+
+      - name: Run hash update script for list files
+        run: |
+          python update_hashes.py list.txt
+          python update_hashes.py global/list.txt
+
+      - name: Commit and push changes
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git add list.txt global/list.txt
+          git diff --quiet && git diff --staged --quiet || (git commit -m "update md5 hashes" && git push)

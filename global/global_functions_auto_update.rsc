@@ -2,19 +2,19 @@
 # 888   Y88b 888     888 8888b   888            d88888     888
 # 888    888 888     888 88888b  888           d88P888     888
 # 888   d88P 888     888 888Y88b 888          d88P 888     888
-# 8888888P  888     888 888 Y88b888         d88P  888     888
+# 8888888P"  888     888 888 Y88b888         d88P  888     888
 # 888 T88b   888     888 888  Y88888        d88P   888     888
 # 888  T88b  Y88b. .d88P 888   Y8888       d8888888888     888
-# 888   T88b  Y88888P  888    Y888      d88P     888     888
+# 888   T88b  "Y88888P"  888    Y888      d88P     888     888
 #
 #  .d8888b. 88888888888     d8888 8888888b. 88888888888 888
 # d88P  Y88b    888        d88888 888   Y88b    888     888
 # Y88b.         888       d88P888 888    888    888     888
-#  Y888b.      888      d88P 888 888   d88P    888     888
-#     Y88b.    888     d88P  888 8888888P     888     888
-#       888    888    d88P   888 888 T88b      888     Y8P
-# Y88b  d88P    888   d8888888888 888  T88b     888       
-#  Y8888P     888  d88P     888 888   T88b    888     888
+#  "Y888b.      888      d88P 888 888   d88P    888     888
+#     "Y88b.    888     d88P  888 8888888P"     888     888
+#       "888    888    d88P   888 888 T88b      888     Y8P
+# Y88b  d88P    888   d8888888888 888  T88b     888      " 
+#  "Y8888P"     888  d88P     888 888   T88b    888     888
 #
 # YOU NEED TO RUN THIS SCRIPT AT SYSTEM START!
 # OR IF YOU CHANGED SOMETHING IN THIS FILE!
@@ -182,6 +182,7 @@
 # Returns: true on successful script update and execution, or false on failure
 # Example: $DownloadAndImportScript "https://example.com/scripts/my_script.rsc"
 :set DownloadAndImportScript do={
+    :global GetMd5Sum
     :global EndsWithStr
     :global FetchWithRedirect
 
@@ -191,9 +192,15 @@
     }
 
     :local rawUrl [:tostr $1]
+    :local expectedMd5Sum [:tostr $2]
 
     :if ([:len $rawUrl] = 0) do={
         :log error "DownloadAndImportScript: URL parameter is missing."
+        :return false
+    }
+
+    :if ([:len $expectedMd5Sum] != 32) do={
+        :log error "DownloadAndImportScript: Wrong expected MD5 sum."
         :return false
     }
 
@@ -222,13 +229,19 @@
     :do {
         :local newSource [$FetchWithRedirect $rawUrl]
         :if ([:len $newSource] > 0) do={
+            :local actualMd5Sum [$GetMd5Sum $newSource]
+            :if ($expectedMd5Sum != $actualMd5Sum) do={
+                :log info ("MD5 sum for " . $scriptName . " doesn't match: got " . $actualMd5Sum . " but expected " . $expectedMd5Sum)
+                :return false
+            }
+
             :if ([:len [/system script find name=$scriptName]] > 0) do={
                 /system script set [find name=$scriptName] source=$newSource comment=$scriptName
             } else={
                 /system script add name=$scriptName source=$newSource comment=$scriptName
             }
 
-            :log info "DownloadAndImportScript: Script '$scriptName' updated successfully."
+            :log info "DownloadAndImportScript: Script $scriptName updated successfully."
             :return true
         }
     } on-error={
@@ -285,11 +298,22 @@
 
             :foreach rawLine in=$lines do={
                 # Remove spaces, carriage returns, line feeds, and tabs from both ends
-                :local cleanUrl [$TrimStr $rawLine ("\r\n\t ")]
+                :local cleanLine [$TrimStr $rawLine ("\r\n\t ")]
 
                 # Ignore empty lines and comment lines (starting with #)
-                :if ([:len $cleanUrl] > 0 and [:pick $cleanUrl 0 1] != "#") do={
-                    :local res [$DownloadAndImportScript $cleanUrl]
+                :if ([:len $cleanLine] > 0 and [:pick $cleanLine 0 1] != "#") do={
+                    :local parts [$SplitStr $cleanLine " "]
+                    :local cleanUrl ""
+                    :local res false
+
+                    :if ([:len $parts] >= 2) do={
+                        :local md5 ($parts->0)
+                        :set cleanUrl ($parts->1)
+                        :set res [$DownloadAndImportScript $cleanUrl $md5]
+                    } else={
+                        :log error ("MD5 hash or URL not found in line " . $cleanLine)
+                    }
+
                     :if ($res = true) do={
                         :log info ($cleanUrl . " downloaded successfully")
                         :set successCount ($successCount + 1)
@@ -311,7 +335,7 @@
 
                         :set importedScripts ($importedScripts , $scriptName)
                     } else={
-                        :log error ($cleanUrl . " download error")
+                        :log error ($cleanLine . " download error")
                         :set failCount ($failCount + 1)
                     }
                 }

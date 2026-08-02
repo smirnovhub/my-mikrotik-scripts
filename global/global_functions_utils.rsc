@@ -847,9 +847,9 @@
         :local newSource [$FetchWithRedirect $rawUrl]
         :if ([:len $newSource] > 0) do={
             :if ([:len [/system script find name=$scriptName]] > 0) do={
-                /system script set [find name=$scriptName] source=$newSource
+                /system script set [find name=$scriptName] source=$newSource comment=$scriptName
             } else={
-                /system script add name=$scriptName source=$newSource
+                /system script add name=$scriptName source=$newSource comment=$scriptName
             }
 
             :log info "DownloadAndImportScript: Script '$scriptName' updated successfully."

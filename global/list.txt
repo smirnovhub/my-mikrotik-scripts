@@ -8,6 +8,7 @@
 #
 https://github.com/smirnovhub/my-mikrotik-scripts/raw/refs/heads/master/global/global_functions.rsc
 https://github.com/smirnovhub/my-mikrotik-scripts/raw/refs/heads/master/global/global_functions_array_str.rsc
+https://github.com/smirnovhub/my-mikrotik-scripts/raw/refs/heads/master/global/global_functions_auto_update.rsc
 https://github.com/smirnovhub/my-mikrotik-scripts/raw/refs/heads/master/global/global_functions_datetime.rsc
 https://github.com/smirnovhub/my-mikrotik-scripts/raw/refs/heads/master/global/global_functions_encoding.rsc
 https://github.com/smirnovhub/my-mikrotik-scripts/raw/refs/heads/master/global/global_functions_global_vars.rsc

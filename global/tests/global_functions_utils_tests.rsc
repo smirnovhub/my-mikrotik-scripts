@@ -746,7 +746,7 @@
             :put ("\1B[31m  [FAIL]\1B[0m " . $name . " | Expected: '" . [:tostr $expected] . "', Got: '" . [:tostr $actual] . "'")
             :set ($state->"failed") (($state->"failed") + 1)
         }
-        
+
         :return $state
     }
 
@@ -764,12 +764,10 @@
     }
     :set res [$RunTestCase $res $isNotEmpty true "Verify returned version string is not empty"]
 
-
     # --- Test Case 2: Verify no spaces in parsed version ---
     # The output must be stripped of any channel/build information (like "7.15 (stable)")
     :local hasSpace ([:find $parsedVersion " "] >= 0)
     :set res [$RunTestCase $res $hasSpace false "Verify there are no spaces in the extracted version"]
-
 
     # --- Test Case 3: Verify correct parsing behavior based on raw system string ---
     # We replicate the extraction logic directly on the raw value to verify the function's internal path

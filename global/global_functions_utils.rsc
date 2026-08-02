@@ -46,6 +46,7 @@
 :global SendPrivateTelegramMessage
 :global DownloadAndImportScript
 :global DownloadAndImportScriptsFromList
+:global FetchWithRedirect
 
 # Global dependencies:
 #   Telegram (if you want to use SendPublicTelegramMessage or SendPrivateTelegramMessage)
@@ -673,9 +674,15 @@
     :log info "Send private Telegram message: $messageText"
 }
 
-# Function to download and import/update RouterOS script from URL
+# Purpose: Download a .rsc script from a URL, update or create it in RouterOS 
+#          system scripts, and execute it immediately.
+# Parameters:
+#   $1 - URL to the script file ending with .rsc
+# Returns: true on successful script update and execution, or false on failure
+# Example: $DownloadAndImportScript "https://example.com/scripts/my_script.rsc"
 :set DownloadAndImportScript do={
     :global EndsWithStr
+    :global FetchWithRedirect
 
     # Workaround for the MikroTik RouterOS interpreter bug (phantom execution)
     :if ([:len $0] = 0) do={
@@ -711,10 +718,8 @@
     }
 
     :do {
-        :local fetchResult [/tool fetch url=$rawUrl output=user as-value]
-        :if ($fetchResult->"status" = "finished") do={
-            :local newSource ($fetchResult->"data")
-            
+        :local newSource [$FetchWithRedirect $rawUrl]
+        :if ([:len $newSource] > 0) do={
             :if ([:len [/system script find name=$scriptName]] > 0) do={
                 /system script set [find name=$scriptName] source=$newSource
             } else={
@@ -733,11 +738,17 @@
     }
 }
 
-# Global function to download a file list and import each script using DownloadAndImportScript
+# Purpose: Download a text file containing script URLs line-by-line, parse valid
+#          entries, and import each script into RouterOS using DownloadAndImportScript.
+# Parameters:
+#   $1 - URL to the text file ending with .txt containing list of script URLs
+# Returns: true on successful list processing, or false on error
+# Example: $DownloadAndImportScriptsFromList "https://example.com/scripts/list.txt"
 :set DownloadAndImportScriptsFromList do={
     :global SplitStr
     :global TrimStr
     :global EndsWithStr
+    :global FetchWithRedirect
     :global DownloadAndImportScript
 
     # Workaround for the MikroTik RouterOS interpreter bug (phantom execution)
@@ -758,9 +769,8 @@
     }
 
     :do {
-        :local fetchResult [/tool fetch url=$listUrl output=user as-value]
-        :if ($fetchResult->"status" = "finished") do={
-            :local content ($fetchResult->"data")
+        :local content [$FetchWithRedirect $listUrl]
+        :if ([:len $content] > 0) do={
             :local lines [$SplitStr $content ("\n")]
             :local successCount 0
             :local failCount 0
@@ -789,4 +799,129 @@
         :log error ("DownloadAndImportScriptsFromList: Failed to download list from " . $listUrl)
         :return false
     }
+}
+
+# Purpose: Download content from a URL with support for HTTP 3xx redirects
+#          and error logging, storing payload directly in memory via as-value.
+# Parameters:
+#   $1 - Target URL to fetch content from
+# Returns: String with downloaded content on success, or empty string on failure
+# Example: :put [$FetchWithRedirect "https://github.com/smirnovhub/my-mikrotik-scripts/raw/refs/heads/master/global/list.txt"]
+:set FetchWithRedirect do={
+    :global GetRandom20CharHex
+
+    # Workaround for the MikroTik RouterOS interpreter bug (phantom execution)
+    :if ([:len $0] = 0) do={
+        :return ""
+    }
+
+    :local currentUrl [:tostr $1]
+    :if ([:len $currentUrl] = 0) do={
+        :log error "FetchWithRedirect: URL parameter is missing."
+        :return ""
+    }
+
+    :local maxRedirects 5
+    :local redirectCount 0
+
+    :local timeoutSec 10
+    :local elapsedSec 0
+
+    :log info ("FetchWithRedirect: Fetching " . $currentUrl)
+
+    :while (true) do={
+        :do {
+            # Attempt direct sync download in-memory via as-value
+            :local fetchRes [/tool fetch url=$currentUrl output=user as-value]
+            :if ($fetchRes->"status" = "finished") do={
+                :return ($fetchRes->"data")
+            } else={
+                :log error ("FetchWithRedirect: Failed to fetch " . $currentUrl)
+                :return ""
+            }
+        } on-error={
+            # Fetch failed (3xx redirect or network error) -> capture error text via :execute
+            :local tmpLogFile ([$GetRandom20CharHex] . ".txt")
+
+            # Execute fetch with keep-result=no to record only stderr/stdout
+            :local fetchCmd "/tool fetch url=\"$currentUrl\" keep-result=no"
+            :local jobId [:execute file=$tmpLogFile script=$fetchCmd]
+
+            :set elapsedSec 0
+
+            :while (([:len [/system script job find where .id=$jobId]] = 1) && ($elapsedSec < $timeoutSec)) do={
+                :set elapsedSec ($elapsedSec + 1)
+                :delay 500ms
+            }
+
+            :if ([:len [/system script job find where .id=$jobId]] = 1) do={
+                :log error ("FetchWithRedirect: Request to " . $currentUrl . " timed out")
+                /system script job remove [find where .id=$jobId]
+                /file remove [find where name=$tmpLogFile]
+                :return ""
+            }
+
+            :local nextUrl ""
+            :local errorMessage ""
+
+            # Extract new Location URL or parse HTTP/network error
+            :if ([:len [/file find where name=$tmpLogFile]] = 1) do={
+                :local logContent [/file get [find where name=$tmpLogFile] contents]
+                /file remove [find where name=$tmpLogFile]
+
+                # Look for 3xx status marker (e.g. '<301', '<302', '<307')
+                :local redirectMarker " <30"
+                :local markerPos [:find $logContent $redirectMarker]
+
+                :if ([:len $markerPos] > 0) do={
+                    :if ($redirectCount >= $maxRedirects) do={
+                        :log error ("FetchWithRedirect: Too many redirects (max: " . $maxRedirects . ") for URL: " . $currentUrl)
+                        :return ""
+                    }
+
+                    :local quoteStart [:find $logContent "\"" $markerPos]
+                    :if ([:len $quoteStart] > 0) do={
+                        :local startPos ($quoteStart + 1)
+                        :local restStr [:pick $logContent $startPos [:len $logContent]]
+                        :local endPos [:find $restStr "\""]
+
+                        :if ([:len $endPos] > 0) do={
+                            :set nextUrl [:pick $restStr 0 $endPos]
+                        }
+                    }
+                } else={
+                    # Parse generic error message between '<' and '>' (e.g., '<500 Internal Server Error>')
+                    :local openBracket [:find $logContent "<"]
+                    :local closeBracket [:find $logContent ">"]
+
+                    :if ([:len $openBracket] > 0 and [:len $closeBracket] > 0 and $closeBracket > $openBracket) do={
+                        :set errorMessage [:pick $logContent ($openBracket + 1) $closeBracket]
+                    }
+                }
+            }
+
+            # If a redirect URL was found, advance to the next iteration
+            :if ([:len $nextUrl] > 0) do={
+                :if ($nextUrl = $currentUrl) do={
+                    :log error ("FetchWithRedirect: Circular redirect to " . $nextUrl)
+                    :return ""
+                }
+
+                :set redirectCount ($redirectCount + 1)
+                :log info ("FetchWithRedirect: Following 3xx redirect (" . $redirectCount . "/" . $maxRedirects . ") to " . $nextUrl)
+                :set currentUrl $nextUrl
+            } else={
+                # Unrecoverable error (HTTP error status, network error, or log extraction failed)
+                :if ([:len $errorMessage] > 0) do={
+                    :log error ("FetchWithRedirect: Error fetching " . $currentUrl . ": " . $errorMessage)
+                } else={
+                    :log error ("FetchWithRedirect: Failed to fetch " . $currentUrl)
+                }
+                :return ""
+            }
+        }
+    }
+
+    :log error ("FetchWithRedirect: Too many redirects (max: " . $maxRedirects . ") for URL: " . $currentUrl)
+    :return ""
 }

@@ -92,7 +92,15 @@
 # MD5 has been shown to not be collision resistant, as such MD5 is not suitable 
 # for certain applications involving security and/or cryptography, 
 # see http://en.wikipedia.org/wiki/Md5 for additional information.
-#
+
+# Purpose: Calculate the MD5 hash checksum for a given string or array of bytes.
+# Parameters:
+#   $1 - String to calculate the hash for
+# Returns: MD5 checksum as a hex string
+# NOTE: Useful for data integrity verification and cryptographic hashing.
+# Example: :put [$GetMd5Sum "Hello World"]
+# Output:
+#   b10a8db164e0754105b7a99be72e3fe5
 :set GetMd5Sum do={
   :global DecToChar
   :global asciiCodeTable
@@ -455,6 +463,13 @@
   :return $sMd5Output
 }
 
+# Purpose: Calculate the CRC32 checksum for a given string or array of bytes.
+# Parameters:
+#   $1 - String to calculate the checksum for
+# Returns: CRC32 checksum as a string or number
+# Example: :put [$GetCrc32Sum "Hello World"]
+# Output:
+#   4a17b156
 :set GetCrc32Sum do={
     :global DecToChar
     :global asciiCodeTable

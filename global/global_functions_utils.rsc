@@ -60,6 +60,17 @@
 #   global_functions_datetime:
 #       :global GetCurrentDateTime
 
+# Purpose: Write a message to the system log with specified severity and immediately terminate script execution.
+# Parameters:
+#   $1 - Log severity level ("info", "warning", "error", "debug"; defaults to "info" for unrecognised values)
+#   $2 - Prefix or module name
+#   $3 - Log message text
+# Returns: None (always terminates execution via :error)
+# NOTE: Formats the entry as "<name>: <message>" before logging and raising the error.
+# Example: [$LogAndExit "error" "MyModule" "Critical database connection failure"]
+# Output:
+#   System log: MyModule: Critical database connection failure
+#   Script execution aborted with error message.
 :set LogAndExit do={
   :local severity [:tostr $1]
   :local name     [:tostr $2]

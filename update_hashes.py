@@ -1,6 +1,6 @@
 import re
 import sys
-import hashlib
+import zlib
 
 from pathlib import Path
 
@@ -8,8 +8,11 @@ from pathlib import Path
 URL_PATTERN = re.compile(r"^http.*/refs/heads/[^/]+/(?P<rel_path>.+)$")
 
 
-def calculate_md5(filepath: Path) -> str:
-    return hashlib.md5(filepath.read_bytes()).hexdigest()
+def calculate_hash(filepath: Path) -> str:
+    # Read bytes and calculate CRC32 checksum
+    crc_val = zlib.crc32(filepath.read_bytes())
+    # Format as 8-character lowercase hex string
+    return f"{crc_val:08x}"
 
 
 def process_list(list_file_path: Path):
@@ -20,7 +23,7 @@ def process_list(list_file_path: Path):
     updated_lines = []
     repo_root = Path.cwd()
 
-    print(f"Updating {list_file_path} using MD5 hashes...")
+    print(f"Updating {list_file_path} hashes...")
 
     with open(list_file_path, "r", encoding="utf-8") as f:
         lines = f.readlines()
@@ -45,7 +48,7 @@ def process_list(list_file_path: Path):
             local_file = repo_root / rel_path_str
 
             if local_file.exists() and local_file.is_file():
-                file_hash = calculate_md5(local_file)
+                file_hash = calculate_hash(local_file)
                 updated_lines.append(f"{file_hash} {url}\n")
                 print(f"{file_hash} {url}")
                 continue
@@ -58,7 +61,7 @@ def process_list(list_file_path: Path):
     with open(list_file_path, "w", encoding="utf-8", newline="\n") as f:
         f.writelines(updated_lines)
 
-    print(f"Updated {list_file_path} using MD5 hashes.")
+    print(f"Hashes {list_file_path} Updated.")
 
 
 if __name__ == "__main__":

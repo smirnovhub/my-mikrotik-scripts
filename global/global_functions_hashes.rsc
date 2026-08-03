@@ -455,6 +455,13 @@
   :return $sMd5Output
 }
 
+# Purpose: Calculate the CRC32 checksum for a given string or array of bytes.
+# Parameters:
+#   $1 - String to calculate the checksum for
+# Returns: CRC32 checksum as a string or number
+# Example: :put [$GetCrc32Sum "Hello World"]
+# Output:
+#   4a17b156
 :set GetCrc32Sum do={
     :global DecToChar
     :global asciiCodeTable

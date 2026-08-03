@@ -231,7 +231,7 @@
         :if ([:len $newSource] > 0) do={
             :local actualHashSum [$GetCrc32Sum $newSource]
             :if ($expectedHashSum != $actualHashSum) do={
-                :log info ("Hash sum for " . $scriptName . " doesn't match: got " . $actualHashSum . " but expected " . $expectedHashSum)
+                :log error ("Hash sum for " . $scriptName . " doesn't match: got " . $actualHashSum . " but expected " . $expectedHashSum)
                 :return false
             }
 

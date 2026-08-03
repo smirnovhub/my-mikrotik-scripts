@@ -219,6 +219,9 @@
 # Parameters:
 #   $1 - Input string to be URL-encoded
 # Returns: URL-encoded string with special characters replaced by their %HH representations
+# Example: :put [$UrlEncode "encoded! (string) [test]"]
+# Output:
+#   encoded%21%20%28string%29%20%5Btest%5D
 :set UrlEncode do={
     # Convert input to string to ensure proper type
     :local input [:tostr $1]
@@ -296,6 +299,9 @@
 # Parameters:
 #   $1 - URL-encoded input string
 # Returns: Decoded string with all %HH sequences replaced by their corresponding characters
+# Example: :put [$UrlDecode "decoded%21%20%28string%29%20%5Btest%5D"]
+# Output:
+#   decoded! (string) [test]
 :set UrlDecode do={
 
     # Global function to convert hex strings to numbers

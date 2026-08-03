@@ -182,7 +182,7 @@
 # Returns: true on successful script update and execution, or false on failure
 # Example: $DownloadAndImportScript "https://example.com/scripts/my_script.rsc"
 :set DownloadAndImportScript do={
-    :global GetMd5Sum
+    :global GetCrc32Sum
     :global EndsWithStr
     :global FetchWithRedirect
 
@@ -192,15 +192,15 @@
     }
 
     :local rawUrl [:tostr $1]
-    :local expectedMd5Sum [:tostr $2]
+    :local expectedHashSum [:tostr $2]
 
     :if ([:len $rawUrl] = 0) do={
         :log error "DownloadAndImportScript: URL parameter is missing."
         :return false
     }
 
-    :if ([:len $expectedMd5Sum] != 32) do={
-        :log error "DownloadAndImportScript: Wrong expected MD5 sum."
+    :if ([:len $expectedHashSum] = 0) do={
+        :log error "DownloadAndImportScript: Hash sum parameter is missing."
         :return false
     }
 
@@ -229,9 +229,9 @@
     :do {
         :local newSource [$FetchWithRedirect $rawUrl]
         :if ([:len $newSource] > 0) do={
-            :local actualMd5Sum [$GetMd5Sum $newSource]
-            :if ($expectedMd5Sum != $actualMd5Sum) do={
-                :log info ("MD5 sum for " . $scriptName . " doesn't match: got " . $actualMd5Sum . " but expected " . $expectedMd5Sum)
+            :local actualHashSum [$GetCrc32Sum $newSource]
+            :if ($expectedHashSum != $actualHashSum) do={
+                :log error ("Hash sum for " . $scriptName . " doesn't match: got " . $actualHashSum . " but expected " . $expectedHashSum)
                 :return false
             }
 
@@ -307,11 +307,11 @@
                     :local res false
 
                     :if ([:len $parts] >= 2) do={
-                        :local md5 ($parts->0)
+                        :local hash ($parts->0)
                         :set cleanUrl ($parts->1)
-                        :set res [$DownloadAndImportScript $cleanUrl $md5]
+                        :set res [$DownloadAndImportScript $cleanUrl $hash]
                     } else={
-                        :log error ("MD5 hash or URL not found in line " . $cleanLine)
+                        :log error ("Hash sum or URL not found in line " . $cleanLine)
                     }
 
                     :if ($res = true) do={

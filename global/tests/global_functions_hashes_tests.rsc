@@ -4,6 +4,7 @@
 
 :set RunAllHashesTests do={
     :global GetMd5SumTest
+    :global GetCrc32SumTest
 
     :local res [:toarray ""]
     :if ([:typeof $1] = "array") do={

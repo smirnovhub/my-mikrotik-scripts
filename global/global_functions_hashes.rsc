@@ -29,6 +29,7 @@
 # Automatically generated ASCII code table
 :global asciiCodeTable
 
+# Standard CRC32 polynomial 0xEDB88320 lookup table
 :global crc32Table
 :set crc32Table {
     0x00000000; 0x77073096; 0xEE0E612C; 0x990951BA; 0x076DC419; 0x706AF48F; 0xE963A535; 0x9E6495A3;

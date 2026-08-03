@@ -20,6 +20,8 @@
 
 :set GetMd5SumTest do={
     :global GetMd5Sum
+    :global DecToChar
+    :global IsPrintableStr
 
     :local res [:toarray ""]
     :if ([:typeof $1] = "array") do={
@@ -28,6 +30,7 @@
 
     :local RunTestCase do={
         :global GetMd5Sum
+        :global IsPrintableStr
 
         # Workaround for the MikroTik RouterOS interpreter bug (phantom execution)
         :if ([:len $0] = 0) do={
@@ -39,14 +42,19 @@
         :local expected [:tostr $3]
         :local name [:tostr $4]
 
+        :local inputDisplay $inputStr
+        :if (![$IsPrintableStr $inputDisplay]) do={
+            :set inputDisplay "<binary string>"
+        }
+
         # Use an explicit check for the test execution block to handle empty strings safely
         :local actual [$GetMd5Sum $inputStr]
         :if ($actual = $expected) do={
             :set ($state->"passed") (($state->"passed") + 1)
-            :put ("  \1B[32m[PASS]\1B[0m " . $name . ": '" . $inputStr . "' -> '" . $actual . "'")
+            :put ("  \1B[32m[PASS]\1B[0m " . $name . ": '" . $inputDisplay . "' -> '" . $actual . "'")
         } else={
             :set ($state->"failed") (($state->"failed") + 1)
-            :put ("  \1B[31m[FAIL]\1B[0m " . $name . ": '" . $inputStr . "' | Expected: '" . $expected . "', Got: '" . $actual . "'")
+            :put ("  \1B[31m[FAIL]\1B[0m " . $name . ": '" . $inputDisplay . "' | Expected: '" . $expected . "', Got: '" . $actual . "'")
         }
         :return $state
     }
@@ -126,6 +134,15 @@
 
     # 129-byte message
     :set res [$RunTestCase $res "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa" "b325dc1c6f5e7a2b7cf465b9feab7948" "129-byte message double block overflow hash"]
+
+    # --- Test: All 256 byte values ---
+    :local allChars ""
+
+    :for i from=0 to=255 do={
+        :set allChars ($allChars . [$DecToChar $i])
+    }
+
+    :set res [$RunTestCase $res $allChars "e2c865db4162bed963bfaa9ef6ac18f0" "All 256 byte values hash"]
 
     :put "Testing completed."
     :return $res

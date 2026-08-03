@@ -61,7 +61,7 @@ def process_list(list_file_path: Path):
     with open(list_file_path, "w", encoding="utf-8", newline="\n") as f:
         f.writelines(updated_lines)
 
-    print(f"Hashes {list_file_path} Updated.")
+    print(f"Hashes {list_file_path} updated.")
 
 
 if __name__ == "__main__":

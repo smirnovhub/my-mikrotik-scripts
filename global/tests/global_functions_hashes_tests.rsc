@@ -194,31 +194,28 @@
     :put "Starting GetCrc32Sum tests..."
 
     # Empty string validation (Standard Crc32 for empty input)
-    :set res [$RunTestCase $res "" "d41d8cd98f00b204e9800998ecf8427e" "Empty string boundary hash verification"]
+    :set res [$RunTestCase $res "" "00000000" "Empty string boundary hash verification"]
 
     # Short basic strings
-    :set res [$RunTestCase $res "a" "0cc175b9c0f1b6a831c399e269772661" "Single lowercase character string hash"]
-    :set res [$RunTestCase $res "abc" "900150983cd24fb0d6963f7d28e17f72" "Short lowercase alphabetical sequence hash"]
-    :set res [$RunTestCase $res "message digest" "f96b697d7cb7938d525a2f31aaf161d0" "Standard spaced alphabetical phrase hash"]
+    :set res [$RunTestCase $res "a" "e8b7be43" "Single lowercase character string hash"]
+    :set res [$RunTestCase $res "abc" "352441c2" "Short lowercase alphabetical sequence hash"]
+    :set res [$RunTestCase $res "message digest" "20159d7f" "Standard spaced alphabetical phrase hash"]
 
     # Numeric and special character sequences
-    :set res [$RunTestCase $res "1234567890" "e807f1fcf82d132f9bb018ca6738a19f" "Numeric sequence data hash validation"]
-    :set res [$RunTestCase $res "admin" "21232f297a57a5a743894a0e4a801fc3" "Common administrative identifier string hash"]
-    :set res [$RunTestCase $res "RouterOS" "7e08a36aac8e952ec66f3f28bd384bc0" "Mixed case application specific string hash"]
-
-    # Empty string validation (Standard Crc32 for empty input)
-    :set res [$RunTestCase $res "" "d41d8cd98f00b204e9800998ecf8427e" "Empty string boundary hash verification"]
+    :set res [$RunTestCase $res "1234567890" "261daee5" "Numeric sequence data hash validation"]
+    :set res [$RunTestCase $res "admin" "880e0d76" "Common administrative identifier string hash"]
+    :set res [$RunTestCase $res "RouterOS" "866c2528" "Mixed case application specific string hash"]
 
     # Single character inputs
-    :set res [$RunTestCase $res "A" "7fc56270e7a70fa81a5935b72eacbe29" "Single uppercase character string hash"]
+    :set res [$RunTestCase $res "A" "d3d99e8b" "Single uppercase character string hash"]
 
     # Standard RFC 1321 test vectors
-    :set res [$RunTestCase $res "abcdefghijklmnopqrstuvwxyz" "c3fcd3d76192e4007dfb496cca67e13b" "Complete lowercase alphabet hash"]
-    :set res [$RunTestCase $res "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789" "d174ab98d277d9f5a5611c2c9f419d9f" "Uppercase lowercase and digit sequence hash"]
-    :set res [$RunTestCase $res "12345678901234567890123456789012345678901234567890123456789012345678901234567890" "57edf4a22be3c955ac49da2e2107b67a" "Long numeric sequence RFC validation hash"]
+    :set res [$RunTestCase $res "abcdefghijklmnopqrstuvwxyz" "4c2750bd" "Complete lowercase alphabet hash"]
+    :set res [$RunTestCase $res "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789" "1fc2e6d2" "Uppercase lowercase and digit sequence hash"]
+    :set res [$RunTestCase $res "12345678901234567890123456789012345678901234567890123456789012345678901234567890" "7ca94a72" "Long numeric sequence RFC validation hash"]
 
     # Common strings
-    :set res [$RunTestCase $res "password" "5f4dcc3b5aa765d61d8327deb882cf99" "Common password string hash"]
+    :set res [$RunTestCase $res "password" "35c246d5" "Common password string hash"]
 
     # Case sensitivity
     :set res [$RunTestCase $res "hello" "3610a686" "Lowercase word hash"]
@@ -229,7 +226,7 @@
     :set res [$RunTestCase $res " " "e96ccf45" "Single space character hash"]
     :set res [$RunTestCase $res "  " "ef331695" "Two consecutive space characters hash"]
     :set res [$RunTestCase $res "abc " "9c334898" "Trailing space preservation hash"]
-    :set res [$RunTestCase $res " abc" " abc" "Leading space preservation hash"]
+    :set res [$RunTestCase $res " abc" "4b13e8f2" "Leading space preservation hash"]
     :set res [$RunTestCase $res "abc 123" "fc382e1d" "Embedded space preservation hash"]
 
     # Repeated character sequences
@@ -237,8 +234,8 @@
     :set res [$RunTestCase $res "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb" "47fd49d4" "Repeated lowercase character block hash"]
 
     # Special characters
-    :set res [$RunTestCase $res ("!@#\$%^&*()") "05b28d17a7b6e7024b6e5d8cc43a8bf7" "Common punctuation character sequence hash"]
-    :set res [$RunTestCase $res ("~`[]{}|\\:;") "a5264c255ab316bcff01963a084ec8a0" "Mixed punctuation character sequence hash"]
+    :set res [$RunTestCase $res ("!@#\$%^&*()") "aea29b98" "Common punctuation character sequence hash"]
+    :set res [$RunTestCase $res ("~`[]{}|\\:;") "ad6d1dcf" "Mixed punctuation character sequence hash"]
 
     # --- Test: All 256 byte values ---
     :local allChars ""

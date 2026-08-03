@@ -9,6 +9,9 @@ on:
   pull_request:
     branches: ["master"]
 
+permissions:
+  contents: write
+
 jobs:
   update-hashes:
     runs-on: ubuntu-latest

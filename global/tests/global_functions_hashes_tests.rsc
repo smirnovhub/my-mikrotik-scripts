@@ -1,5 +1,6 @@
 :global RunAllHashesTests
 :global GetMd5SumTest
+:global GetCrc32SumTest
 
 :set RunAllHashesTests do={
     :global GetMd5SumTest
@@ -12,6 +13,7 @@
     :put "\1B[35m=== STARTING ALL HASHES TESTS ===\1B[0m"
 
     :set res [$GetMd5SumTest $res]
+    :set res [$GetCrc32SumTest $res]
 
     :put "\1B[35m=== ALL HASHES TESTS COMPLETED ===\1B[0m"
 
@@ -143,6 +145,109 @@
     }
 
     :set res [$RunTestCase $res $allChars "e2c865db4162bed963bfaa9ef6ac18f0" "All 256 byte values hash"]
+
+    :put "Testing completed."
+    :return $res
+}
+
+:set GetCrc32SumTest do={
+    :global GetCrc32Sum
+    :global DecToChar
+    :global IsPrintableStr
+
+    :local res [:toarray ""]
+    :if ([:typeof $1] = "array") do={
+        :set res $1
+    }
+
+    :local RunTestCase do={
+        :global GetCrc32Sum
+        :global IsPrintableStr
+
+        # Workaround for the MikroTik RouterOS interpreter bug (phantom execution)
+        :if ([:len $0] = 0) do={
+            :return $1
+        }
+
+        :local state $1
+        :local inputStr [:tostr $2]
+        :local expected [:tostr $3]
+        :local name [:tostr $4]
+
+        :local inputDisplay $inputStr
+        :if (![$IsPrintableStr $inputDisplay]) do={
+            :set inputDisplay "<binary string>"
+        }
+
+        # Use an explicit check for the test execution block to handle empty strings safely
+        :local actual [$GetCrc32Sum $inputStr]
+        :if ($actual = $expected) do={
+            :set ($state->"passed") (($state->"passed") + 1)
+            :put ("  \1B[32m[PASS]\1B[0m " . $name . ": '" . $inputDisplay . "' -> '" . $actual . "'")
+        } else={
+            :set ($state->"failed") (($state->"failed") + 1)
+            :put ("  \1B[31m[FAIL]\1B[0m " . $name . ": '" . $inputDisplay . "' | Expected: '" . $expected . "', Got: '" . $actual . "'")
+        }
+        :return $state
+    }
+
+    :put "Starting GetCrc32Sum tests..."
+
+    # Empty string validation (Standard Crc32 for empty input)
+    :set res [$RunTestCase $res "" "d41d8cd98f00b204e9800998ecf8427e" "Empty string boundary hash verification"]
+
+    # Short basic strings
+    :set res [$RunTestCase $res "a" "0cc175b9c0f1b6a831c399e269772661" "Single lowercase character string hash"]
+    :set res [$RunTestCase $res "abc" "900150983cd24fb0d6963f7d28e17f72" "Short lowercase alphabetical sequence hash"]
+    :set res [$RunTestCase $res "message digest" "f96b697d7cb7938d525a2f31aaf161d0" "Standard spaced alphabetical phrase hash"]
+
+    # Numeric and special character sequences
+    :set res [$RunTestCase $res "1234567890" "e807f1fcf82d132f9bb018ca6738a19f" "Numeric sequence data hash validation"]
+    :set res [$RunTestCase $res "admin" "21232f297a57a5a743894a0e4a801fc3" "Common administrative identifier string hash"]
+    :set res [$RunTestCase $res "RouterOS" "7e08a36aac8e952ec66f3f28bd384bc0" "Mixed case application specific string hash"]
+
+    # Empty string validation (Standard Crc32 for empty input)
+    :set res [$RunTestCase $res "" "d41d8cd98f00b204e9800998ecf8427e" "Empty string boundary hash verification"]
+
+    # Single character inputs
+    :set res [$RunTestCase $res "A" "7fc56270e7a70fa81a5935b72eacbe29" "Single uppercase character string hash"]
+
+    # Standard RFC 1321 test vectors
+    :set res [$RunTestCase $res "abcdefghijklmnopqrstuvwxyz" "c3fcd3d76192e4007dfb496cca67e13b" "Complete lowercase alphabet hash"]
+    :set res [$RunTestCase $res "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789" "d174ab98d277d9f5a5611c2c9f419d9f" "Uppercase lowercase and digit sequence hash"]
+    :set res [$RunTestCase $res "12345678901234567890123456789012345678901234567890123456789012345678901234567890" "57edf4a22be3c955ac49da2e2107b67a" "Long numeric sequence RFC validation hash"]
+
+    # Common strings
+    :set res [$RunTestCase $res "password" "5f4dcc3b5aa765d61d8327deb882cf99" "Common password string hash"]
+
+    # Case sensitivity
+    :set res [$RunTestCase $res "hello" "3610a686" "Lowercase word hash"]
+    :set res [$RunTestCase $res "Hello" "f7d18982" "Capitalized word hash"]
+    :set res [$RunTestCase $res "HELLO" "c1446436" "Uppercase word hash"]
+
+    # Whitespace handling
+    :set res [$RunTestCase $res " " "e96ccf45" "Single space character hash"]
+    :set res [$RunTestCase $res "  " "ef331695" "Two consecutive space characters hash"]
+    :set res [$RunTestCase $res "abc " "9c334898" "Trailing space preservation hash"]
+    :set res [$RunTestCase $res " abc" " abc" "Leading space preservation hash"]
+    :set res [$RunTestCase $res "abc 123" "fc382e1d" "Embedded space preservation hash"]
+
+    # Repeated character sequences
+    :set res [$RunTestCase $res "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa" "cab11777" "Repeated lowercase character block hash"]
+    :set res [$RunTestCase $res "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb" "47fd49d4" "Repeated lowercase character block hash"]
+
+    # Special characters
+    :set res [$RunTestCase $res ("!@#\$%^&*()") "05b28d17a7b6e7024b6e5d8cc43a8bf7" "Common punctuation character sequence hash"]
+    :set res [$RunTestCase $res ("~`[]{}|\\:;") "a5264c255ab316bcff01963a084ec8a0" "Mixed punctuation character sequence hash"]
+
+    # --- Test: All 256 byte values ---
+    :local allChars ""
+
+    :for i from=0 to=255 do={
+        :set allChars ($allChars . [$DecToChar $i])
+    }
+
+    :set res [$RunTestCase $res $allChars "29058c73" "All 256 byte values hash"]
 
     :put "Testing completed."
     :return $res

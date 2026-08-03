@@ -481,15 +481,11 @@
 
     # Initial CRC value
     :local crc 0xFFFFFFFF
+    :local len ([:len $input] - 1)
 
     # Loop through each character in the input string
-    :for i from=0 to=([:len $input] - 1) do={
-        # Get byte numeric value directly from global ASCII hash map
-        :local byteVal ($asciiCodeTable->[:pick $input $i])
-
-        # Calculate table index and update CRC value
-        :local tableIndex (($crc ^ $byteVal) & 0xFF)
-        :set crc (($crc >> 8) ^ ($crc32Table->$tableIndex))
+    :for i from=0 to=$len do={
+        :set crc (($crc >> 8) ^ ($crc32Table->((($crc ^ ($asciiCodeTable->[:pick $input $i])) & 0xFF))))
     }
 
     # Final XOR value

@@ -39,7 +39,7 @@ jobs:
             
             # Commit only if there are uncommitted changes
             if ! git diff --quiet || ! git diff --staged --quiet; then
-              git commit -m "update hashes [skip actions]"
+              git commit -m "update hashes"
             fi
             
             if [ -n "$GITHUB_HEAD_REF" ]; then

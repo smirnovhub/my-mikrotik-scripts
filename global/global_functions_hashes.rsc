@@ -26,6 +26,9 @@
 :global GetMd5Sum
 :global GetCrc32Sum
 
+# 256-entry byte-to-hex lookup table
+:global md5HexByteTable
+
 # Automatically generated ASCII code table
 :global asciiCodeTable
 
@@ -104,43 +107,33 @@
 :set GetMd5Sum do={
   :global DecToChar
   :global asciiCodeTable
+  :global md5HexByteTable
   :local strMessage $1
+  :local lMessageLength [:len $strMessage]
 
-  # $strHexValues, Used to create hexadecimal output
-  :local strHexValues "0123456789abcdef"
-  # To have uppercase hexadecimal A-F use the next line instead of the above
-  # :local strHexValues "0123456789ABCDEF"
-
-  # No futher modification required beyond this point unless customizing script
-  # Start by defining constant values
+  # Fast return for empty string
+  :if ($lMessageLength = 0) do={
+    :return "d41d8cd98f00b204e9800998ecf8427e"
+  }
 
   # Initialize ASCII lookup table on first use
   :if ([:typeof $asciiCodeTable] = "nothing") do={
       :set asciiCodeTable [:toarray ""]
-
       :for i from=0 to=255 do={
           :set ($asciiCodeTable->[$DecToChar $i]) $i
       }
   }
 
-  # k[i] = floor(abs(sin(i + 1))  4294967296) 
-  # Or just use the following table $k[0..63]:
-  :local k ( 0xD76AA478, 0xE8C7B756, 0x242070DB, 0xC1BDCEEE, \
-            0xF57C0FAF, 0x4787C62A, 0xA8304613, 0xFD469501, \
-            0x698098D8, 0x8B44F7AF, 0xFFFF5BB1, 0x895CD7BE, \
-            0x6B901122, 0xFD987193, 0xA679438E, 0x49B40821, \
-            0xF61E2562, 0xC040B340, 0x265E5A51, 0xE9B6C7AA, \
-            0xD62F105D, 0x02441453, 0xD8A1E681, 0xE7D3FBC8, \
-            0x21E1CDE6, 0xC33707D6, 0xF4D50D87, 0x455A14ED, \
-            0xA9E3E905, 0xFCEFA3F8, 0x676F02D9, 0x8D2A4C8A, \
-            0xFFFA3942, 0x8771F681, 0x6D9D6122, 0xFDE5380C, \
-            0xA4BEEA44, 0x4BDECFA9, 0xF6BB4B60, 0xBEBFBC70, \
-            0x289B7EC6, 0xEAA127FA, 0xD4EF3085, 0x04881D05, \
-            0xD9D4D039, 0xE6DB99E5, 0x1FA27CF8, 0xC4AC5665, \
-            0xF4292244, 0x432AFF97, 0xAB9423A7, 0xFC93A039, \
-            0x655B59C3, 0x8F0CCC92, 0xFFEFF47D, 0x85845DD1, \
-            0x6FA87E4F, 0xFE2CE6E0, 0xA3014314, 0x4E0811A1, \
-            0xF7537E82, 0xBD3AF235, 0x2AD7D2BB, 0xEB86D391 )
+  # Initialize 256-entry byte-to-hex lookup table on first use
+  :if ([:typeof $md5HexByteTable] = "nothing") do={
+      :local strHex "0123456789abcdef"
+      :set md5HexByteTable [:toarray ""]
+      :for i from=0 to=255 do={
+          :local high [:pick $strHex ($i >> 4) (($i >> 4) + 1)]
+          :local low [:pick $strHex ($i & 0xF) (($i & 0xF) + 1)]
+          :set ($md5HexByteTable->$i) ($high . $low)
+      }
+  }
 
   :local a 0x67452301
   :local b 0xEFCDAB89
@@ -152,315 +145,175 @@
   :local CC 0x98BADCFE
   :local DD 0x10325476
 
-  :local s1 ( 7, 12, 17, 22 )
-  :local s2 ( 5, 9, 14, 20 )
-  :local s3 ( 4, 11, 16, 23 )
-  :local s4 ( 6, 10, 15, 21 )
-
-  :local i 0
-  :local j 0
-  :local x 0
-  :local S 0
-  :local T 0
-  :local lcv 0
   :local tmp1 0
+  :local lNumberOfWords (((($lMessageLength + 8) / 64) + 1) * 16)
+  
+  :local lWordArray [:toarray ""]
 
-  :local arrMd5State []
-  :local arrWordArray []
-  :local ch ""
-  :local iByteCount 0
-  :local iCharVal 3
-  :local iDec 0
-  :local iHexDigit 8
-  :local iMd5State 0
-  :local lBytePosition 0
-  :local lMessageLength 0
-  :local lNumberOfWords 0
-  :local lShiftedVal 0
-  :local lWordArray []
-  :local lWordArrLen 0
-  :local lWordCount 0
-  :local sHex ""
-  :local sMd5Hash ""
-  :local sMd5Output ""
-  :local iteration 0
-
-  :set lMessageLength [:len $strMessage]
-
-  # Number of 32-bit words.
-  :set lNumberOfWords (((($lMessageLength + 8) / 64) + 1) * 16)
-
-  # Build the initial array.
-  #
-  # This is intentionally done in one operation instead of repeatedly
-  # prepending to a string.
-  :set arrWordArray []
-
-  :for i from=0 to=($lNumberOfWords - 1) do={
-    :set arrWordArray ($arrWordArray, 0)
+  # Build the initial array
+  :for w from=0 to=($lNumberOfWords - 1) do={
+    :set ($lWordArray->$w) 0
   }
 
-  # Convert message to word array.
-  #
-  # IMPORTANT:
-  # The original implementation uses a rotated value here:
-  #
-  #   (value << position) | (value >> (32 - position))
-  #
-  # Keep exactly the same behavior.
-
-  :set iByteCount 0
-
-  :while ($iByteCount < $lMessageLength) do={
-    :set lWordCount ($iByteCount / 4)
-    :set lBytePosition (($iByteCount % 4) * 8)
-
-    :set ch [:pick $strMessage $iByteCount]
-
-    # Get byte numeric value directly from global ASCII hash map
-    :local iCharVal ($asciiCodeTable->$ch)
-
-    :set lShiftedVal ( \
-      (($iCharVal) << $lBytePosition) | \
-      (($iCharVal) >> (32 - $lBytePosition)) \
-    )
-
-    :set lShiftedVal ([:tonum $lShiftedVal] + 0)
-
-    :set lShiftedVal ( \
-      (([:tonum [:pick $arrWordArray $lWordCount]] + 0) | \
-       $lShiftedVal) & 0xFFFFFFFF \
-    )
-
-    # Replace only the required element.
-    #
-    # Constructing the complete array with:
-    #   [ :pick left ], value, [ :pick right ]
-    # was the major performance problem.
-    #
-    # RouterOS array element assignment is used only here.
-    :set ($arrWordArray->$lWordCount) $lShiftedVal
-
-    :set iByteCount ($iByteCount + 1)
+  # Pack message bytes into 32-bit words
+  :for i from=0 to=($lMessageLength - 1) do={
+    :local wIndex ($i / 4)
+    :local bPos (($i % 4) * 8)
+    :local ch [:pick $strMessage $i]
+    :local cVal ($asciiCodeTable->$ch)
+    :local curVal ($lWordArray->$wIndex)
+    :set ($lWordArray->$wIndex) ($curVal | ($cVal << $bPos))
   }
 
-  # Add MD5 padding byte.
-  :set lWordCount ($iByteCount / 4)
-  :set lBytePosition (($iByteCount % 4) * 8)
+  # Add padding byte 0x80
+  :local padWIndex ($lMessageLength / 4)
+  :local padBPos (($lMessageLength % 4) * 8)
+  :local curVal ($lWordArray->$padWIndex)
+  :set ($lWordArray->$padWIndex) ($curVal | (0x80 << $padBPos))
 
-  :set lShiftedVal ( \
-    (0x80 << $lBytePosition) | \
-    (0x80 >> (32 - $lBytePosition)) \
-  )
+  # Append original message length in bits
+  :local bitLen ($lMessageLength * 8)
+  :set ($lWordArray->($lNumberOfWords - 2)) ($bitLen & 0xFFFFFFFF)
+  :set ($lWordArray->($lNumberOfWords - 1)) (($bitLen >> 32) & 0xFFFFFFFF)
 
-  :set lShiftedVal ( \
-    (([:tonum [:pick $arrWordArray $lWordCount]] + 0) | \
-     ([:tonum $lShiftedVal] + 0)) & 0xFFFFFFFF \
-  )
+  :local lWordArrLen ([:len $lWordArray] - 1)
 
-  :set ($arrWordArray->$lWordCount) $lShiftedVal
-
-  # Append original message length in bits.
-  :set ($arrWordArray->($lNumberOfWords - 2)) ( \
-    ( \
-      (([:tonum $lMessageLength] + 0) << 3) | \
-      (([:tonum $lMessageLength] + 0) >> 29) \
-    ) & 0xFFFFFFFF \
-  )
-
-  :set ($arrWordArray->($lNumberOfWords - 1)) ( \
-    (([:tonum $lMessageLength] + 0) >> 29) & 0xFFFFFFFF \
-  )
-
-  :set lWordArray [:toarray $arrWordArray]
-  :set lWordArrLen ([:len $lWordArray] - 1)
-
-  ### Main Loop ###
-
-  :set tmp1 0
-  :set x 0
-  :set T 0
-  :set S 0
-  :set i 0
-  :set j 0
-  :set iteration 0
+  ### Main Loop (Unrolled Rounds) ###
 
   :for lcv from=0 to=$lWordArrLen step=16 do={
-    :set AA [:tonum $a]
-    :set BB [:tonum $b]
-    :set CC [:tonum $c]
-    :set DD [:tonum $d]
+    :set AA $a
+    :set BB $b
+    :set CC $c
+    :set DD $d
 
-    :local chuckoffset ($iteration * 16)
+    :local off $lcv
+
+    :local w0  ($lWordArray->($off + 0))
+    :local w1  ($lWordArray->($off + 1))
+    :local w2  ($lWordArray->($off + 2))
+    :local w3  ($lWordArray->($off + 3))
+    :local w4  ($lWordArray->($off + 4))
+    :local w5  ($lWordArray->($off + 5))
+    :local w6  ($lWordArray->($off + 6))
+    :local w7  ($lWordArray->($off + 7))
+    :local w8  ($lWordArray->($off + 8))
+    :local w9  ($lWordArray->($off + 9))
+    :local w10 ($lWordArray->($off + 10))
+    :local w11 ($lWordArray->($off + 11))
+    :local w12 ($lWordArray->($off + 12))
+    :local w13 ($lWordArray->($off + 13))
+    :local w14 ($lWordArray->($off + 14))
+    :local w15 ($lWordArray->($off + 15))
 
     ### Round 1 ###
+    :set tmp1 ((($d ^ ($b & ($c ^ $d))) + $a + 0xD76AA478 + $w0) & 0xFFFFFFFF);  :set a (($b + (($tmp1 << 7)  | ($tmp1 >> 25))) & 0xFFFFFFFF)
+    :set tmp1 ((($c ^ ($a & ($b ^ $c))) + $d + 0xE8C7B756 + $w1) & 0xFFFFFFFF);  :set d (($a + (($tmp1 << 12) | ($tmp1 >> 20))) & 0xFFFFFFFF)
+    :set tmp1 ((($b ^ ($d & ($a ^ $b))) + $c + 0x242070DB + $w2) & 0xFFFFFFFF);  :set c (($d + (($tmp1 << 17) | ($tmp1 >> 15))) & 0xFFFFFFFF)
+    :set tmp1 ((($a ^ ($c & ($d ^ $a))) + $b + 0xC1BDCEEE + $w3) & 0xFFFFFFFF);  :set b (($c + (($tmp1 << 22) | ($tmp1 >> 10))) & 0xFFFFFFFF)
 
-    :for i from=0 to=15 do={
-      :set x ([:tonum [:pick $lWordArray (($i & 15) + $chuckoffset)]] + 0)
-      :set T ([:tonum [:pick $k $i]] + 0)
-      :set S ([:tonum [:pick $s1 ($i & 3)]] + 0)
+    :set tmp1 ((($d ^ ($b & ($c ^ $d))) + $a + 0xF57C0FAF + $w4) & 0xFFFFFFFF);  :set a (($b + (($tmp1 << 7)  | ($tmp1 >> 25))) & 0xFFFFFFFF)
+    :set tmp1 ((($c ^ ($a & ($b ^ $c))) + $d + 0x4787C62A + $w5) & 0xFFFFFFFF);  :set d (($a + (($tmp1 << 12) | ($tmp1 >> 20))) & 0xFFFFFFFF)
+    :set tmp1 ((($b ^ ($d & ($a ^ $b))) + $c + 0xA8304613 + $w6) & 0xFFFFFFFF);  :set c (($d + (($tmp1 << 17) | ($tmp1 >> 15))) & 0xFFFFFFFF)
+    :set tmp1 ((($a ^ ($c & ($d ^ $a))) + $b + 0xFD469501 + $w7) & 0xFFFFFFFF);  :set b (($c + (($tmp1 << 22) | ($tmp1 >> 10))) & 0xFFFFFFFF)
 
-      :set tmp1 ( \
-        (($d ^ ($b & ($c ^ $d))) + $a + $T + $x) & 0xFFFFFFFF \
-      )
+    :set tmp1 ((($d ^ ($b & ($c ^ $d))) + $a + 0x698098D8 + $w8) & 0xFFFFFFFF);  :set a (($b + (($tmp1 << 7)  | ($tmp1 >> 25))) & 0xFFFFFFFF)
+    :set tmp1 ((($c ^ ($a & ($b ^ $c))) + $d + 0x8B44F7AF + $w9) & 0xFFFFFFFF);  :set d (($a + (($tmp1 << 12) | ($tmp1 >> 20))) & 0xFFFFFFFF)
+    :set tmp1 ((($b ^ ($d & ($a ^ $b))) + $c + 0xFFFF5BB1 + $w10) & 0xFFFFFFFF); :set c (($d + (($tmp1 << 17) | ($tmp1 >> 15))) & 0xFFFFFFFF)
+    :set tmp1 ((($a ^ ($c & ($d ^ $a))) + $b + 0x895CD7BE + $w11) & 0xFFFFFFFF); :set b (($c + (($tmp1 << 22) | ($tmp1 >> 10))) & 0xFFFFFFFF)
 
-      :set tmp1 ((($tmp1 << $S) | ($tmp1 >> (32 - $S))) & 0xFFFFFFFF)
-      :set tmp1 (($tmp1 + $b) & 0xFFFFFFFF)
-  # Rotate a,b,c,d params positions, e.g. d, a, b, c ... c, d, a, b ... b, c, d, a 
-  # and a gets new value from tmp1
-      :set a (([:tonum $d] + 0) & 0xFFFFFFFF)
-      :set d (([:tonum $c] + 0) & 0xFFFFFFFF)
-      :set c (([:tonum $b] + 0) & 0xFFFFFFFF)
-      :set b (([:tonum $tmp1] + 0) & 0xFFFFFFFF)
-    }
+    :set tmp1 ((($d ^ ($b & ($c ^ $d))) + $a + 0x6B901122 + $w12) & 0xFFFFFFFF); :set a (($b + (($tmp1 << 7)  | ($tmp1 >> 25))) & 0xFFFFFFFF)
+    :set tmp1 ((($c ^ ($a & ($b ^ $c))) + $d + 0xFD987193 + $w13) & 0xFFFFFFFF); :set d (($a + (($tmp1 << 12) | ($tmp1 >> 20))) & 0xFFFFFFFF)
+    :set tmp1 ((($b ^ ($d & ($a ^ $b))) + $c + 0xA679438E + $w14) & 0xFFFFFFFF); :set c (($d + (($tmp1 << 17) | ($tmp1 >> 15))) & 0xFFFFFFFF)
+    :set tmp1 ((($a ^ ($c & ($d ^ $a))) + $b + 0x49B40821 + $w15) & 0xFFFFFFFF); :set b (($c + (($tmp1 << 22) | ($tmp1 >> 10))) & 0xFFFFFFFF)
 
     ### Round 2 ###
+    :set tmp1 ((($c ^ ($d & ($b ^ $c))) + $a + 0xF61E2562 + $w1) & 0xFFFFFFFF);  :set a (($b + (($tmp1 << 5)  | ($tmp1 >> 27))) & 0xFFFFFFFF)
+    :set tmp1 ((($b ^ ($c & ($a ^ $b))) + $d + 0xC040B340 + $w6) & 0xFFFFFFFF);  :set d (($a + (($tmp1 << 9)  | ($tmp1 >> 23))) & 0xFFFFFFFF)
+    :set tmp1 ((($a ^ ($b & ($d ^ $a))) + $c + 0x265E5A51 + $w11) & 0xFFFFFFFF); :set c (($d + (($tmp1 << 14) | ($tmp1 >> 18))) & 0xFFFFFFFF)
+    :set tmp1 ((($d ^ ($a & ($c ^ $d))) + $b + 0xE9B6C7AA + $w0) & 0xFFFFFFFF);  :set b (($c + (($tmp1 << 20) | ($tmp1 >> 12))) & 0xFFFFFFFF)
 
-    :set j 1
+    :set tmp1 ((($c ^ ($d & ($b ^ $c))) + $a + 0xD62F105D + $w5) & 0xFFFFFFFF);  :set a (($b + (($tmp1 << 5)  | ($tmp1 >> 27))) & 0xFFFFFFFF)
+    :set tmp1 ((($b ^ ($c & ($a ^ $b))) + $d + 0x02441453 + $w10) & 0xFFFFFFFF); :set d (($a + (($tmp1 << 9)  | ($tmp1 >> 23))) & 0xFFFFFFFF)
+    :set tmp1 ((($a ^ ($b & ($d ^ $a))) + $c + 0xD8A1E681 + $w15) & 0xFFFFFFFF); :set c (($d + (($tmp1 << 14) | ($tmp1 >> 18))) & 0xFFFFFFFF)
+    :set tmp1 ((($d ^ ($a & ($c ^ $d))) + $b + 0xE7D3FBC8 + $w4) & 0xFFFFFFFF);  :set b (($c + (($tmp1 << 20) | ($tmp1 >> 12))) & 0xFFFFFFFF)
 
-    :for i from=0 to=15 do={
-      :set x ( \
-        [:tonum [:pick $lWordArray \
-          ((($j & 15) + $chuckoffset))]] + 0 \
-      )
+    :set tmp1 ((($c ^ ($d & ($b ^ $c))) + $a + 0x21E1CDE6 + $w9) & 0xFFFFFFFF);  :set a (($b + (($tmp1 << 5)  | ($tmp1 >> 27))) & 0xFFFFFFFF)
+    :set tmp1 ((($b ^ ($c & ($a ^ $b))) + $d + 0xC33707D6 + $w14) & 0xFFFFFFFF); :set d (($a + (($tmp1 << 9)  | ($tmp1 >> 23))) & 0xFFFFFFFF)
+    :set tmp1 ((($a ^ ($b & ($d ^ $a))) + $c + 0xF4D50D87 + $w3) & 0xFFFFFFFF);  :set c (($d + (($tmp1 << 14) | ($tmp1 >> 18))) & 0xFFFFFFFF)
+    :set tmp1 ((($d ^ ($a & ($c ^ $d))) + $b + 0x455A14ED + $w8) & 0xFFFFFFFF);  :set b (($c + (($tmp1 << 20) | ($tmp1 >> 12))) & 0xFFFFFFFF)
 
-      :set T ([:tonum [:pick $k ($i + 16)]] + 0)
-      :set S ([:tonum [:pick $s2 ($i & 3)]] + 0)
-
-      :set tmp1 ( \
-        (($c ^ ($d & ($b ^ $c))) + $a + $T + $x) & 0xFFFFFFFF \
-      )
-
-      :set tmp1 ((($tmp1 << $S) | ($tmp1 >> (32 - $S))) & 0xFFFFFFFF)
-      :set tmp1 (($tmp1 + $b) & 0xFFFFFFFF)
-  # Rotate a,b,c,d param positions, e.g. d, a, b, c ... c, d, a, b ... b, c, d, a
-      :set a (([:tonum $d] + 0) & 0xFFFFFFFF)
-      :set d (([:tonum $c] + 0) & 0xFFFFFFFF)
-      :set c (([:tonum $b] + 0) & 0xFFFFFFFF)
-      :set b (([:tonum $tmp1] + 0) & 0xFFFFFFFF)
-
-      :set j ($j + 5)
-    }
+    :set tmp1 ((($c ^ ($d & ($b ^ $c))) + $a + 0xA9E3E905 + $w13) & 0xFFFFFFFF); :set a (($b + (($tmp1 << 5)  | ($tmp1 >> 27))) & 0xFFFFFFFF)
+    :set tmp1 ((($b ^ ($c & ($a ^ $b))) + $d + 0xFCEFA3F8 + $w2) & 0xFFFFFFFF);  :set d (($a + (($tmp1 << 9)  | ($tmp1 >> 23))) & 0xFFFFFFFF)
+    :set tmp1 ((($a ^ ($b & ($d ^ $a))) + $c + 0x676F02D9 + $w7) & 0xFFFFFFFF);  :set c (($d + (($tmp1 << 14) | ($tmp1 >> 18))) & 0xFFFFFFFF)
+    :set tmp1 ((($d ^ ($a & ($c ^ $d))) + $b + 0x8D2A4C8A + $w12) & 0xFFFFFFFF); :set b (($c + (($tmp1 << 20) | ($tmp1 >> 12))) & 0xFFFFFFFF)
 
     ### Round 3 ###
+    :set tmp1 ((($b ^ $c ^ $d) + $a + 0xFFFA3942 + $w5) & 0xFFFFFFFF);  :set a (($b + (($tmp1 << 4)  | ($tmp1 >> 28))) & 0xFFFFFFFF)
+    :set tmp1 ((($a ^ $b ^ $c) + $d + 0x8771F681 + $w8) & 0xFFFFFFFF);  :set d (($a + (($tmp1 << 11) | ($tmp1 >> 21))) & 0xFFFFFFFF)
+    :set tmp1 ((($d ^ $a ^ $b) + $c + 0x6D9D6122 + $w11) & 0xFFFFFFFF); :set c (($d + (($tmp1 << 16) | ($tmp1 >> 16))) & 0xFFFFFFFF)
+    :set tmp1 ((($c ^ $d ^ $a) + $b + 0xFDE5380C + $w14) & 0xFFFFFFFF); :set b (($c + (($tmp1 << 23) | ($tmp1 >> 9))) & 0xFFFFFFFF)
 
-    :set j 5
+    :set tmp1 ((($b ^ $c ^ $d) + $a + 0xA4BEEA44 + $w1) & 0xFFFFFFFF);  :set a (($b + (($tmp1 << 4)  | ($tmp1 >> 28))) & 0xFFFFFFFF)
+    :set tmp1 ((($a ^ $b ^ $c) + $d + 0x4BDECFA9 + $w4) & 0xFFFFFFFF);  :set d (($a + (($tmp1 << 11) | ($tmp1 >> 21))) & 0xFFFFFFFF)
+    :set tmp1 ((($d ^ $a ^ $b) + $c + 0xF6BB4B60 + $w7) & 0xFFFFFFFF);  :set c (($d + (($tmp1 << 16) | ($tmp1 >> 16))) & 0xFFFFFFFF)
+    :set tmp1 ((($c ^ $d ^ $a) + $b + 0xBEBFBC70 + $w10) & 0xFFFFFFFF); :set b (($c + (($tmp1 << 23) | ($tmp1 >> 9))) & 0xFFFFFFFF)
 
-    :for i from=0 to=15 do={
-      :set x ( \
-        [:tonum [:pick $lWordArray \
-          ((($j & 15) + $chuckoffset))]] + 0 \
-      )
+    :set tmp1 ((($b ^ $c ^ $d) + $a + 0x289B7EC6 + $w13) & 0xFFFFFFFF); :set a (($b + (($tmp1 << 4)  | ($tmp1 >> 28))) & 0xFFFFFFFF)
+    :set tmp1 ((($a ^ $b ^ $c) + $d + 0xEAA127FA + $w0) & 0xFFFFFFFF);  :set d (($a + (($tmp1 << 11) | ($tmp1 >> 21))) & 0xFFFFFFFF)
+    :set tmp1 ((($d ^ $a ^ $b) + $c + 0xD4EF3085 + $w3) & 0xFFFFFFFF);  :set c (($d + (($tmp1 << 16) | ($tmp1 >> 16))) & 0xFFFFFFFF)
+    :set tmp1 ((($c ^ $d ^ $a) + $b + 0x04881D05 + $w6) & 0xFFFFFFFF);  :set b (($c + (($tmp1 << 23) | ($tmp1 >> 9))) & 0xFFFFFFFF)
 
-      :set T ([:tonum [:pick $k ($i + 32)]] + 0)
-      :set S ([:tonum [:pick $s3 ($i & 3)]] + 0)
-
-      :set tmp1 ( \
-        (($b ^ $c ^ $d) + $a + $T + $x) & 0xFFFFFFFF \
-      )
-
-      :set tmp1 ((($tmp1 << $S) | ($tmp1 >> (32 - $S))) & 0xFFFFFFFF)
-      :set tmp1 (($tmp1 + $b) & 0xFFFFFFFF)
-  # Rotate a,b,c,d param positions, e.g. d, a, b, c ... c, d, a, b ... b, c, d, a
-      :set a (([:tonum $d] + 0) & 0xFFFFFFFF)
-      :set d (([:tonum $c] + 0) & 0xFFFFFFFF)
-      :set c (([:tonum $b] + 0) & 0xFFFFFFFF)
-      :set b (([:tonum $tmp1] + 0) & 0xFFFFFFFF)
-
-      :set j ($j + 3)
-    }
+    :set tmp1 ((($b ^ $c ^ $d) + $a + 0xD9D4D039 + $w9) & 0xFFFFFFFF);  :set a (($b + (($tmp1 << 4)  | ($tmp1 >> 28))) & 0xFFFFFFFF)
+    :set tmp1 ((($a ^ $b ^ $c) + $d + 0xE6DB99E5 + $w12) & 0xFFFFFFFF); :set d (($a + (($tmp1 << 11) | ($tmp1 >> 21))) & 0xFFFFFFFF)
+    :set tmp1 ((($d ^ $a ^ $b) + $c + 0x1FA27CF8 + $w15) & 0xFFFFFFFF); :set c (($d + (($tmp1 << 16) | ($tmp1 >> 16))) & 0xFFFFFFFF)
+    :set tmp1 ((($c ^ $d ^ $a) + $b + 0xC4AC5665 + $w2) & 0xFFFFFFFF);  :set b (($c + (($tmp1 << 23) | ($tmp1 >> 9))) & 0xFFFFFFFF)
 
     ### Round 4 ###
+    :set tmp1 ((($c ^ ($b | ($d ^ 0xFFFFFFFF))) + $a + 0xF4292244 + $w0) & 0xFFFFFFFF);  :set a (($b + (($tmp1 << 6)  | ($tmp1 >> 26))) & 0xFFFFFFFF)
+    :set tmp1 ((($b ^ ($a | ($c ^ 0xFFFFFFFF))) + $d + 0x432AFF97 + $w7) & 0xFFFFFFFF);  :set d (($a + (($tmp1 << 10) | ($tmp1 >> 22))) & 0xFFFFFFFF)
+    :set tmp1 ((($a ^ ($d | ($b ^ 0xFFFFFFFF))) + $c + 0xAB9423A7 + $w14) & 0xFFFFFFFF); :set c (($d + (($tmp1 << 15) | ($tmp1 >> 17))) & 0xFFFFFFFF)
+    :set tmp1 ((($d ^ ($c | ($a ^ 0xFFFFFFFF))) + $b + 0xFC93A039 + $w5) & 0xFFFFFFFF);  :set b (($c + (($tmp1 << 21) | ($tmp1 >> 11))) & 0xFFFFFFFF)
 
-    :set j 0
+    :set tmp1 ((($c ^ ($b | ($d ^ 0xFFFFFFFF))) + $a + 0x655B59C3 + $w12) & 0xFFFFFFFF); :set a (($b + (($tmp1 << 6)  | ($tmp1 >> 26))) & 0xFFFFFFFF)
+    :set tmp1 ((($b ^ ($a | ($c ^ 0xFFFFFFFF))) + $d + 0x8F0CCC92 + $w3) & 0xFFFFFFFF);  :set d (($a + (($tmp1 << 10) | ($tmp1 >> 22))) & 0xFFFFFFFF)
+    :set tmp1 ((($a ^ ($d | ($b ^ 0xFFFFFFFF))) + $c + 0xFFEFF47D + $w10) & 0xFFFFFFFF); :set c (($d + (($tmp1 << 15) | ($tmp1 >> 17))) & 0xFFFFFFFF)
+    :set tmp1 ((($d ^ ($c | ($a ^ 0xFFFFFFFF))) + $b + 0x85845DD1 + $w1) & 0xFFFFFFFF);  :set b (($c + (($tmp1 << 21) | ($tmp1 >> 11))) & 0xFFFFFFFF)
 
-    :for i from=0 to=15 do={
-      :set x ( \
-        [:tonum [:pick $lWordArray \
-          ((($j & 15) + $chuckoffset))]] + 0 \
-      )
+    :set tmp1 ((($c ^ ($b | ($d ^ 0xFFFFFFFF))) + $a + 0x6FA87E4F + $w8) & 0xFFFFFFFF);  :set a (($b + (($tmp1 << 6)  | ($tmp1 >> 26))) & 0xFFFFFFFF)
+    :set tmp1 ((($b ^ ($a | ($c ^ 0xFFFFFFFF))) + $d + 0xFE2CE6E0 + $w15) & 0xFFFFFFFF); :set d (($a + (($tmp1 << 10) | ($tmp1 >> 22))) & 0xFFFFFFFF)
+    :set tmp1 ((($a ^ ($d | ($b ^ 0xFFFFFFFF))) + $c + 0xA3014314 + $w6) & 0xFFFFFFFF);  :set c (($d + (($tmp1 << 15) | ($tmp1 >> 17))) & 0xFFFFFFFF)
+    :set tmp1 ((($d ^ ($c | ($a ^ 0xFFFFFFFF))) + $b + 0x4E0811A1 + $w13) & 0xFFFFFFFF); :set b (($c + (($tmp1 << 21) | ($tmp1 >> 11))) & 0xFFFFFFFF)
 
-      :set T ([:tonum [:pick $k ($i + 48)]] + 0)
-      :set S ([:tonum [:pick $s4 ($i & 3)]] + 0)
-
-      :set tmp1 ( \
-        ($c ^ ($b | (-1 * ($d + 1)))) & 0xFFFFFFFF \
-      )
-
-      :set tmp1 (($tmp1 + $a + $T + $x) & 0xFFFFFFFF)
-      :set tmp1 ((($tmp1 << $S) | ($tmp1 >> (32 - $S))) & 0xFFFFFFFF)
-      :set tmp1 (($tmp1 + $b) & 0xFFFFFFFF)
-
-      :set a (([:tonum $d] + 0) & 0xFFFFFFFF)
-      :set d (([:tonum $c] + 0) & 0xFFFFFFFF)
-      :set c (([:tonum $b] + 0) & 0xFFFFFFFF)
-      :set b (([:tonum $tmp1] + 0) & 0xFFFFFFFF)
-
-      :set j ($j + 7)
-    }
+    :set tmp1 ((($c ^ ($b | ($d ^ 0xFFFFFFFF))) + $a + 0xF7537E82 + $w4) & 0xFFFFFFFF);  :set a (($b + (($tmp1 << 6)  | ($tmp1 >> 26))) & 0xFFFFFFFF)
+    :set tmp1 ((($b ^ ($a | ($c ^ 0xFFFFFFFF))) + $d + 0xBD3AF235 + $w11) & 0xFFFFFFFF); :set d (($a + (($tmp1 << 10) | ($tmp1 >> 22))) & 0xFFFFFFFF)
+    :set tmp1 ((($a ^ ($d | ($b ^ 0xFFFFFFFF))) + $c + 0x2AD7D2BB + $w2) & 0xFFFFFFFF);  :set c (($d + (($tmp1 << 15) | ($tmp1 >> 17))) & 0xFFFFFFFF)
+    :set tmp1 ((($d ^ ($c | ($a ^ 0xFFFFFFFF))) + $b + 0xEB86D391 + $w9) & 0xFFFFFFFF);  :set b (($c + (($tmp1 << 21) | ($tmp1 >> 11))) & 0xFFFFFFFF)
 
     :set a (($a + $AA) & 0xFFFFFFFF)
     :set b (($b + $BB) & 0xFFFFFFFF)
     :set c (($c + $CC) & 0xFFFFFFFF)
     :set d (($d + $DD) & 0xFFFFFFFF)
-
-    :set iteration ($iteration + 1)
   }
 
-  # Convert MD5 state to hexadecimal output.
-  #
-  # This section is kept equivalent to the original implementation.
-
-  :set arrMd5State [:toarray "$a, $b, $c, $d"]
-  :set sMd5Hash ""
-  :set sMd5Output ""
-  :set iDec 0
-  :set iMd5State 0
-  :set sHex ""
-
-  :for i from=0 to=3 do={
-    :set iMd5State [:pick $arrMd5State $i]
-
-    :for j from=0 to=3 do={
-      :set iMd5State ([:tonum $iMd5State] & 0xFFFFFFFF)
-
-      :if ($j < 1) do={
-        :set iDec ([:tonum $iMd5State] & 255)
-      } else={
-        :set iDec ( \
-          ($iMd5State & 0x7FFFFFFE) / \
-          (2 << (($j * 8) - 1)) \
-        )
-
-        :if (($iMd5State & 0x80000000) > 0) do={
-          :set iDec ( \
-            $iDec | \
-            (0x40000000 / (2 << (($j * 8) - 2))) \
-          )
-        }
-
-        :set iDec ($iDec & 0xFF)
-      }
-
-      :set sHex ""
-
-      :for k from=0 to=(4 * ($iHexDigit - 1)) step=4 do={
-        :set sHex ( \
-          [:pick $strHexValues \
-            (($iDec >> $k) & 0xF) \
-            ((($iDec >> $k) & 0xF) + 1) \
-          ] . $sHex \
-        )
-      }
-
-      :set sHex [:tostr $sHex]
-      :set sHex [:pick $sHex ([:len $sHex] - 2) [:len $sHex]]
-
-      :set sMd5Output ($sMd5Output . $sHex)
-    }
-  }
-
-  :return $sMd5Output
+  # Direct conversion of MD5 state (a, b, c, d) to hex string using lookup table
+  :return ( \
+    ($md5HexByteTable->($a & 0xFF)) . \
+    ($md5HexByteTable->(($a >> 8) & 0xFF)) . \
+    ($md5HexByteTable->(($a >> 16) & 0xFF)) . \
+    ($md5HexByteTable->(($a >> 24) & 0xFF)) . \
+    ($md5HexByteTable->($b & 0xFF)) . \
+    ($md5HexByteTable->(($b >> 8) & 0xFF)) . \
+    ($md5HexByteTable->(($b >> 16) & 0xFF)) . \
+    ($md5HexByteTable->(($b >> 24) & 0xFF)) . \
+    ($md5HexByteTable->($c & 0xFF)) . \
+    ($md5HexByteTable->(($c >> 8) & 0xFF)) . \
+    ($md5HexByteTable->(($c >> 16) & 0xFF)) . \
+    ($md5HexByteTable->(($c >> 24) & 0xFF)) . \
+    ($md5HexByteTable->($d & 0xFF)) . \
+    ($md5HexByteTable->(($d >> 8) & 0xFF)) . \
+    ($md5HexByteTable->(($d >> 16) & 0xFF)) . \
+    ($md5HexByteTable->(($d >> 24) & 0xFF)) \
+  )
 }
 
 # Purpose: Calculate the CRC32 checksum for a given string or array of bytes.

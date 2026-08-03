@@ -289,6 +289,9 @@
 # Purpose: Retrieve the current system date and time and convert it to a Unix timestamp.
 # Parameters: None
 # Returns: Unix timestamp (seconds since 1970-01-01 00:00:00 UTC)
+# Example: :put [$GetUnixTimestamp]
+# Output:
+#   1785783961
 :set GetUnixTimestamp do={
     :global ToUnixTimestamp
 
@@ -306,6 +309,9 @@
 # Parameters:
 #   $1 - Unix timestamp
 # Returns: Formatted date-time string
+# Example: :put [$FromUnixTimestamp "1785783961"]
+# Output:
+#   2026-08-03 19:06:01
 :set FromUnixTimestamp do={
     # Workaround for the MikroTik RouterOS interpreter bug (phantom execution).
     # When a function is called multiple times without assigning its return value 
@@ -417,6 +423,9 @@
 # Parameters:
 #   $1 - Total seconds (integer)
 # Returns: Formatted string, e.g., "2d 3h 15m 10s", skipping any zero components
+# Example: :put [$FormatSecondsLong "12345"]
+# Output:
+#   3h 25m 45s
 :set FormatSecondsLong do={
     :global TrimStrRight
 
@@ -455,6 +464,9 @@
 # Parameters:
 #   $1 - Total seconds (integer)
 # Returns: Formatted string, e.g., "3 days", "5 hrs", "12 min", or "30 sec"
+# Example: :put [$FormatSecondsShort "12345"]
+# Output:
+#   3 hrs
 :set FormatSecondsShort do={
     # Input parameter: total seconds
     :local sec [:tonum $1]

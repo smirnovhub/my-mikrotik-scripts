@@ -1,11 +1,11 @@
 name: Update Hashes
 
 on:
-  push:
-    paths:
-      - '**/*.rsc'
-      - '**/*.txt'
-      - '**/*.py'
+  pull_request:
+    branches: ["master"]
+
+permissions:
+  contents: write
 
 jobs:
   update-hashes:
@@ -25,8 +25,27 @@ jobs:
           python update_hashes.py global/list.txt
 
       - name: Commit and push changes
-        run: |
-          git config --global user.name "github-actions[bot]"
-          git config --global user.email "github-actions[bot]@users.noreply.github.com"
-          git add list.txt global/list.txt
-          git diff --quiet && git diff --staged --quiet || (git commit -m "update hashes" && git push)
+        uses: nick-fields/retry@v3
+        with:
+          timeout_minutes: 1
+          max_attempts: 3
+          retry_wait_seconds: 5
+          command: |
+            git config --global user.name "github-actions[bot]"
+            git config --global user.email "github-actions[bot]@users.noreply.github.com"
+            
+            git add list.txt global/list.txt
+            
+            # Commit only if there are uncommitted changes
+            if ! git diff --quiet || ! git diff --staged --quiet; then
+              git commit -m "update hashes"
+            fi
+            
+            if [ -n "$GITHUB_HEAD_REF" ]; then
+              BRANCH="$GITHUB_HEAD_REF"
+            else
+              BRANCH="$GITHUB_REF_NAME"
+            fi
+            
+            git pull --rebase origin "$BRANCH"
+            git push origin HEAD:"$BRANCH"

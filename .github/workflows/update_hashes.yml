@@ -26,7 +26,7 @@ jobs:
           python update_hashes.py global/list.txt
 
       - name: Commit and push changes
-        uses: nick-fields/retry@v3
+        uses: nick-fields/retry@v4
         with:
           timeout_minutes: 1
           max_attempts: 3

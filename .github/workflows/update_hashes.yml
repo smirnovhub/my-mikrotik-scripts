@@ -1,11 +1,6 @@
 name: Update Hashes
 
 on:
-  push:
-    paths:
-      - '**/*.rsc'
-      - '**/*.txt'
-      - '**/*.py'
   pull_request:
     branches: ["master"]
 

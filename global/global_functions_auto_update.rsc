@@ -355,7 +355,17 @@
                 }
             }
 
-            :log info ("DownloadAndImportScriptsFromList: Processed list. Success: " . $successCount . ", Failed: " . $failCount)
+            :local logStr ("DownloadAndImportScriptsFromList: Processed list. Success: " . $successCount . ", Failed: " . $failCount)
+
+            :if ($failCount = 0) do={
+                :log info $logStr
+            } else={
+                :if ($successCount = 0) do={
+                    :log error $logStr
+                } else={
+                    :log warning $logStr
+                }
+            }
 
             :if ($runScripts = true) do={
                 :delay 1s

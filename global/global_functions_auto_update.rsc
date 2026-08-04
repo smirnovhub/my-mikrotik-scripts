@@ -215,7 +215,7 @@
     :local url "https://api.github.com/repos/$repoOwner/$repoName/git/ref/heads/$repoBranch"
 
     # Prepare HTTP headers
-    :local httpHeaders "Accept: application/vnd.github+json,User-Agent: MikroTik-RouterOS,X-GitHub-Api-Version: 2026-03-10"
+    :local httpHeaders "Accept: application/vnd.github+json,X-GitHub-Api-Version: 2026-03-10"
 
     :local result [:toarray ""]
 

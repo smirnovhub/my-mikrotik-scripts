@@ -109,17 +109,6 @@
       }
   }
 
-  :local a 0x67452301
-  :local b 0xEFCDAB89
-  :local c 0x98BADCFE
-  :local d 0x10325476
-
-  :local aa 0x67452301
-  :local bb 0xEFCDAB89
-  :local cc 0x98BADCFE
-  :local dd 0x10325476
-
-  :local tmp1 0
   :local lNumberOfWords (((($lMessageLength + 8) / 64) + 1) * 16)
 
   :local lWordArray [:toarray ""]
@@ -133,7 +122,7 @@
   :local i 0
 
   :while (($i + 3) < $lMessageLength) do={
-    :set ($lWordArray->($i / 4)) ( \
+    :set ($lWordArray->($i >> 2)) ( \
       ($asciiCodeTable->[:pick $strMessage $i]) | \
       (($asciiCodeTable->[:pick $strMessage ($i + 1)]) << 8) | \
       (($asciiCodeTable->[:pick $strMessage ($i + 2)]) << 16) | \
@@ -166,9 +155,21 @@
   :set ($lWordArray->($lNumberOfWords - 2)) ($bitLen & 0xFFFFFFFF)
   :set ($lWordArray->($lNumberOfWords - 1)) (($bitLen >> 32) & 0xFFFFFFFF)
 
-  :local lWordArrLen ([:len $lWordArray] - 1)
-
   ### Main Loop (Unrolled Rounds) ###
+
+  :local a 0x67452301
+  :local b 0xEFCDAB89
+  :local c 0x98BADCFE
+  :local d 0x10325476
+
+  :local aa 0x67452301
+  :local bb 0xEFCDAB89
+  :local cc 0x98BADCFE
+  :local dd 0x10325476
+
+  :local tmp1 0
+
+  :local lWordArrLen ([:len $lWordArray] - 1)
 
   :for lcv from=0 to=$lWordArrLen step=16 do={
     :set aa $a
@@ -176,24 +177,22 @@
     :set cc $c
     :set dd $d
 
-    :local off $lcv
-
-    :local w0  ($lWordArray->($off + 0))
-    :local w1  ($lWordArray->($off + 1))
-    :local w2  ($lWordArray->($off + 2))
-    :local w3  ($lWordArray->($off + 3))
-    :local w4  ($lWordArray->($off + 4))
-    :local w5  ($lWordArray->($off + 5))
-    :local w6  ($lWordArray->($off + 6))
-    :local w7  ($lWordArray->($off + 7))
-    :local w8  ($lWordArray->($off + 8))
-    :local w9  ($lWordArray->($off + 9))
-    :local w10 ($lWordArray->($off + 10))
-    :local w11 ($lWordArray->($off + 11))
-    :local w12 ($lWordArray->($off + 12))
-    :local w13 ($lWordArray->($off + 13))
-    :local w14 ($lWordArray->($off + 14))
-    :local w15 ($lWordArray->($off + 15))
+    :local w0  ($lWordArray->$lcv)
+    :local w1  ($lWordArray->($lcv + 1))
+    :local w2  ($lWordArray->($lcv + 2))
+    :local w3  ($lWordArray->($lcv + 3))
+    :local w4  ($lWordArray->($lcv + 4))
+    :local w5  ($lWordArray->($lcv + 5))
+    :local w6  ($lWordArray->($lcv + 6))
+    :local w7  ($lWordArray->($lcv + 7))
+    :local w8  ($lWordArray->($lcv + 8))
+    :local w9  ($lWordArray->($lcv + 9))
+    :local w10 ($lWordArray->($lcv + 10))
+    :local w11 ($lWordArray->($lcv + 11))
+    :local w12 ($lWordArray->($lcv + 12))
+    :local w13 ($lWordArray->($lcv + 13))
+    :local w14 ($lWordArray->($lcv + 14))
+    :local w15 ($lWordArray->($lcv + 15))
 
     ### Round 1 ###
     :set tmp1 ((($d ^ ($b & ($c ^ $d))) + $a + 0xD76AA478 + $w0) & 0xFFFFFFFF);  :set a (($b + (($tmp1 << 7)  | ($tmp1 >> 25))) & 0xFFFFFFFF)

@@ -42,9 +42,11 @@
         :return ""
     }
 
+    :local prefix "FetchWithRedirect:"
+
     :local currentUrl [:tostr $1]
     :if ([:len $currentUrl] = 0) do={
-        :log error "FetchWithRedirect: URL parameter is missing."
+        :log error "$prefix URL parameter is missing."
         :return ""
     }
 
@@ -70,7 +72,7 @@
     :local checkIntervalMs 500
     :local elapsedMs 0
 
-    :log info ("FetchWithRedirect: Fetching " . $currentUrl)
+    :log info "$prefix Fetching $currentUrl"
 
     :while (true) do={
         :do {
@@ -79,7 +81,7 @@
             :if ($fetchRes->"status" = "finished") do={
                 :return ($fetchRes->"data")
             } else={
-                :log error ("FetchWithRedirect: Failed to fetch " . $currentUrl)
+                :log error "$prefix Failed to fetch $currentUrl"
                 :return ""
             }
         } on-error={
@@ -98,7 +100,7 @@
             }
 
             :if ([:len [/system script job find where .id=$jobId]] = 1) do={
-                :log error ("FetchWithRedirect: Request to " . $currentUrl . " timed out")
+                :log error "$prefix Request to $currentUrl timed out"
                 /system script job remove [find where .id=$jobId]
                 /file remove [find where name=$tmpLogFile]
                 :return ""
@@ -123,7 +125,7 @@
 
                 :if ($markerPos >= 0) do={
                     :if ($redirectCount >= $maxRedirects) do={
-                        :log error ("FetchWithRedirect: Too many redirects (max: " . $maxRedirects . ") for URL: " . $currentUrl)
+                        :log error ("$prefix Too many redirects (max: " . $maxRedirects . ") for URL: " . $currentUrl)
                         :return ""
                     }
 
@@ -152,26 +154,26 @@
             # If a redirect URL was found, advance to the next iteration
             :if ([:len $nextUrl] > 0) do={
                 :if ($nextUrl = $currentUrl) do={
-                    :log error ("FetchWithRedirect: Circular redirect to " . $nextUrl)
+                    :log error "$prefix Circular redirect to $nextUrl"
                     :return ""
                 }
 
                 :set redirectCount ($redirectCount + 1)
-                :log info ("FetchWithRedirect: Following 3xx redirect (" . $redirectCount . "/" . $maxRedirects . ") to " . $nextUrl)
+                :log info ("$prefix Following 3xx redirect (" . $redirectCount . "/" . $maxRedirects . ") to " . $nextUrl)
                 :set currentUrl $nextUrl
             } else={
                 # Unrecoverable error (HTTP error status, network error, or log extraction failed)
                 :if ([:len $errorMessage] > 0) do={
-                    :log error ("FetchWithRedirect: Error fetching " . $currentUrl . ": " . $errorMessage)
+                    :log error "$prefix Error fetching $currentUrl: $errorMessage"
                 } else={
-                    :log error ("FetchWithRedirect: Failed to fetch " . $currentUrl)
+                    :log error "$prefix Failed to fetch $currentUrl"
                 }
                 :return ""
             }
         }
     }
 
-    :log error ("FetchWithRedirect: Too many redirects (max: " . $maxRedirects . ") for URL: " . $currentUrl)
+    :log error ("$prefix Too many redirects (max: " . $maxRedirects . ") for URL: " . $currentUrl)
     :return ""
 }
 
@@ -192,26 +194,28 @@
         :return false
     }
 
+    :local prefix "DownloadAndImportScript:"
+
     :local rawUrl [:tostr $1]
     :local expectedHashSum [:tostr $2]
 
     :if ([:len $rawUrl] = 0) do={
-        :log error "DownloadAndImportScript: URL parameter is missing."
+        :log error "$prefix URL parameter is missing."
         :return false
     }
 
     :if ([:len $expectedHashSum] = 0) do={
-        :log error "DownloadAndImportScript: Hash sum parameter is missing."
+        :log error "$prefix Hash sum parameter is missing."
         :return false
     }
 
     :if ([:len $expectedHashSum] != 8 && [:len $expectedHashSum] != 32) do={
-        :log error "DownloadAndImportScript: Wrong hash. Only CRC32 and MD5 supported."
+        :log error "$prefix Wrong hash. Only CRC32 and MD5 supported."
         :return false
     }
 
     :if ([$EndsWithStr $rawUrl ".rsc"] = false) do={
-        :log error "DownloadAndImportScript: file name should end with .rsc"
+        :log error "$prefix File name should end with .rsc"
         :return false
     }
 
@@ -237,15 +241,15 @@
         :if ([:len $newSource] > 0) do={
             :local actualHashSum ""
             :if ([:len $expectedHashSum] = 8) do={
-                :log info "Checking CRC32 sum..."
+                :log info "$prefix Checking CRC32 sum..."
                 :set actualHashSum [$GetCrc32Sum $newSource]
             } else={
-                :log info "Checking MD5 sum..."
+                :log info "$prefix Checking MD5 sum..."
                 :set actualHashSum [$GetMd5Sum $newSource]
             }
 
             :if ($expectedHashSum != $actualHashSum) do={
-                :log error ("Hash sum for " . $scriptName . " doesn't match: got " . $actualHashSum . " but expected " . $expectedHashSum)
+                :log error "$prefix Hash sum for $scriptName doesn't match: got $actualHashSum but expected $expectedHashSum"
                 :return false
             }
 
@@ -255,11 +259,11 @@
                 /system script add name=$scriptName source=$newSource comment=$scriptName
             }
 
-            :log info "DownloadAndImportScript: Script $scriptName updated successfully."
+            :log info "$prefix Script $scriptName updated successfully."
             :return true
         }
     } on-error={
-        :log error ("DownloadAndImportScript: Failed to download from " . $rawUrl)
+        :log error ("$prefix Failed to download from $rawUrl")
         :return false
     }
 }
@@ -277,6 +281,8 @@
     :global SplitStr
     :global TrimStr
     :global EndsWithStr
+    :global GetUnixTimestamp
+    :global FormatSecondsLong
     :global FetchWithRedirect
     :global DownloadAndImportScript
 
@@ -285,15 +291,17 @@
         :return false
     }
 
+    :local prefix "DownloadAndImportScriptsFromList:"
+
     :local listUrl [:tostr $1]
 
     :if ([:len $listUrl] = 0) do={
-        :log error "DownloadAndImportScriptsFromList: List URL parameter is missing."
+        :log error "$prefix List URL parameter is missing."
         :return false
     }
 
     :if ([$EndsWithStr $listUrl ".txt"] = false) do={
-        :log error "DownloadAndImportScriptsFromList: file name should end with .txt"
+        :log error "$prefix file name should end with .txt"
         :return false
     }
 
@@ -301,6 +309,9 @@
     :if ([:tostr $2] = "true") do={
         :set runScripts true
     }
+
+    :local startTs [$GetUnixTimestamp]
+    :log info "$prefix Start importing from $listUrl"
 
     :do {
         :local content [$FetchWithRedirect $listUrl]
@@ -325,11 +336,11 @@
                         :set cleanUrl [$TrimStr ($parts->1)]
                         :set res [$DownloadAndImportScript $cleanUrl $hash]
                     } else={
-                        :log error ("Hash sum or URL not found in line " . $cleanLine)
+                        :log error ("$prefix Hash sum or URL not found in line " . $cleanLine)
                     }
 
                     :if ($res = true) do={
-                        :log info ($cleanUrl . " downloaded successfully")
+                        :log info ("$prefix " . $cleanUrl . " downloaded successfully")
                         :set successCount ($successCount + 1)
 
                         # Extract script name to add to the execution list
@@ -349,13 +360,13 @@
 
                         :set importedScripts ($importedScripts , $scriptName)
                     } else={
-                        :log error ($cleanLine . " download error")
+                        :log error ("$prefix " . $cleanLine . " download error")
                         :set failCount ($failCount + 1)
                     }
                 }
             }
 
-            :local logStr ("DownloadAndImportScriptsFromList: Processed list. Success: " . $successCount . ", Failed: " . $failCount)
+            :local logStr ("$prefix Import completed. Success: " . $successCount . ", Failed: " . $failCount)
 
             :if ($failCount = 0) do={
                 :log info $logStr
@@ -373,20 +384,23 @@
                 # Execute all successfully imported scripts
                 :foreach scriptName in=$importedScripts do={
                     :if ([:len [/system script find name=$scriptName]] > 0) do={
-                        :log info ("DownloadAndImportScriptsFromList: Running script " . $scriptName)
+                        :log info ("$prefix Running script " . $scriptName)
                         :do {
                             /system script run $scriptName
                         } on-error={
-                            :log error ("DownloadAndImportScriptsFromList: Error running " . $scriptName)
+                            :log error ("$prefix Error running " . $scriptName)
                         }
                     }
                 }
             }
 
+            :local duration ([$GetUnixTimestamp] - $startTs)
+            :log info ("$prefix Finished in " . [$FormatSecondsLong $duration])
+
             :return true
         }
     } on-error={
-        :log error ("DownloadAndImportScriptsFromList: Failed to download list from " . $listUrl)
+        :log error ("$prefix Failed to download list from " . $listUrl)
         :return false
     }
 }

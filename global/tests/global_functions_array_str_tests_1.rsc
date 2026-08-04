@@ -700,6 +700,7 @@
 
     # --- Part 1: TrimStrLeft Tests ---
     :set res [$RunTestCase $res "left" "TrimmedString" "Trng" "immedString" "Example case from description"]
+	:set res [$RunTestCase $res "left" ("\r\n\t TrStr\r\n\t ") "" ("TrStr\r\n\t ") "Trim without parameters"]
     :set res [$RunTestCase $res "left" "   hello" " " "hello" "Leading spaces"]
     :set res [$RunTestCase $res "left" "hello" "xyz" "hello" "No matching trim characters"]
     :set res [$RunTestCase $res "left" "aaaaab" "a" "b" "Multiple identical characters"]
@@ -711,6 +712,7 @@
 
     # --- Part 2: TrimStrRight Tests ---
     :set res [$RunTestCase $res "right" "TrimmedString" "Trng" "TrimmedStri" "Example case from description"]
+    :set res [$RunTestCase $res "right" ("\r\n\t TrStr\r\n\t ") "" ("\r\n\t TrStr") "Trim without parameters"]
     :set res [$RunTestCase $res "right" "hello   " " " "hello" "Trailing spaces"]
     :set res [$RunTestCase $res "right" "hello" "xyz" "hello" "No matching trim characters"]
     :set res [$RunTestCase $res "right" "baaaaa" "a" "b" "Multiple identical characters"]
@@ -722,6 +724,7 @@
 
     # --- Part 3: TrimStr (Both Ends) Tests ---
     :set res [$RunTestCase $res "both" "TrimmedString" "Trng" "immedStri" "Example case from description"]
+    :set res [$RunTestCase $res "both" ("\r\n\t TrStr\r\n\t ") "" "TrStr" "Trim without parameters"]
     :set res [$RunTestCase $res "both" "   hello   " " " "hello" "Spaces on both sides"]
     :set res [$RunTestCase $res "both" "abc" "xyz" "abc" "No matching trim characters"]
     :set res [$RunTestCase $res "both" "aaa" "a" "" "Trim entire string consisting of trim chars"]

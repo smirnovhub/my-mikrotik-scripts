@@ -534,23 +534,23 @@
 
     :local domain "github.com/"
     :local domainPos [:find $listUrl $domain]
-    
+
     :if ([:type $domainPos] = "num") do={
         :local pathStart ($domainPos + [:len $domain])
         :local urlPath [:pick $listUrl $pathStart [:len $listUrl]]
-    
+
         # Find owner
         :local slash1 [:find $urlPath "/"]
         :set owner [:pick $urlPath 0 $slash1]
-    
+
         # Find repo
         :local slash2 [:find $urlPath "/" ($slash1 + 1)]
         :set repo [:pick $urlPath ($slash1 + 1) $slash2]
-    
+
         # Find branch after "/raw/refs/heads/"
         :local headsMarker "/raw/refs/heads/"
         :local headsPos [:find $urlPath $headsMarker]
-    
+
         :if ([:type $headsPos] = "num") do={
             :local branchStart ($headsPos + [:len $headsMarker])
             :local slash3 [:find $urlPath "/" $branchStart]

@@ -69,45 +69,19 @@
     0xB3667A2E; 0xC4614AB8; 0x5D681B02; 0x2A6F2B94; 0xB40BBE37; 0xC30C8EA1; 0x5A05DF1B; 0x2D02EF8D
 }
 
-# String message to MD5 Hash
-# Creates a MD5 hash from a message string
-# Version 1.00, 6/17/2012, Created by TealFrog
-# Version 1.1 2/11/2016, Modified by FAMS
-# Script tested and developed under MikroTik ROS 6.3 to 6.33
-# 
-#
-# This software is identified as using and is based on the, "RSA Data Security, 
-# Inc. MD5 Message-Digest Algorithm".  This program is a derived work from the RSA Data
-# Security, Inc. MD5 Message-Digest Algorithm.
-# See http://www.ietf.org/rfc/rfc1321.txt for further information.
-#
-# The author of this program makes no representations concerning either
-# the merchantability of this software or the suitability of this
-# software for any particular purpose or non-infringement.
-# This program is provided "as is" without express or implied warranty of any kind.
-# The author makes no representations or warranties of any kind as to the 
-# completeness, accuracy, timeliness, availability, functionality and compliance
-# with applicable laws. By using this software you accept the risk that the 
-# information may be incomplete or inaccurate or may not meet your needs 
-# and requirements. The author shall not be liable for any damages or 
-# injury arising out of the use of this program. Use this program at your own risk. 
-#
-# MD5 has been shown to not be collision resistant, as such MD5 is not suitable 
-# for certain applications involving security and/or cryptography, 
-# see http://en.wikipedia.org/wiki/Md5 for additional information.
-
 # Purpose: Calculate the MD5 hash checksum for a given string or array of bytes.
 # Parameters:
 #   $1 - String to calculate the hash for
 # Returns: MD5 checksum as a hex string
-# NOTE: Useful for data integrity verification and cryptographic hashing.
 # Example: :put [$GetMd5Sum "Hello World"]
 # Output:
 #   b10a8db164e0754105b7a99be72e3fe5
 :set GetMd5Sum do={
   :global DecToChar
+
   :global asciiCodeTable
   :global md5HexByteTable
+
   :local strMessage $1
   :local lMessageLength [:len $strMessage]
 
@@ -140,14 +114,14 @@
   :local c 0x98BADCFE
   :local d 0x10325476
 
-  :local AA 0x67452301
-  :local BB 0xEFCDAB89
-  :local CC 0x98BADCFE
-  :local DD 0x10325476
+  :local aa 0x67452301
+  :local bb 0xEFCDAB89
+  :local cc 0x98BADCFE
+  :local dd 0x10325476
 
   :local tmp1 0
   :local lNumberOfWords (((($lMessageLength + 8) / 64) + 1) * 16)
-  
+
   :local lWordArray [:toarray ""]
 
   # Build the initial array
@@ -197,10 +171,10 @@
   ### Main Loop (Unrolled Rounds) ###
 
   :for lcv from=0 to=$lWordArrLen step=16 do={
-    :set AA $a
-    :set BB $b
-    :set CC $c
-    :set DD $d
+    :set aa $a
+    :set bb $b
+    :set cc $c
+    :set dd $d
 
     :local off $lcv
 
@@ -305,10 +279,10 @@
     :set tmp1 ((($a ^ ($d | ($b ^ 0xFFFFFFFF))) + $c + 0x2AD7D2BB + $w2) & 0xFFFFFFFF);  :set c (($d + (($tmp1 << 15) | ($tmp1 >> 17))) & 0xFFFFFFFF)
     :set tmp1 ((($d ^ ($c | ($a ^ 0xFFFFFFFF))) + $b + 0xEB86D391 + $w9) & 0xFFFFFFFF);  :set b (($c + (($tmp1 << 21) | ($tmp1 >> 11))) & 0xFFFFFFFF)
 
-    :set a (($a + $AA) & 0xFFFFFFFF)
-    :set b (($b + $BB) & 0xFFFFFFFF)
-    :set c (($c + $CC) & 0xFFFFFFFF)
-    :set d (($d + $DD) & 0xFFFFFFFF)
+    :set a (($a + $aa) & 0xFFFFFFFF)
+    :set b (($b + $bb) & 0xFFFFFFFF)
+    :set c (($c + $cc) & 0xFFFFFFFF)
+    :set d (($d + $dd) & 0xFFFFFFFF)
   }
 
   # Direct conversion of MD5 state (a, b, c, d) to hex string using lookup table

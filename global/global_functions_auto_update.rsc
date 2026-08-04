@@ -133,19 +133,18 @@
 
                     # Extract target URL enclosed in quotes
                     :local quoteStart [:find $logContent "\"" $markerPos]
-                    :if ([:len $quoteStart] > 0) do={
+                    :if ([:type $quoteStart] = "num") do={
                         :local startPos ($quoteStart + 1)
                         :local restStr [:pick $logContent $startPos [:len $logContent]]
                         :local endPos [:find $restStr "\""]
 
-                        :if ([:len $endPos] > 0) do={
+                        :if ([:type $endPos] = "num") do={
                             :set nextUrl [:pick $restStr 0 $endPos]
                         }
                     }
                 } else={
                     # Parse generic error message
                     :local failurePos [:find $logContent $failureMarker]
-
                     :if ([:type $failurePos] = "num") do={
                         :set errorMessage [:pick $logContent ($failurePos + [:len $failureMarker]) [:len $logContent]]
                         :set errorMessage [$TrimStr $errorMessage]
@@ -179,25 +178,32 @@
     :return ""
 }
 
+# Purpose: Query GitHub API to fetch the latest commit SHA hash for a given branch.
+# Parameters:
+#   $1 - Repository owner (organization or username)
+#   $2 - Repository name
+#   $3 - Branch name
+# Returns: SHA hash string of the latest commit on success, or empty string on error
+# Example: :put [$GetGitHubLastCommitHash "smirnovhub" "my-mikrotik-scripts" "master"]
 :set GetGitHubLastCommitHash do={
     # Workaround for the MikroTik RouterOS interpreter bug (phantom execution)
     :if ([:len $0] = 0) do={
         :return ""
     }
 
-    :local repoName [:tostr $1]
-    :local repoOwner [:tostr $2]
+    :local repoOwner [:tostr $1]
+    :local repoName [:tostr $2]
     :local repoBranch [:tostr $3]
 
     :local prefix "GetGitHubLastCommitHash:"
 
-    :if ([:len $repoName] = 0) do={
-        :log error "$prefix Repository name parameter is missing."
+    :if ([:len $repoOwner] = 0) do={
+        :log error "$prefix Repository owner parameter is missing."
         :return ""
     }
 
-    :if ([:len $repoOwner] = 0) do={
-        :log error "$prefix Repository owner parameter is missing."
+    :if ([:len $repoName] = 0) do={
+        :log error "$prefix Repository name parameter is missing."
         :return ""
     }
 
@@ -227,11 +233,11 @@
     :local searchKey "\"sha\":\""
     :local keyPos [:find $content $searchKey]
 
-    :if ($keyPos != "") do={
+    :if ([:type $keyPos] = "num") do={
         :local startPos ($keyPos + [:len $searchKey])
         :local endPos [:find $content "\"" $startPos]
 
-        :if ($endPos != "") do={
+        :if ([:type $endPos] = "num") do={
             :local sha [:pick $content $startPos $endPos]
             :log info "$prefix Latest commit SHA: $sha"
             :return $sha
@@ -473,6 +479,14 @@
     }
 }
 
+# Purpose: Check GitHub repository for new commits via API, and if updated,
+#          download and import RouterOS scripts from a specified list file URL.
+#          Sends Telegram notifications on parsing errors or execution status.
+# Parameters:
+#   $1 - URL to the .txt file on GitHub containing a list of script URLs
+#   $2 - (Optional) Boolean flag/string ("true"). If true, executes imported scripts
+# Returns: true on success (or if scripts are already up to date), false on error
+# Example: $DownloadAndImportScriptsFromGitHubList "https://github.com/smirnovhub/my-mikrotik-scripts/raw/refs/heads/master/list.txt" true
 :set DownloadAndImportScriptsFromGitHubList do={
     :global EndsWithStr
     :global GetMd5Sum
@@ -521,7 +535,7 @@
     :local domain "github.com/"
     :local domainPos [:find $listUrl $domain]
     
-    :if ([:len $domainPos] > 0) do={
+    :if ([:type $domainPos] = "num") do={
         :local pathStart ($domainPos + [:len $domain])
         :local urlPath [:pick $listUrl $pathStart [:len $listUrl]]
     
@@ -537,7 +551,7 @@
         :local headsMarker "/raw/refs/heads/"
         :local headsPos [:find $urlPath $headsMarker]
     
-        :if ($headsPos != "") do={
+        :if ([:type $headsPos] = "num") do={
             :local branchStart ($headsPos + [:len $headsMarker])
             :local slash3 [:find $urlPath "/" $branchStart]
             :set branch [:pick $urlPath $branchStart $slash3]
@@ -548,7 +562,7 @@
         :return false
     }
 
-    :local lastCommitHash [$GetGitHubLastCommitHash $repo $owner $branch]
+    :local lastCommitHash [$GetGitHubLastCommitHash $owner $repo $branch]
 
     :if ([:len $lastCommitHash] = 0) do={
         $SendPrivateTelegramMessage ("$failEmoji <b>$deviceName:</b> failed to get last commit hash from GitHub")
@@ -563,11 +577,10 @@
         :return true
     }
 
-    $SetGlobalVar $lastCommitGlobalVarName $lastCommitHash
-
     :local result [$DownloadAndImportScriptsFromList $listUrl $runScripts]
 
     :if ($result) do={
+        $SetGlobalVar $lastCommitGlobalVarName $lastCommitHash
         $SendPrivateTelegramMessage ("$successEmoji <b>$deviceName:</b> scripts updated successfully")
     } else={
         $SendPrivateTelegramMessage ("$failEmoji <b>$deviceName:</b> failed to update scripts")

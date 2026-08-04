@@ -335,7 +335,7 @@
         :return "00000000"
     }
 
-    :local hexTable "0123456789abcdef"
+    :local hexChars "0123456789abcdef"
 
     # Initial CRC value
     :local crc 0xFFFFFFFF
@@ -350,13 +350,13 @@
     :set crc ($crc ^ 0xFFFFFFFF)
 
     # Format 8-character hex string output
-    :local encodedResult ""
+    :local result ""
     :for byteIdx from=3 to=0 step=-1 do={
         :local bVal (($crc >> ($byteIdx * 8)) & 0xFF)
-        :local h1 [:pick $hexTable (($bVal >> 4) & 0x0F) ((($bVal >> 4) & 0x0F) + 1)]
-        :local h2 [:pick $hexTable ($bVal & 0x0F) (($bVal & 0x0F) + 1)]
-        :set encodedResult ($encodedResult . $h1 . $h2)
+        :local h1 [:pick $hexChars (($bVal >> 4) & 0x0F) ((($bVal >> 4) & 0x0F) + 1)]
+        :local h2 [:pick $hexChars ($bVal & 0x0F) (($bVal & 0x0F) + 1)]
+        :set result ($result . $h1 . $h2)
     }
 
-    :return $encodedResult
+    :return $result
 }

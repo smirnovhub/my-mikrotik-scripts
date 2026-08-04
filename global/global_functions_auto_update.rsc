@@ -144,7 +144,7 @@
 
                     :if ([:type $failurePos] = "num") do={
                         :set errorMessage [:pick $logContent ($failurePos + [:len $failureMarker]) [:len $logContent]]
-                        :set errorMessage [$TrimStr $errorMessage ("\r\n\t ")]
+                        :set errorMessage [$TrimStr $errorMessage]
                     }
                 }
             }
@@ -182,6 +182,7 @@
 # Returns: true on successful script update and execution, or false on failure
 # Example: $DownloadAndImportScript "https://example.com/scripts/my_script.rsc"
 :set DownloadAndImportScript do={
+    :global GetMd5Sum
     :global GetCrc32Sum
     :global EndsWithStr
     :global FetchWithRedirect
@@ -201,6 +202,11 @@
 
     :if ([:len $expectedHashSum] = 0) do={
         :log error "DownloadAndImportScript: Hash sum parameter is missing."
+        :return false
+    }
+
+    :if ([:len $expectedHashSum] != 8 && [:len $expectedHashSum] != 32) do={
+        :log error "DownloadAndImportScript: Wrong hash. Only CRC32 and MD5 supported."
         :return false
     }
 
@@ -229,7 +235,15 @@
     :do {
         :local newSource [$FetchWithRedirect $rawUrl]
         :if ([:len $newSource] > 0) do={
-            :local actualHashSum [$GetCrc32Sum $newSource]
+            :local actualHashSum ""
+            :if ([:len $expectedHashSum] = 8) do={
+                :log info "Checking CRC32 sum..."
+                :set actualHashSum [$GetCrc32Sum $newSource]
+            } else={
+                :log info "Checking MD5 sum..."
+                :set actualHashSum [$GetMd5Sum $newSource]
+            }
+
             :if ($expectedHashSum != $actualHashSum) do={
                 :log error ("Hash sum for " . $scriptName . " doesn't match: got " . $actualHashSum . " but expected " . $expectedHashSum)
                 :return false
@@ -298,7 +312,7 @@
 
             :foreach rawLine in=$lines do={
                 # Remove spaces, carriage returns, line feeds, and tabs from both ends
-                :local cleanLine [$TrimStr $rawLine ("\r\n\t ")]
+                :local cleanLine [$TrimStr $rawLine]
 
                 # Ignore empty lines and comment lines (starting with #)
                 :if ([:len $cleanLine] > 0 and [:pick $cleanLine 0 1] != "#") do={
@@ -307,8 +321,8 @@
                     :local res false
 
                     :if ([:len $parts] >= 2) do={
-                        :local hash ($parts->0)
-                        :set cleanUrl ($parts->1)
+                        :local hash [$TrimStr ($parts->0)]
+                        :set cleanUrl [$TrimStr ($parts->1)]
                         :set res [$DownloadAndImportScript $cleanUrl $hash]
                     } else={
                         :log error ("Hash sum or URL not found in line " . $cleanLine)

@@ -114,7 +114,9 @@
   :local source $1
   :local delimiter " "
 
-  :if ([:len $2] > 0) do={ :set delimiter $2 }
+  :if ([:len $2] > 0) do={
+      :set delimiter $2
+  }
 
   :if ([:typeof $source] != "array") do={
       :set source [$SplitStr $1 $delimiter]
@@ -345,7 +347,13 @@
 #   immedString
 :set TrimStrLeft do={
     :local s $1
-    :local chars $2
+
+    :local chars ("\r\n\t ")
+    
+    :if ([:len $2] > 0) do={
+        :set chars $2
+    }
+
     :local cont true
 
     :while (($cont = true) and ([:len $s] > 0)) do={
@@ -375,7 +383,13 @@
 #   TrimmedStri
 :set TrimStrRight do={
     :local s $1
-    :local chars $2
+
+    :local chars ("\r\n\t ")
+    
+    :if ([:len $2] > 0) do={
+        :set chars $2
+    }
+
     :local cont true
 
     :while (($cont = true) and ([:len $s] > 0)) do={

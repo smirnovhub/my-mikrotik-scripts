@@ -110,7 +110,13 @@
   }
 
   :local lNumberOfWords (((($lMessageLength + 8) / 64) + 1) * 16)
+
   :local lWordArray [:toarray ""]
+
+  # Build the initial array
+  :for w from=0 to=($lNumberOfWords - 1) do={
+    :set ($lWordArray->$w) 0
+  }
 
   # Pack message bytes into 32-bit words
   :local i 0

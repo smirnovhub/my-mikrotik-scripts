@@ -109,6 +109,50 @@
       }
   }
 
+  :local lWordArray [:toarray ""]
+
+  # Pack message bytes into 32-bit words
+  :local i 0
+  :while (($i + 3) < $lMessageLength) do={
+    :set ($lWordArray->($i >> 2)) ( \
+      ($asciiCodeTable->[:pick $strMessage $i]) | \
+      (($asciiCodeTable->[:pick $strMessage ($i + 1)]) << 8) | \
+      (($asciiCodeTable->[:pick $strMessage ($i + 2)]) << 16) | \
+      (($asciiCodeTable->[:pick $strMessage ($i + 3)]) << 24) \
+    )
+    :set i ($i + 4)
+  }
+
+  # Pack remaining 1-3 bytes
+  :local curVal 0
+
+  :if ($i < $lMessageLength) do={
+    :set curVal ($asciiCodeTable->[:pick $strMessage $i])
+    :if (($i + 1) < $lMessageLength) do={
+      :set curVal ($curVal | (($asciiCodeTable->[:pick $strMessage ($i + 1)]) << 8))
+    }
+    :if (($i + 2) < $lMessageLength) do={
+      :set curVal ($curVal | (($asciiCodeTable->[:pick $strMessage ($i + 2)]) << 16))
+    }
+  }
+
+  # Add padding byte 0x80
+  :local padWIndex ($i >> 2)
+  :local padBPos (($lMessageLength % 4) * 8)
+  :set ($lWordArray->$padWIndex) ($curVal | (0x80 << $padBPos))
+
+  # Fill missing middle words with 0 and place bit length
+  :local lNumberOfWords (((($lMessageLength + 8) / 64) + 1) * 16)
+  :for w from=($padWIndex + 1) to=($lNumberOfWords - 1) do={
+    :set ($lWordArray->$w) 0
+  }
+
+  :local bitLen ($lMessageLength * 8)
+  :set ($lWordArray->($lNumberOfWords - 2)) ($bitLen & 0xFFFFFFFF)
+  :set ($lWordArray->($lNumberOfWords - 1)) (($bitLen >> 32) & 0xFFFFFFFF)
+
+  ### Main Loop (Unrolled Rounds) ###
+
   :local a 0x67452301
   :local b 0xEFCDAB89
   :local c 0x98BADCFE
@@ -120,55 +164,8 @@
   :local dd 0x10325476
 
   :local tmp1 0
-  :local lNumberOfWords (((($lMessageLength + 8) / 64) + 1) * 16)
-
-  :local lWordArray [:toarray ""]
-
-  # Build the initial array
-  :for w from=0 to=($lNumberOfWords - 1) do={
-    :set ($lWordArray->$w) 0
-  }
-
-  # Pack message bytes into 32-bit words
-  :local i 0
-
-  :while (($i + 3) < $lMessageLength) do={
-    :set ($lWordArray->($i / 4)) ( \
-      ($asciiCodeTable->[:pick $strMessage $i]) | \
-      (($asciiCodeTable->[:pick $strMessage ($i + 1)]) << 8) | \
-      (($asciiCodeTable->[:pick $strMessage ($i + 2)]) << 16) | \
-      (($asciiCodeTable->[:pick $strMessage ($i + 3)]) << 24) \
-    )
-    :set i ($i + 4)
-  }
-
-  # Pack remaining 1-3 bytes
-  :if ($i < $lMessageLength) do={
-    :set ($lWordArray->($i / 4)) ($asciiCodeTable->[:pick $strMessage $i])
-
-    :if (($i + 1) < $lMessageLength) do={
-      :set ($lWordArray->($i / 4)) (($lWordArray->($i / 4)) | (($asciiCodeTable->[:pick $strMessage ($i + 1)]) << 8))
-    }
-
-    :if (($i + 2) < $lMessageLength) do={
-      :set ($lWordArray->($i / 4)) (($lWordArray->($i / 4)) | (($asciiCodeTable->[:pick $strMessage ($i + 2)]) << 16))
-    }
-  }
-
-  # Add padding byte 0x80
-  :local padWIndex ($lMessageLength / 4)
-  :local padBPos (($lMessageLength % 4) * 8)
-  :local curVal ($lWordArray->$padWIndex)
-  :set ($lWordArray->$padWIndex) ($curVal | (0x80 << $padBPos))
-
-  # Append original message length in bits
-  :local bitLen ($lMessageLength * 8)
-  :set ($lWordArray->($lNumberOfWords - 2)) ($bitLen & 0xFFFFFFFF)
-  :set ($lWordArray->($lNumberOfWords - 1)) (($bitLen >> 32) & 0xFFFFFFFF)
 
   :local lWordArrLen ([:len $lWordArray] - 1)
-
-  ### Main Loop (Unrolled Rounds) ###
 
   :for lcv from=0 to=$lWordArrLen step=16 do={
     :set aa $a
@@ -176,24 +173,22 @@
     :set cc $c
     :set dd $d
 
-    :local off $lcv
-
-    :local w0  ($lWordArray->($off + 0))
-    :local w1  ($lWordArray->($off + 1))
-    :local w2  ($lWordArray->($off + 2))
-    :local w3  ($lWordArray->($off + 3))
-    :local w4  ($lWordArray->($off + 4))
-    :local w5  ($lWordArray->($off + 5))
-    :local w6  ($lWordArray->($off + 6))
-    :local w7  ($lWordArray->($off + 7))
-    :local w8  ($lWordArray->($off + 8))
-    :local w9  ($lWordArray->($off + 9))
-    :local w10 ($lWordArray->($off + 10))
-    :local w11 ($lWordArray->($off + 11))
-    :local w12 ($lWordArray->($off + 12))
-    :local w13 ($lWordArray->($off + 13))
-    :local w14 ($lWordArray->($off + 14))
-    :local w15 ($lWordArray->($off + 15))
+    :local w0  ($lWordArray->$lcv)
+    :local w1  ($lWordArray->($lcv + 1))
+    :local w2  ($lWordArray->($lcv + 2))
+    :local w3  ($lWordArray->($lcv + 3))
+    :local w4  ($lWordArray->($lcv + 4))
+    :local w5  ($lWordArray->($lcv + 5))
+    :local w6  ($lWordArray->($lcv + 6))
+    :local w7  ($lWordArray->($lcv + 7))
+    :local w8  ($lWordArray->($lcv + 8))
+    :local w9  ($lWordArray->($lcv + 9))
+    :local w10 ($lWordArray->($lcv + 10))
+    :local w11 ($lWordArray->($lcv + 11))
+    :local w12 ($lWordArray->($lcv + 12))
+    :local w13 ($lWordArray->($lcv + 13))
+    :local w14 ($lWordArray->($lcv + 14))
+    :local w15 ($lWordArray->($lcv + 15))
 
     ### Round 1 ###
     :set tmp1 ((($d ^ ($b & ($c ^ $d))) + $a + 0xD76AA478 + $w0) & 0xFFFFFFFF);  :set a (($b + (($tmp1 << 7)  | ($tmp1 >> 25))) & 0xFFFFFFFF)

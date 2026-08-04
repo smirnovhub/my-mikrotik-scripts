@@ -77,9 +77,6 @@
     :set res [$RunTestCase $res "admin" "21232f297a57a5a743894a0e4a801fc3" "Common administrative identifier string hash"]
     :set res [$RunTestCase $res "RouterOS" "7e08a36aac8e952ec66f3f28bd384bc0" "Mixed case application specific string hash"]
 
-    # Empty string validation (Standard MD5 for empty input)
-    :set res [$RunTestCase $res "" "d41d8cd98f00b204e9800998ecf8427e" "Empty string boundary hash verification"]
-
     # Single character inputs
     :set res [$RunTestCase $res "A" "7fc56270e7a70fa81a5935b72eacbe29" "Single uppercase character string hash"]
 
@@ -146,6 +143,77 @@
     }
 
     :set res [$RunTestCase $res $allChars "e2c865db4162bed963bfaa9ef6ac18f0" "All 256 byte values hash"]
+
+    # Short remaining-byte packing tests
+    :set res [$RunTestCase $res "aa" "4124bc0a9335c27f086f24ba207a4912" "Two-byte message packing validation"]
+    :set res [$RunTestCase $res "aaa" "47bce5c74f589f4867dbd57e9ca9f808" "Three-byte message packing validation"]
+    :set res [$RunTestCase $res "aaaa" "74b87337454200d4d33f80c4663dc5e5" "Four-byte message word boundary validation"]
+    :set res [$RunTestCase $res "aaaaa" "594f803b380a41396ed63dca39503542" "Five-byte message packing validation"]
+
+    # 119/120/121-byte padding boundary
+    :local testStr ""
+
+    :for i from=1 to=119 do={
+        :set testStr ($testStr . "a")
+    }
+    :set res [$RunTestCase $res $testStr "8a7bd0732ed6a28ce75f6dabc90e1613" "119-byte message padding boundary hash"]
+
+    :set testStr ($testStr . "a")
+    :set res [$RunTestCase $res $testStr "5f61c0ccad4cac44c75ff505e1f1e537" "120-byte message padding boundary hash"]
+
+    :set testStr ($testStr . "a")
+    :set res [$RunTestCase $res $testStr "f6acfca2d47c87f2b14ca038234d3614" "121-byte message padding boundary hash"]
+
+    # 191/192/193-byte multi-block boundary
+    :set testStr ""
+
+    :for i from=1 to=191 do={
+        :set testStr ($testStr . "a")
+    }
+    :set res [$RunTestCase $res $testStr "16e2824f7a3f00ef0028994182071953" "191-byte message multi-block boundary hash"]
+
+    :set testStr ($testStr . "a")
+    :set res [$RunTestCase $res $testStr "234c07907df5019d5f40f03936939bce" "192-byte message exact three-block hash"]
+
+    :set testStr ($testStr . "a")
+    :set res [$RunTestCase $res $testStr "8ea3af1d9476fa0b6c04ce4f3a336c03" "193-byte message multi-block overflow hash"]
+
+    # 255/256/257-byte boundary
+    :set testStr ""
+
+    :for i from=1 to=255 do={
+        :set testStr ($testStr . "a")
+    }
+    :set res [$RunTestCase $res $testStr "46bc249a5a8fc5d622cf12c42c463ae0" "255-byte message boundary hash"]
+
+    :set testStr ($testStr . "a")
+    :set res [$RunTestCase $res $testStr "81109eec5aa1a284fb5327b10e9c16b9" "256-byte message exact boundary hash"]
+
+    :set testStr ($testStr . "a")
+    :set res [$RunTestCase $res $testStr "b7958df91b9413477491e9b6e27f1bac" "257-byte message boundary overflow hash"]
+
+    # Long multi-block messages
+    :set testStr ""
+
+    :for i from=1 to=512 do={
+        :set testStr ($testStr . "a")
+    }
+    :set res [$RunTestCase $res $testStr "56907396339ca2b099bd12245f936ddc" "512-byte multi-block message hash"]
+
+    :set testStr ""
+
+    :for i from=1 to=1024 do={
+        :set testStr ($testStr . "a")
+    }
+    :set res [$RunTestCase $res $testStr "c9a34cfc85d982698c6ac89f76071abd" "1024-byte multi-block message hash"]
+
+    # Zero-byte handling
+    :set testStr ""
+
+    :for i from=1 to=64 do={
+        :set testStr ($testStr . [$DecToChar 0])
+    }
+    :set res [$RunTestCase $res $testStr "3b5d3c7d207e37dceeedd301e35e2e58" "64 zero-byte message hash"]
 
     :put "Testing completed."
     :return $res

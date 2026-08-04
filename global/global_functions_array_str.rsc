@@ -349,7 +349,7 @@
     :local s $1
 
     :local chars ("\r\n\t ")
-    
+
     :if ([:len $2] > 0) do={
         :set chars $2
     }
@@ -385,7 +385,7 @@
     :local s $1
 
     :local chars ("\r\n\t ")
-    
+
     :if ([:len $2] > 0) do={
         :set chars $2
     }

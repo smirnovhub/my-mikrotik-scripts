@@ -1,6 +1,7 @@
 import re
 import sys
 import zlib
+import hashlib
 
 from pathlib import Path
 
@@ -8,7 +9,12 @@ from pathlib import Path
 URL_PATTERN = re.compile(r"^http.*/refs/heads/[^/]+/(?P<rel_path>.+)$")
 
 
-def calculate_hash(filepath: Path) -> str:
+def calculate_md5(filepath: Path) -> str:
+    # Read bytes and calculate MD5 checksum
+    return hashlib.md5(filepath.read_bytes()).hexdigest()
+
+
+def calculate_crc32(filepath: Path) -> str:
     # Read bytes and calculate CRC32 checksum
     crc_val = zlib.crc32(filepath.read_bytes())
     # Format as 8-character lowercase hex string
@@ -48,7 +54,7 @@ def process_list(list_file_path: Path):
             local_file = repo_root / rel_path_str
 
             if local_file.exists() and local_file.is_file():
-                file_hash = calculate_hash(local_file)
+                file_hash = calculate_crc32(local_file)
                 updated_lines.append(f"{file_hash} {url}\n")
                 print(f"{file_hash} {url}")
                 continue

@@ -109,18 +109,10 @@
       }
   }
 
-  :local lNumberOfWords (((($lMessageLength + 8) / 64) + 1) * 16)
-
   :local lWordArray [:toarray ""]
-
-  # Build the initial array
-  :for w from=0 to=($lNumberOfWords - 1) do={
-    :set ($lWordArray->$w) 0
-  }
 
   # Pack message bytes into 32-bit words
   :local i 0
-
   :while (($i + 3) < $lMessageLength) do={
     :set ($lWordArray->($i >> 2)) ( \
       ($asciiCodeTable->[:pick $strMessage $i]) | \
@@ -132,25 +124,29 @@
   }
 
   # Pack remaining 1-3 bytes
+  :local curVal 0
+
   :if ($i < $lMessageLength) do={
-    :set ($lWordArray->($i / 4)) ($asciiCodeTable->[:pick $strMessage $i])
-
+    :set curVal ($asciiCodeTable->[:pick $strMessage $i])
     :if (($i + 1) < $lMessageLength) do={
-      :set ($lWordArray->($i / 4)) (($lWordArray->($i / 4)) | (($asciiCodeTable->[:pick $strMessage ($i + 1)]) << 8))
+      :set curVal ($curVal | (($asciiCodeTable->[:pick $strMessage ($i + 1)]) << 8))
     }
-
     :if (($i + 2) < $lMessageLength) do={
-      :set ($lWordArray->($i / 4)) (($lWordArray->($i / 4)) | (($asciiCodeTable->[:pick $strMessage ($i + 2)]) << 16))
+      :set curVal ($curVal | (($asciiCodeTable->[:pick $strMessage ($i + 2)]) << 16))
     }
   }
 
   # Add padding byte 0x80
-  :local padWIndex ($lMessageLength / 4)
+  :local padWIndex ($i >> 2)
   :local padBPos (($lMessageLength % 4) * 8)
-  :local curVal ($lWordArray->$padWIndex)
   :set ($lWordArray->$padWIndex) ($curVal | (0x80 << $padBPos))
 
-  # Append original message length in bits
+  # Fill missing middle words with 0 and place bit length
+  :local lNumberOfWords (((($lMessageLength + 8) / 64) + 1) * 16)
+  :for w from=($padWIndex + 1) to=($lNumberOfWords - 1) do={
+    :set ($lWordArray->$w) 0
+  }
+
   :local bitLen ($lMessageLength * 8)
   :set ($lWordArray->($lNumberOfWords - 2)) ($bitLen & 0xFFFFFFFF)
   :set ($lWordArray->($lNumberOfWords - 1)) (($bitLen >> 32) & 0xFFFFFFFF)

@@ -1,6 +1,6 @@
 import re
-import sys
 import zlib
+import argparse
 import hashlib
 
 from pathlib import Path
@@ -21,15 +21,29 @@ def calculate_crc32(filepath: Path) -> str:
     return f"{crc_val:08x}"
 
 
-def process_list(list_file_path: Path):
+# Registry mapping algorithm names to their handler functions
+HASH_FUNCTIONS = {
+    "crc32": calculate_crc32,
+    "md5": calculate_md5,
+}
+
+
+def process_list(list_file_path: Path, alg: str):
     if not list_file_path.exists():
         print(f"Error: {list_file_path} not found.")
+        return
+
+    hash_func = HASH_FUNCTIONS.get(alg.lower())
+    if not hash_func:
+        print(
+            f"Error: Unsupported hash algorithm '{alg}'. Supported: {', '.join(HASH_FUNCTIONS.keys())}"
+        )
         return
 
     updated_lines = []
     repo_root = Path.cwd()
 
-    print(f"Updating {list_file_path} hashes...")
+    print(f"Updating {list_file_path} using [{alg.upper()}] hashes...")
 
     with open(list_file_path, "r", encoding="utf-8") as f:
         lines = f.readlines()
@@ -54,7 +68,7 @@ def process_list(list_file_path: Path):
             local_file = repo_root / rel_path_str
 
             if local_file.exists() and local_file.is_file():
-                file_hash = calculate_crc32(local_file)
+                file_hash = hash_func(local_file)
                 updated_lines.append(f"{file_hash} {url}\n")
                 print(f"{file_hash} {url}")
                 continue
@@ -67,13 +81,20 @@ def process_list(list_file_path: Path):
     with open(list_file_path, "w", encoding="utf-8", newline="\n") as f:
         f.writelines(updated_lines)
 
-    print(f"Hashes {list_file_path} updated.")
+    print(f"Hashes in {list_file_path} updated successfully.")
 
 
 if __name__ == "__main__":
-    if len(sys.argv) < 2:
-        print(f"Usage: python {Path(sys.argv[0]).name} <path/to/list.txt>")
-        sys.exit(1)
+    parser = argparse.ArgumentParser(
+        description="Update file checksums in a reference list.")
+    parser.add_argument("list_path", type=Path, help="Path to the list file")
+    parser.add_argument(
+        "-a",
+        type=str,
+        required=True,
+        choices=list(HASH_FUNCTIONS.keys()),
+        help="Hash algorithm to use (default: crc32)",
+    )
 
-    target_path = Path(sys.argv[1])
-    process_list(target_path)
+    args = parser.parse_args()
+    process_list(args.list_path, args.a)

@@ -24,8 +24,10 @@
 
 # global functions
 :global FetchWithRedirect
+:global GetGitHubLastCommitHash
 :global DownloadAndImportScript
 :global DownloadAndImportScriptsFromList
+:global DownloadAndImportScriptsFromGitHubList
 
 # Purpose: Download content from a URL with support for HTTP 3xx redirects
 #          and error logging, storing payload directly in memory via as-value.
@@ -177,6 +179,72 @@
     :return ""
 }
 
+:set GetGitHubLastCommitHash do={
+    # Workaround for the MikroTik RouterOS interpreter bug (phantom execution)
+    :if ([:len $0] = 0) do={
+        :return ""
+    }
+
+    :local repoName [:tostr $1]
+    :local repoOwner [:tostr $2]
+    :local repoBranch [:tostr $3]
+
+    :local prefix "GetGitHubLastCommitHash:"
+
+    :if ([:len $repoName] = 0) do={
+        :log error "$prefix Repository name parameter is missing."
+        :return ""
+    }
+
+    :if ([:len $repoOwner] = 0) do={
+        :log error "$prefix Repository owner parameter is missing."
+        :return ""
+    }
+
+    :if ([:len $repoBranch] = 0) do={
+        :log error "$prefix Repository branch parameter is missing."
+        :return ""
+    }
+
+    :local url "https://api.github.com/repos/$repoOwner/$repoName/git/ref/heads/$repoBranch"
+
+    # Prepare HTTP headers
+    :local httpHeaders "Accept: application/vnd.github+json,User-Agent: MikroTik-RouterOS,X-GitHub-Api-Version: 2026-03-10"
+
+    :local result [:toarray ""]
+
+    # Fetch data from GitHub API
+    :do {
+        :set result [/tool fetch url=$url http-header-field=$httpHeaders output=user as-value]
+    } on-error={
+        :log error "$prefix Failed to execute HTTP request"
+        return ""
+    }
+
+    :local content ($result->"data")
+
+    # Simple JSON extraction logic for "sha":"<hash>"
+    :local searchKey "\"sha\":\""
+    :local keyPos [:find $content $searchKey]
+
+    :if ($keyPos != "") do={
+        :local startPos ($keyPos + [:len $searchKey])
+        :local endPos [:find $content "\"" $startPos]
+
+        :if ($endPos != "") do={
+            :local sha [:pick $content $startPos $endPos]
+            :log info "$prefix Latest commit SHA: $sha"
+            :return $sha
+        } else={
+            :log error "$prefix Closing quote for SHA not found"
+            :return ""
+        }
+    } else={
+        :log error "$prefix SHA key not found in response"
+        :return ""
+    }
+}
+
 # Purpose: Download a .rsc script from a URL, update or create it in RouterOS 
 #          system scripts, and execute it immediately.
 # Parameters:
@@ -301,7 +369,7 @@
     }
 
     :if ([$EndsWithStr $listUrl ".txt"] = false) do={
-        :log error "$prefix file name should end with .txt"
+        :log error "$prefix File name should end with .txt"
         :return false
     }
 
@@ -403,4 +471,107 @@
         :log error ("$prefix Failed to download list from " . $listUrl)
         :return false
     }
+}
+
+:set DownloadAndImportScriptsFromGitHubList do={
+    :global EndsWithStr
+    :global GetMd5Sum
+    :global SetGlobalVar
+    :global GetGlobalVarOrDefault
+    :global GetGitHubLastCommitHash
+    :global SendPrivateTelegramMessage
+    :global DownloadAndImportScriptsFromList
+
+    :global largeGreenCircleEmoji
+    :global largeRedCircleEmoji
+
+    # Workaround for the MikroTik RouterOS interpreter bug (phantom execution)
+    :if ([:len $0] = 0) do={
+        :return false
+    }
+
+    :local prefix "DownloadAndImportScriptsFromGitHubList:"
+
+    :local listUrl [:tostr $1]
+
+    :if ([:len $listUrl] = 0) do={
+        :log error "$prefix List URL parameter is missing."
+        :return false
+    }
+
+    :if ([$EndsWithStr $listUrl ".txt"] = false) do={
+        :log error "$prefix File name should end with .txt"
+        :return false
+    }
+
+    :local runScripts false
+    :if ([:tostr $2] = "true") do={
+        :set runScripts true
+    }
+
+    :local successEmoji $largeGreenCircleEmoji
+    :local failEmoji $largeRedCircleEmoji
+
+    :local deviceName [/system identity get name]
+
+    :local owner ""
+    :local repo ""
+    :local branch ""
+
+    :local domain "github.com/"
+    :local domainPos [:find $listUrl $domain]
+    
+    :if ([:len $domainPos] > 0) do={
+        :local pathStart ($domainPos + [:len $domain])
+        :local urlPath [:pick $listUrl $pathStart [:len $listUrl]]
+    
+        # Find owner
+        :local slash1 [:find $urlPath "/"]
+        :set owner [:pick $urlPath 0 $slash1]
+    
+        # Find repo
+        :local slash2 [:find $urlPath "/" ($slash1 + 1)]
+        :set repo [:pick $urlPath ($slash1 + 1) $slash2]
+    
+        # Find branch after "/raw/refs/heads/"
+        :local headsMarker "/raw/refs/heads/"
+        :local headsPos [:find $urlPath $headsMarker]
+    
+        :if ($headsPos != "") do={
+            :local branchStart ($headsPos + [:len $headsMarker])
+            :local slash3 [:find $urlPath "/" $branchStart]
+            :set branch [:pick $urlPath $branchStart $slash3]
+        }
+    } else={
+        :log error "$prefix Failed to parse GitHub URL $listUrl"
+        $SendPrivateTelegramMessage ("$failEmoji <b>$deviceName:</b> failed to parse GitHub URL")
+        :return false
+    }
+
+    :local lastCommitHash [$GetGitHubLastCommitHash $repo $owner $branch]
+
+    :if ([:len $lastCommitHash] = 0) do={
+        $SendPrivateTelegramMessage ("$failEmoji <b>$deviceName:</b> failed to get last commit hash from GitHub")
+        :return false
+    }
+
+    :local lastCommitGlobalVarName ([$GetMd5Sum $listUrl] . "-last-commit")
+    :local storedLastCommitHash [$GetGlobalVarOrDefault $lastCommitGlobalVarName ""]
+
+    :if ($storedLastCommitHash = $lastCommitHash) do={
+        :log info "$prefix scripts are up to date. Do nothing"
+        :return true
+    }
+
+    $SetGlobalVar $lastCommitGlobalVarName $lastCommitHash
+
+    :local result [$DownloadAndImportScriptsFromList $listUrl $runScripts]
+
+    :if ($result) do={
+        $SendPrivateTelegramMessage ("$successEmoji <b>$deviceName:</b> scripts updated successfully")
+    } else={
+        $SendPrivateTelegramMessage ("$failEmoji <b>$deviceName:</b> failed to update scripts")
+    }
+
+    :return result
 }

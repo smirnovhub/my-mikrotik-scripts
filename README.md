@@ -262,7 +262,6 @@ The scripts are intended to be run at system startup or whenever modifications a
 
 Below are practical examples demonstrating how to run test suites in RouterOS, ranging from executing individual test cases to running entire packages and chaining them into a full pipeline.
 
-
 ### 1. Running Individual Test Functions
 
 Run a specific test function when debugging a single component:
@@ -300,6 +299,39 @@ Execute all tests in a specific module using its corresponding RunAll entry poin
 # Run all utility tests
 :global RunAllUtilsTests
 :put [$RunAllUtilsTests]
+```
+
+### 3. Chaining Multiple Packages (Continuous Integration Pipeline)
+
+Aggregate results across multiple test suites into a single execution pass to inspect cumulative passed and failed counters:
+
+```routeros
+:global RunAllArrayStrTests1
+:global RunAllArrayStrTests2
+:global RunAllDateTimeTests1
+:global RunAllDateTimeTests2
+:global RunAllEncodingTests
+:global RunAllGlobalVarTests
+:global RunAllHashesTests
+:global RunAllUtilsTests
+
+# Initialize result collector
+:local stats [:toarray ""]
+
+# Execute suites sequentially while passing the results map
+:set stats [$RunAllArrayStrTests1 $stats]
+:set stats [$RunAllArrayStrTests2 $stats]
+:set stats [$RunAllDateTimeTests1 $stats]
+:set stats [$RunAllDateTimeTests2 $stats]
+:set stats [$RunAllEncodingTests $stats]
+:set stats [$RunAllGlobalVarTests $stats]
+:set stats [$RunAllHashesTests $stats]
+:set stats [$RunAllUtilsTests $stats]
+
+# Output global execution summary
+:put ("\1B[35m=== FINAL TEST RESULTS ===\1B[0m")
+:put ("  Passed: " . ($stats->"passed"))
+:put ("  Failed: " . ($stats->"failed"))
 ```
 
 Thanks for original scripts and ideas to its authors:

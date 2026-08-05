@@ -21,10 +21,13 @@ The scripts are intended to be run at system startup or whenever modifications a
 ### Global Variables
 
 - **globalFunctionsReady**: Boolean flag indicating global functions readiness (`false` by default, set to `true` at the end of `global_functions.rsc`)
+- **largeGreenCircleEmoji**: Stores the URL-encoded green circle emoji (`🟢`) used for successful status updates
+- **largeRedCircleEmoji**: Stores the URL-encoded red circle emoji (`🔴`) used for failed status updates
+- **largeYellowCircleEmoji**: Stores the URL-encoded yellow circle emoji (`🟡`) used for warning, in-progress, or pending status indicators
+- **whiteCircleEmoji**: Stores the URL-encoded white circle emoji (`⚪`) used for neutral list markers, inactive states, or toggled-off option indicators
+- **backhandIndexPointingLeftEmoji**: Stores the URL-encoded left-pointing backhand index emoji (`👈`) used to highlight or draw attention to preceding text or values
 - **warningSignEmoji**: Stores the URL-encoded warning emoji (`⚠️`) used for alert messages
 - **squaredUpWithExclamationMark**: Stores the URL-encoded “squared up” emoji (`🆙`) with exclamation mark
-- **largeGreenCircleEmoji**: Green indicator emoji for successful status updates
-- **largeRedCircleEmoji**: Red indicator emoji for failed status updates
 - **telegramBotToken**: Stores the token for the Telegram bot used to send messages
 - **telegramPublicChatID**: Stores the Telegram public chat ID where messages will be sent
 - **telegramPrivateChatID**: Stores the Telegram private chat ID where messages will be sent

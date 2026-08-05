@@ -2,12 +2,12 @@
 # and install all of following scripts
 #
 # :global DownloadAndImportScriptsFromList
-# $DownloadAndImportScriptsFromList https://github.com/smirnovhub/my-mikrotik-scripts/raw/refs/heads/master/list.txt
+# $DownloadAndImportScriptsFromList https://github.com/smirnovhub/my-mikrotik-scripts/raw/refs/heads/master/other/list.txt
 #
 # Or with automatically check last commit hash:
 #
 # :global DownloadAndImportScriptsFromGitHubList
-# $DownloadAndImportScriptsFromGitHubList https://github.com/smirnovhub/my-mikrotik-scripts/raw/refs/heads/master/list.txt
+# $DownloadAndImportScriptsFromGitHubList https://github.com/smirnovhub/my-mikrotik-scripts/raw/refs/heads/master/other/list.txt
 
 e13ab0d07eb6df99a4f213b84d90d73e https://github.com/smirnovhub/my-mikrotik-scripts/raw/refs/heads/master/check_dhcp_dynamic_leases.rsc
 692fa1d722de69dcd1039a7ed3fd96e7 https://github.com/smirnovhub/my-mikrotik-scripts/raw/refs/heads/master/on_startup.rsc

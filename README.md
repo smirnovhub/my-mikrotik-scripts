@@ -18,13 +18,16 @@ My collection of **Mikrotik** scripts. All global scripts are tested on **Router
 These scripts are a comprehensive collection of global functions and utilities for RouterOS. They provide reusable functions for string manipulation, date-time conversion, networking checks, random number generation, external script auto-updates, and more.  
 The scripts are intended to be run at system startup or whenever modifications are made.
 
-### Global Variables
+### Global Pre-defined Variables
 
 - **globalFunctionsReady**: Boolean flag indicating global functions readiness (`false` by default, set to `true` at the end of `global_functions.rsc`)
+- **largeGreenCircleEmoji**: Stores the URL-encoded green circle emoji (`🟢`) used for successful status updates
+- **largeRedCircleEmoji**: Stores the URL-encoded red circle emoji (`🔴`) used for failed status updates
+- **largeYellowCircleEmoji**: Stores the URL-encoded yellow circle emoji (`🟡`) used for warning, in-progress, or pending status indicators
+- **whiteCircleEmoji**: Stores the URL-encoded white circle emoji (`⚪`) used for neutral list markers, inactive states, or toggled-off option indicators
+- **backhandIndexPointingLeftEmoji**: Stores the URL-encoded left-pointing backhand index emoji (`👈`) used to highlight or draw attention to preceding text or values
 - **warningSignEmoji**: Stores the URL-encoded warning emoji (`⚠️`) used for alert messages
 - **squaredUpWithExclamationMark**: Stores the URL-encoded “squared up” emoji (`🆙`) with exclamation mark
-- **largeGreenCircleEmoji**: Green indicator emoji for successful status updates
-- **largeRedCircleEmoji**: Red indicator emoji for failed status updates
 - **telegramBotToken**: Stores the token for the Telegram bot used to send messages
 - **telegramPublicChatID**: Stores the Telegram public chat ID where messages will be sent
 - **telegramPrivateChatID**: Stores the Telegram private chat ID where messages will be sent
@@ -37,6 +40,11 @@ The scripts are intended to be run at system startup or whenever modifications a
 - **TimeIsSync / WaitTimeSync**: Check or wait for NTP time synchronization.
 - **WaitFullyConnected**: Wait until network is fully ready (default route reachable, DNS resolving, and NTP synced).
 - **SilentPing**: Perform silent pings to a single host or multiple hosts in parallel.  
+- **GetHttpFileContent**: Downloads file content from an HTTP URL into memory, enforcing a 64 KB size limit.
+- **GetHttpFileContentWithRetry**: Fetches HTTP file content with automatic retries and incremental backoff delays between attempts.
+- **GetDhcpClientAddress**: Retrieves the assigned IPv4 address (without CIDR prefix) from a bound DHCP client on a specified interface.
+- **GetDhcpClientGateway**: Retrieves the default gateway IPv4 address provided by a bound DHCP client on a specified interface.
+- **GetRouterOSVersion**: Retrieves the system RouterOS version string, automatically stripping release channels or build suffixes (e.g., returning `"7.21.5"`).
 
 ### Logging & Error Handling
 - **LogAndExit**: Logs messages with severity (`info`, `warning`, `error`, `debug`) and stops execution if necessary.
@@ -60,6 +68,13 @@ The scripts are intended to be run at system startup or whenever modifications a
 - **CompareStr**: Compare two strings lexicographically using ASCII character codes.
 - **IsPrintableStr**: Check whether a string contains only printable characters.
 - **ExtractFileName**: Extract and return the file name from a path (with optional extension retention).
+
+### Named Global Variables Utilities
+
+- **GetGlobalVar**: Retrieves a value of a dynamically evaluated global variable by its base name.
+- **GetGlobalVarOrDefault**: Retrieves a global variable's value, returning a specified default value if the variable does not exist, is uninitialized, or evaluates to `nothing`/`nil`.
+- **SetGlobalVar**: Assigns a value to a dynamically created global variable in the system environment.
+- **RemoveGlobalVar**: Completely deletes a dynamic global variable from `/system script environment` by its name.
 
 ### Random & Numeric Utilities
 - **GetRandom20CharHex**: Generate a random 20-character hexadecimal string.
@@ -108,6 +123,14 @@ The scripts are intended to be run at system startup or whenever modifications a
 ### Notifications
 - **SendPublicTelegramMessage**: Send messages via Telegram to public chat (requires bot token and chat ID).
 - **SendPrivateTelegramMessage**: Send messages via Telegram to private chat (requires bot token and chat ID).
+
+### Auto-Update & Remote Fetching Utilities
+
+- **FetchWithRedirect**: Downloads content from a specified URL using `/tool fetch` with full support for HTTP 3xx redirects across both RouterOS v6 and v7 environments. Captures errors via temporary output logs and returns the downloaded content directly in memory without writing the final payload to disk.
+- **GetGitHubLastCommitHash**: Queries the GitHub REST API (`/repos/{owner}/{repo}/git/ref/heads/{branch}`) to retrieve the 40-character SHA commit hash of the latest commit. Uses custom HTTP headers for API versioning and parses JSON response inline.
+- **DownloadAndImportScript**: Fetches an individual `.rsc` script file from a URL, validates its integrity against a provided expected hash (supporting 8-character CRC32 or 32-character MD5 checksums), and creates or updates the entry in `/system script`.
+- **DownloadAndImportScriptsFromList**: Fetches and parses a remote text file (`.txt`) containing space-separated checksums and script URLs line-by-line (ignoring comments and empty lines). Automatically downloads, validates, and imports each script, tracks performance execution time, and optionally executes all updated scripts sequentially. See list.txt files in this repo for example.
+- **DownloadAndImportScriptsFromGitHubList**: Parses a GitHub raw list URL to automatically determine the repository owner, name, and branch. Compares the current commit SHA hash against the stored state in global variables to detect remote repository changes. If new commits exist, it triggers `DownloadAndImportScriptsFromList` and dispatches status alerts (success or failure) via Telegram. See list.txt files in this repo for example.
 
 ## Installation
 1. Save the scripts into your RouterOS environment using their respective module names (

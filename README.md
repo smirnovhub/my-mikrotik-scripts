@@ -1,5 +1,5 @@
 # my-mikrotik-scripts
-My collection of **Mikrotik** scripts. All scripts are tested on **RouterOS 6.49.17**
+My collection of **Mikrotik** scripts. All global scripts are tested on **RouterOS 6.49.17** and **RouterOS 7.21.5**
 
 Thanks for original scripts and ideas to its authors:
 
@@ -9,7 +9,7 @@ Thanks for original scripts and ideas to its authors:
 
 and many others...
 
-Also thanks to ChatGPT. He can do something valuable somewhere in the 10th attempt)
+Also thanks to Gemini and ChatGPT. They can do something valuable somewhere from the 10th attempt)
 
 ## [`check_dhcp_dynamic_leases.rsc`](check_dhcp_dynamic_leases.rsc)
 

@@ -1,5 +1,5 @@
 # my-mikrotik-scripts
-My collection of **Mikrotik** scripts. All global scripts are tested on **RouterOS 6.49.17** and **RouterOS 7.21.5**
+My huge collection of **Mikrotik** scripts. All global scripts are tested on **RouterOS 6.49.17** and **RouterOS 7.21.5**.
 
 # Global Functions List
 
@@ -28,7 +28,7 @@ The following global settings are required to configure Telegram integration. Th
 - **telegramPublicChatID**: Stores the Telegram public chat ID where messages will be sent.
 - **telegramPrivateChatID**: Stores the Telegram private chat ID where messages will be sent.
 
-### Global Pre-defined Variables
+### Global Predefined Constants
 
 - **globalFunctionsReady**: Boolean flag indicating global functions readiness (`false` by default, set to `true` at the end of `global_functions.rsc`).
 - **largeGreenCircleEmoji**: Stores the URL-encoded green circle emoji (`🟢`) used for successful status updates.
@@ -569,10 +569,17 @@ Aggregate results across multiple test suites into a single execution pass to in
 :put ("  Failed: " . ($stats->"failed"))
 ```
 
-Thanks for original scripts and ideas to its authors:
+## Disclaimer
 
-* https://github.com/eworm-de/routeros-scripts.git
-* https://github.com/osamahfarhan/mikrotik.git
-* https://forum.mikrotik.com/
+This software and associated scripts are provided "as is", without warranty of any kind, express or implied, including but not limited to the warranties of merchantability, fitness for a particular purpose, and non-infringement. In no event shall the authors or copyright holders be liable for any claim, damages, or other liability, whether in an action of contract, tort, or otherwise, arising from, out of, or in connection with the software or the use or other dealings in the software.
 
-and many others...
+**Use at your own risk.**
+
+## Acknowledgments
+
+Special thanks to the authors and community members whose scripts, ideas, and open-source solutions served as a foundation and inspiration for this project:
+
+* **[routeros-scripts](https://github.com/eworm-de/routeros-scripts.git)** by eworm-de
+* **[mikrotik](https://github.com/osamahfarhan/mikrotik.git)** by osamahfarhan
+* **[MikroTik Community Forum](https://forum.mikrotik.com/)** and its vibrant community of engineers and enthusiasts
+* ...and many others across the open-source ecosystem.

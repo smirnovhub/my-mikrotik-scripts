@@ -156,6 +156,29 @@ The scripts are intended to be run at system startup or whenever modifications a
 /system script run global_functions_utils
 ```
 
+## Automatic Script Updates
+
+The framework provides built-in mechanisms for automatically downloading, importing, and updating global scripts directly from remote repositories. 
+
+You can perform simple updates using plain file manifests or utilize GitHub-aware functions that verify commit hashes to prevent unnecessary re-downloads when script sources remain unchanged.
+
+```routeros
+# Standard download and import from remote list manifest
+:global DownloadAndImportScriptsFromList
+$DownloadAndImportScriptsFromList https://github.com/smirnovhub/my-mikrotik-scripts/raw/refs/heads/master/global/list.txt true
+
+# GitHub-aware update checking commit hash before re-downloading
+:global DownloadAndImportScriptsFromGitHubList
+$DownloadAndImportScriptsFromGitHubList https://github.com/smirnovhub/my-mikrotik-scripts/raw/refs/heads/master/global/list.txt true
+```
+
+#### Parameters & Behavior
+
+Both update functions accept a boolean parameter (`true` or `false`) following the manifest URL:
+
+- **`true` (Import & Execute)**: Downloads, imports the scripts into the system script store, and **automatically executes** them immediately after loading to populate the global environment.
+- **`false` (Import only)**: Downloads and imports the scripts into the system script store without executing them.
+
 ## Function Usage Examples
 
 Below are practical examples demonstrating how to execute common library functions directly within RouterOS.
@@ -336,14 +359,14 @@ Convert timestamps, format duration strings, or parse RouterOS/ISO date-time for
 # Tests
 
 ## Files list
-* [`global_functions_array_str_tests_1.rsc`](global/global_functions_array_str_tests_1.rsc)
-* [`global_functions_array_str_tests_2.rsc`](global/global_functions_array_str_tests_2.rsc)
-* [`global_functions_datetime_tests_1.rsc`](global/global_functions_datetime_tests_1.rsc)
-* [`global_functions_datetime_tests_2.rsc`](global/global_functions_datetime_tests_2.rsc)
-* [`global_functions_encoding_tests.rsc`](global/global_functions_encoding_tests.rsc)
-* [`global_functions_global_vars_tests.rsc`](global/global_functions_global_vars_tests.rsc)
-* [`global_functions_hashes_tests.rsc`](global/global_functions_hashes_tests.rsc)
-* [`global_functions_utils_tests.rsc`](global/global_functions_utils_tests.rsc)
+* [`global_functions_array_str_tests_1.rsc`](global/tests/global_functions_array_str_tests_1.rsc)
+* [`global_functions_array_str_tests_2.rsc`](global/tests/global_functions_array_str_tests_2.rsc)
+* [`global_functions_datetime_tests_1.rsc`](global/tests/global_functions_datetime_tests_1.rsc)
+* [`global_functions_datetime_tests_2.rsc`](global/tests/global_functions_datetime_tests_2.rsc)
+* [`global_functions_encoding_tests.rsc`](global/tests/global_functions_encoding_tests.rsc)
+* [`global_functions_global_vars_tests.rsc`](global/tests/global_functions_global_vars_tests.rsc)
+* [`global_functions_hashes_tests.rsc`](global/tests/global_functions_hashes_tests.rsc)
+* [`global_functions_utils_tests.rsc`](global/tests/global_functions_utils_tests.rsc)
 
 ### Array and String Functions Tests
 
@@ -436,6 +459,29 @@ Convert timestamps, format duration strings, or parse RouterOS/ISO date-time for
 /system script run global_functions_hashes_tests
 /system script run global_functions_utils_tests
 ```
+## Automatic Test Suite Updates
+
+The framework provides built-in mechanisms for automatically downloading, importing, and updating test suites directly from remote repositories. 
+
+You can perform simple updates using plain file manifests or utilize GitHub-aware functions that verify commit hashes to prevent unnecessary re-downloads when script sources remain unchanged.
+
+```routeros
+# Standard download and import from remote list manifest
+:global DownloadAndImportScriptsFromList
+$DownloadAndImportScriptsFromList https://github.com/smirnovhub/my-mikrotik-scripts/raw/refs/heads/master/global/tests/list.txt true
+
+# GitHub-aware update checking commit hash before re-downloading
+:global DownloadAndImportScriptsFromGitHubList
+$DownloadAndImportScriptsFromGitHubList https://github.com/smirnovhub/my-mikrotik-scripts/raw/refs/heads/master/global/tests/list.txt true
+```
+
+#### Parameters & Behavior
+
+Both update functions accept a boolean parameter (`true` or `false`) following the manifest URL:
+
+- **`true` (Import & Execute)**: Downloads, imports the scripts into the system script store, and **automatically executes** them immediately after loading to populate the global environment.
+- **`false` (Import only)**: Downloads and imports the scripts into the system script store without executing them.
+
 ## Test Execution Examples
 
 Below are practical examples demonstrating how to run test suites in RouterOS, ranging from executing individual test cases to running entire packages and chaining them into a full pipeline.

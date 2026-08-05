@@ -1,4 +1,5 @@
 import re
+import sys
 import zlib
 import argparse
 import hashlib
@@ -28,17 +29,17 @@ HASH_FUNCTIONS = {
 }
 
 
-def process_list(list_file_path: Path, alg: str):
+def process_list(list_file_path: Path, alg: str) -> bool:
     if not list_file_path.exists():
         print(f"Error: {list_file_path} not found.")
-        return
+        return False
 
     hash_func = HASH_FUNCTIONS.get(alg.lower())
     if not hash_func:
         print(
-            f"Error: Unsupported hash algorithm '{alg}'. Supported: {', '.join(HASH_FUNCTIONS.keys())}"
+            f"Error: unsupported hash algorithm '{alg}'. Supported: {', '.join(HASH_FUNCTIONS.keys())}"
         )
-        return
+        return False
 
     updated_lines = []
     repo_root = Path.cwd()
@@ -73,7 +74,8 @@ def process_list(list_file_path: Path, alg: str):
                 print(f"{file_hash} {url}")
                 continue
             else:
-                print(f"Warning: File missing at {local_file} for URL: {url}")
+                print(f"Error: file missing at {local_file} for URL: {url}")
+                return False
 
         # Preserve line if pattern matching fails or target file is missing
         updated_lines.append(line if line.endswith("\n") else line + "\n")
@@ -82,6 +84,7 @@ def process_list(list_file_path: Path, alg: str):
         f.writelines(updated_lines)
 
     print(f"Hashes in {list_file_path} updated successfully.")
+    return True
 
 
 if __name__ == "__main__":
@@ -93,8 +96,9 @@ if __name__ == "__main__":
         type=str,
         required=True,
         choices=list(HASH_FUNCTIONS.keys()),
-        help="Hash algorithm to use (default: crc32)",
+        help="Hash algorithm to use",
     )
 
     args = parser.parse_args()
-    process_list(args.list_path, args.a)
+    if not process_list(args.list_path, args.a):
+        sys.exit(1)

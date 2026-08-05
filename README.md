@@ -155,6 +155,21 @@ The scripts are intended to be run at system startup or whenever modifications a
 /system script run global_functions_hashes
 /system script run global_functions_utils
 ```
+
+# Tests
+
+## Files list
+* [`global_functions_array_str_tests_1.rsc`](global/global_functions_array_str_tests_1.rsc)
+* [`global_functions_array_str_tests_2.rsc`](global/global_functions_array_str_tests_2.rsc)
+* [`global_functions_datetime_tests_1.rsc`](global/global_functions_datetime_tests_1.rsc)
+* [`global_functions_datetime_tests_2.rsc`](global/global_functions_datetime_tests_2.rsc)
+* [`global_functions_encoding_tests.rsc`](global/global_functions_encoding_tests.rsc)
+* [`global_functions_global_vars_tests.rsc`](global/global_functions_global_vars_tests.rsc)
+* [`global_functions_hashes_tests.rsc`](global/global_functions_hashes_tests.rsc)
+* [`global_functions_utils_tests.rsc`](global/global_functions_utils_tests.rsc)
+
+
+
 Thanks for original scripts and ideas to its authors:
 
 * https://github.com/eworm-de/routeros-scripts.git

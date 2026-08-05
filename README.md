@@ -230,14 +230,21 @@ Encode and decode strings using Standard/URL-safe Base64 alphabets or URL percen
 
 # Ping multiple hosts in parallel (returns dictionary with results)
 :local targets {
-    "gateway"="192.168.88.1";
+    "gateway"="172.17.17.1";
     "dns"="8.8.8.8";
     "deadHost"="198.51.100.254"
 }
-:local pingResults [$SilentPing$targets 2]
+
+:local pingResults [$SilentPing $targets 5]
 :put ("Gateway replies: " . ($pingResults->"gateway"))
 :put ("DNS replies: " . ($pingResults->"dns"))
 :put ("Dead host replies: " . ($pingResults->"deadHost"))
+
+# Output:
+Localhost replies: 3
+Gateway replies: 5
+DNS replies: 5
+Dead host replies: 0
 
 # --- Argument Extraction Examples ---
 
@@ -248,17 +255,17 @@ Encode and decode strings using Standard/URL-safe Base64 alphabets or URL percen
 }
 
 # Safely fetch an optional parameter with fallback default
-:local timeout [$GetArgOrDefault$config "timeout" 30]
+:local timeout [$GetArgOrDefault $config "timeout" 30]
 :put ("Timeout: " . $timeout)
 # Output: Timeout: 30
 
 # String "true"/"false" values are automatically parsed into boolean primitives
-:local isEnabled [$GetArgOrDefault$config "enabled" false]
+:local isEnabled [$GetArgOrDefault $config "enabled" false]
 :put ("Enabled type: " . [:typeof $isEnabled] . ", value: " . [:tostr $isEnabled])
 # Output: Enabled type: bool, value: true
 
 # Extract a mandatory parameter (will log and exit script execution if missing)
-:local host [$GetArgOrExit$config "host" "API Configuration"]
+:local host [$GetArgOrExit $config "host" "API Configuration"]
 :put ("Host: " . $host)
 # Output: Host: 10.0.0.1
 ```
@@ -275,15 +282,16 @@ Set, get, fallback, and remove global variables without polluting runtime scope:
 
 # Set global variables (supports primitives, IP addresses, subnets, and arrays)
 $SetGlobalVar "myServerIp" 192.168.88.1
-$SetGlobalVar "mySubnet" 10.0.0.0/24
 
 # Retrieve a global variable value
 :local ip [$GetGlobalVar "myServerIp"]
 :put ("Server IP: " . $ip)
+# Output: Server IP: 192.168.88.1
 
 # Retrieve variable with fallback default if non-existent
 :local port [$GetGlobalVarOrDefault "myServerPort" 8080]
 :put ("Server Port: " . $port)
+# Output: Server Port: 8080
 
 # Remove a global variable
 $RemoveGlobalVar "myServerIp"
@@ -302,14 +310,17 @@ Convert timestamps, format duration strings, or parse RouterOS/ISO date-time for
 
 # Get current normalized system date-time
 :put ("Current Date Time: " . [$GetCurrentDateTime])
+# Output: Current Date Time: 2026-08-05 20:33:25
 
 # Convert Unix timestamp to ISO formatted string
 :local isoDate [$FromUnixTimestamp 1700000000]
 :put ("ISO Date: " . $isoDate)
+# Output: ISO Date: 2023-11-14 22:13:20
 
 # Convert ISO date-time string back to Unix timestamp
 :local ts [$ToUnixTimestamp "2023-11-14 22:13:20"]
 :put ("Unix Timestamp: " . $ts)
+# Output: Unix Timestamp: 1700000000
 
 # Format duration seconds into human-readable detailed string
 :local detailedDuration [$FormatSecondsLong 90184]

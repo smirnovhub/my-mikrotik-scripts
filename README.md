@@ -155,7 +155,6 @@ The scripts are intended to be run at system startup or whenever modifications a
 /system script run global_functions_hashes
 /system script run global_functions_utils
 ```
-
 # Tests
 
 ## Files list
@@ -168,7 +167,97 @@ The scripts are intended to be run at system startup or whenever modifications a
 * [`global_functions_hashes_tests.rsc`](global/global_functions_hashes_tests.rsc)
 * [`global_functions_utils_tests.rsc`](global/global_functions_utils_tests.rsc)
 
+### Array and String Functions Tests
 
+- **RunAllArrayStrTests1**: Executes the first suite of array and string utility tests, covering string operations, case transformations, trim logic, array manipulation, and formatting functions.
+- **RunAllArrayStrTests2**: Executes the second suite of array and string utility tests, covering search, splitting, joining, and array filtering operations.
+- **ParseKeyValueStoreTest**: Tests key-value pair parsing from strings or arrays into associative maps, validating custom delimiters, flag-only keys, boolean casting, duplicate overwrites, and empty element filtering.
+- **RandomTest**: Validates random generation utilities, checking string length, character printability, uniqueness, hexadecimal constraints, 32-bit integer boundaries, and uniform distribution across custom ranges.
+- **HexToNumTest**: Tests conversion of hexadecimal strings to numeric values, covering single/multi-digit inputs, case insensitivity, leading zeros, 32/64-bit boundaries, and invalid character handling.
+- **MapArrayTest**: Tests array mapping transformations, verifying operations on indexed and associative arrays, key/value combinations, boolean inversions, type conversions, and numeric key preservation.
+- **JoinArrayTest**: Tests array joining into delimited strings, validating custom single/multi-character separators, empty elements, single-item arrays, and special escape sequences.
+- **SplitStrTest**: Tests string splitting into arrays by single or multi-character delimiters, verifying maximum split limit constraints, empty tokens, and special character handling.
+- **TrimStrTest**: Tests trimming functions (`TrimStrLeft`, `TrimStrRight`, `TrimStr`), verifying removal of whitespace, custom character sets, control characters, and slashes from string edges.
+- **ReplaceStrTest**: Tests substring replacement, checking single and global matches, empty string edge cases, overlapping patterns, and special character replacements.
+- **RecursiveMergeSortTest**: Tests recursive merge sort logic for numeric arrays, validating unsorted sequences, duplicates, reverse order, zeros, and boundary numbers.
+- **RecursiveMergeSortStrTest**: Tests recursive merge sort for string arrays, validating alphabetical order, prefix length variations, ASCII case sensitivity, numbers as strings, and special characters.
+- **DivideIntAndRoundTest**: Tests integer division with precise decimal rounding and zero-padding, verifying round down/up/half-up cases, trailing zeros, division by zero guards, and small fraction handling.
+- **ToUpperCaseTest**: Tests string conversion to uppercase, ensuring lowercase letters are transformed while numbers, spaces, and special symbols remain intact.
+- **ToLowerCaseTest**: Tests string conversion to lowercase, ensuring uppercase letters are transformed while preserving non-alphabetic characters.
+- **HexToCharTest**: Tests conversion of 2-digit hex codes to ASCII characters, validating printable characters, spaces, control characters (`\t`, `\n`, `\r`), and boundary bytes.
+- **DecToCharTest**: Tests conversion of decimal ASCII codes to characters, covering standard printable ranges, digits, whitespace control characters, and boundary byte values.
+- **CompareStrTest**: Tests lexicographical comparison of two strings (`CompareStr`), validating ASCII ordering (uppercase vs lowercase), length variations, prefix matching, and special characters.
+- **ReverseStrTest**: Tests string reversal (`ReverseStr`), covering standard words, multi-word strings, palindromes, file paths, control characters, and non-string type inputs.
+- **IsPrintableStrTest**: Tests printable character validation (`IsPrintableStr`), verifying standard text and symbols while rejecting control characters (`0x00`-`0x1F`, DEL) and extended ASCII range values.
+- **ExtractFileNameTest**: Tests file name extraction from path strings (`ExtractFileName`), validating extension stripping/retention, hidden files (`.env`), multiple dots, directory slashes, and trailing spaces.
+- **ContainsStrTest**: Tests substring existence checks (`ContainsStr`), covering middle/start/end matches, case sensitivity, empty search targets, and special character handling.
+- **StartsWithStrTest**: Tests prefix matching (`StartsWithStr`), verifying exact prefixes, case sensitivity, empty inputs, path separators, and non-string type handling.
+- **EndsWithStrTest**: Tests suffix matching (`EndsWithStr`), validating file extension checks, trailing slashes/spaces, case sensitivity, and numeric/IP object parameters.
+- **CleanStrTest**: Tests string sanitization (`CleanStr`) against allowed character sets, verifying alphanumeric filtering, whitespace/control character stripping, quotes, path cleaning, and non-string parameter handling.
+
+### Date and Time Functions Tests
+
+- **RunAllDateTimeTests1**: Executes date and time conversion and parsing tests (`GetWeekdayTest`, `GetCurrentDateTimeTest`, `ParseDateTimeTest`, `FromUnixTimestampTest`, `ToUnixTimestampTest`, `GetUnixTimestampTest`)[cite: 3].
+- **RunAllDateTimeTests2**: Executes duration formatting tests (`FormatSecondsShortTest`, `FormatSecondsLongTest`)[cite: 4].
+- **GetWeekdayTest**: Validates the conversion of Unix timestamps to day-of-week strings (`thursday` through `wednesday`), covering epoch baselines, leap day transitions, 400-year Gregorian cycle alignments, far-future boundaries, and intra-day seconds shifts.
+- **GetCurrentDateTimeTest**: Validates live runtime fetches, confirming that real-time system date-time strings and timestamps are correctly structured and mutually convertible.
+- **ParseDateTimeTest**: Tests parsing and conversion of RouterOS format strings (`mmm/dd/yyyy hh:mm:ss`, case-insensitive) and standard ISO strings into normalized YYYY-MM-DD HH:MM:SS format, including error rejection for malformed layout structures.
+- **FromUnixTimestampTest**: Tests conversion of numeric Unix timestamps to formatted ISO date-time strings across all epoch boundaries, 32-bit limits, month end transitions, leap years, and leap century rules.
+- **ToUnixTimestampTest**: Tests conversion of ISO and RouterOS date-time strings into Unix timestamp integers, verifying accuracy across time-of-day edge cases, leap days, non-leap century boundaries, and 32-bit integer limits.
+- **GetUnixTimestampTest**: Verifies live runtime generation of current Unix timestamps and ensures round-trip conversion accuracy through intermediate date-time string representations.
+- **FormatSecondsLongTest**: Tests formatting of raw durations in seconds into multi-component detailed duration strings (`1d 2h 3m 4s`), validating single-unit boundaries, omitted zero components, double-digit days, and multi-thousand day durations.
+- **FormatSecondsShortTest**: Tests dynamic scaling of duration values into single short units (`sec`, `min`, `hrs`, `days`), checking boundary transitions, truncation rules, and multi-day thresholds.
+
+### Encoding and Decoding Functions Tests
+
+- **RunAllEncodingTests**: Executes string and binary encoding/decoding tests (`Base64EncodeTest`, `Base64DecodeTest`, `UrlEncodeTest`, `UrlDecodeTest`)[cite: 5].
+- **Base64EncodeTest**: Tests Base64 encoding functionality, verifying standard RFC 4648 test vectors, URL-safe alphabet substitution (`+`/`/` to `-`/`_`), padding elimination (`nopad`), whitespace preservation, and multi-block text encoding.
+- **Base64DecodeTest**: Tests Base64 decoding operations, validating standard padding rules, missing padding tolerance, strict padding enforcement (`mustpad`), URL-safe character set decoding, invalid character filtering (`ignoreotherchr`), error throwing on malformed inputs, and complete 256-byte binary round-trip conversion.
+- **UrlEncodeTest**: Tests URL percent-encoding according to RFC 3986, verifying pass-through of unreserved alphanumeric characters and proper hex-encoding for spaces (`%20`), delimiters, brackets, arithmetic symbols, and reserved punctuation.
+- **UrlDecodeTest**: Tests URL percent-decoding logic, verifying uppercase/lowercase hexadecimal sequence resolution, unreserved character pass-through, binary output safety checks via `IsPrintableStr`, and a complete 256-byte round-trip decoding test.
+
+### Named Global Variable Utility Functions Tests
+
+- **RunAllGlobalVarTests**: Executes global variable management and state persistence tests (`GlobalVarTest`)[cite: 6].
+- **GlobalVarTest**: Validates global variable lifecycle management (`SetGlobalVar`, `GetGlobalVar`, `GetGlobalVarOrDefault`, `RemoveGlobalVar`), covering primitive type persistence (strings, integers, floats, booleans, IP addresses, subnets, time values), structured arrays (indexed and associative), fallback default resolution for non-existent variables without side-effect creation, variable isolation, repeat updates, type overwriting, idempotent removal, complex string escape sequences, and complete 256-byte binary payload persistence.
+
+### Hashing Functions Tests
+
+- **RunAllHashesTests**: Executes hashing and checksum tests (`GetMd5SumTest`, `GetCrc32SumTest`)[cite: 7].
+- **GetMd5SumTest**: Tests MD5 hash generation (`GetMd5Sum`), validating standard RFC 1321 test vectors, empty string boundaries, single/multi-character strings, case sensitivity, whitespace preservation, 55/56/64/128-byte multi-block message boundaries, and a complete 256-byte binary payload hash.
+- **GetCrc32SumTest**: Tests CRC32 checksum calculation (`GetCrc32Sum`), verifying canonical test vectors (including `123456789`), empty inputs, single/multi-byte sequences, pangrams, numeric boundaries, case sensitivity, character ordering, null bytes, control whitespace, byte-range patterns, and length boundaries up to 257+ bytes.
+
+### Utility Functions Tests
+
+- **RunAllUtilsTests**: Executes system and framework utility tests (`GetArgOrDefaultTest`, `GetArgOrExitTest`, `SilentPingTest`, `RunScriptTest`, `ExportConfigurationTest`, `GetRouterOSVersionTest`)[cite: 8].
+- **GetArgOrDefaultTest**: Validates fallback option retrieval (`GetArgOrDefault`), checking default assignment for missing keys or empty strings, case-sensitive boolean conversion (`true`/`false`), native type retention (booleans, integers, zero values, empty keys), side-effect isolation on source maps, and exception assertions on invalid default parameters.
+- **GetArgOrExitTest**: Tests mandatory argument extraction (`GetArgOrExit`), verifying string-to-boolean parsing, preservation of native types (integers, booleans, zero values), custom/default context handling, map modification immutability, and controlled script exit traps (`LogAndExit`) when required parameters or maps are missing or empty.
+- **SilentPingTest**: Tests ICMP ping utility behavior (`SilentPing`), checking single-host ping packet counts, default parameter fallback, unreachable host zero-reply tracking, parallel execution over host dictionary maps, empty input handling, and environment state cleanliness.
+- **RunScriptTest**: Tests system script invocation wrappers (`RunScript`), verifying positional parameter passing up to 6 arguments, partial parameter truncation, non-existent script handling without system crashes, and internal syntax compilation error trapping.
+- **ExportConfigurationTest**: Validates automated configuration backups (`ExportConfiguration`), testing physical file creation on storage, root export operations, and graceful error handling (returning empty string) when attempting to export to non-existent directory paths.
+- **GetRouterOSVersionTest**: Validates system version parsing (`GetRouterOSVersion`), verifying non-empty string extraction, stripping of channel/build suffix metadata (e.g., removing spaces and `(stable)` flags), and exact alignment with sliced system resource queries.
+
+## Installation
+1. Save the scripts into your RouterOS environment using their respective module names (
+`global_functions_array_str_tests_1`,
+`global_functions_array_str_tests_2`,
+`global_functions_datetime_tests_1`,
+`global_functions_datetime_tests_2`,
+`global_functions_encoding_tests`,
+`global_functions_global_vars_tests`,
+`global_functions_hashes_tests`,
+`global_functions_utils_tests`).
+2. Add the following execution commands to your startup script to load all global functions at system boot:
+```routeros
+/system script run global_functions_array_str_tests_1
+/system script run global_functions_array_str_tests_2
+/system script run global_functions_datetime_tests_1
+/system script run global_functions_datetime_tests_2
+/system script run global_functions_encoding_tests
+/system script run global_functions_global_vars_tests
+/system script run global_functions_hashes_tests
+/system script run global_functions_utils_tests
+```
 
 Thanks for original scripts and ideas to its authors:
 

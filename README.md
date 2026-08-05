@@ -155,6 +155,366 @@ The scripts are intended to be run at system startup or whenever modifications a
 /system script run global_functions_hashes
 /system script run global_functions_utils
 ```
+
+## Function Usage Examples
+
+Below are practical examples demonstrating how to execute common library functions directly within RouterOS.
+
+### 1. Hashing and Checksums
+
+Generate MD5 hashes or CRC32 checksums for strings or binary payloads:
+
+```routeros
+:global GetMd5Sum
+:global GetCrc32Sum
+
+# Generate an MD5 hash
+:local md5 [$GetMd5Sum "admin"]
+:put ("MD5: " . $md5)
+# Output: MD5: 21232f297a57a5a743894a0e4a801fc3
+
+# Generate a CRC32 checksum
+:local crc32 [$GetCrc32Sum "123456789"]
+:put ("CRC32: " . $crc32)
+# Output: CRC32: cbf43926
+```
+
+### 2. Base64 and URL Encoding / Decoding
+
+Encode and decode strings using Standard/URL-safe Base64 alphabets or URL percent-encoding:
+
+```routeros
+:global Base64Encode
+:global Base64Decode
+:global UrlEncode
+:global UrlDecode
+
+# Standard Base64 Encoding
+:local b64 [$Base64Encode "Hello World"]
+:put ("Base64 Encoded: " . $b64)
+# Output: Base64 Encoded: SGVsbG8gV29ybGQ=
+
+# URL-Safe Base64 Encoding without padding
+:local b64Url [$Base64Encode "subjects?" "url" "nopad"]
+:put ("Base64 URL-Safe: " . $b64Url)
+# Output: Base64 URL-Safe: c3ViamVjdHM_
+
+# Base64 Decoding
+:local plain [$Base64Decode "SGVsbG8gV29ybGQ="]
+:put ("Base64 Decoded: " . $plain)
+# Output: Base64 Decoded: Hello World
+
+# URL Percent Encoding
+:local urlEnc [$UrlEncode "search?q=test&a=1"]
+:put ("URL Encoded: " . $urlEnc)
+# Output: URL Encoded: search%3Fq%3Dtest%26a%3D1
+
+# URL Percent Decoding
+:local urlDec [$UrlDecode "search%3Fq%3Dtest%26a%3D1"]
+:put ("URL Decoded: " . $urlDec)
+# Output: URL Decoded: search?q=test&a=1
+```
+
+### 3. Network and Utility Functions (SilentPing, GetArgOrDefault, GetArgOrExit)
+
+```routeros
+:global SilentPing
+:global GetArgOrDefault
+:global GetArgOrExit
+
+# --- Silent Ping Examples ---
+
+# Ping a single host (returns successful packet count integer)
+:local pingsPassed [$SilentPing "127.0.0.1" 3]
+:put ("Localhost replies: " . $pingsPassed)
+
+# Ping multiple hosts in parallel (returns dictionary with results)
+:local targets {
+    "gateway"="172.17.17.1";
+    "dns"="8.8.8.8";
+    "deadHost"="198.51.100.254"
+}
+
+:local pingResults [$SilentPing $targets 5]
+:put ("Gateway replies: " . ($pingResults->"gateway"))
+:put ("DNS replies: " . ($pingResults->"dns"))
+:put ("Dead host replies: " . ($pingResults->"deadHost"))
+
+# Output:
+Localhost replies: 3
+Gateway replies: 5
+DNS replies: 5
+Dead host replies: 0
+
+# --- Argument Extraction Examples ---
+
+:local config {
+    "host"="10.0.0.1";
+    "enabled"="true";
+    "port"=8080
+}
+
+# Safely fetch an optional parameter with fallback default
+:local timeout [$GetArgOrDefault $config "timeout" 30]
+:put ("Timeout: " . $timeout)
+# Output: Timeout: 30
+
+# String "true"/"false" values are automatically parsed into boolean primitives
+:local isEnabled [$GetArgOrDefault $config "enabled" false]
+:put ("Enabled type: " . [:typeof $isEnabled] . ", value: " . [:tostr $isEnabled])
+# Output: Enabled type: bool, value: true
+
+# Extract a mandatory parameter (will log and exit script execution if missing)
+:local host [$GetArgOrExit $config "host" "API Configuration"]
+:put ("Host: " . $host)
+# Output: Host: 10.0.0.1
+```
+
+### 4. Named Global Variable Utility Management
+
+Set, get, fallback, and remove global variables without polluting runtime scope:
+
+```routeros
+:global SetGlobalVar
+:global GetGlobalVar
+:global GetGlobalVarOrDefault
+:global RemoveGlobalVar
+
+# Set global variables (supports primitives, IP addresses, subnets, and arrays)
+$SetGlobalVar "myServerIp" 192.168.88.1
+
+# Retrieve a global variable value
+:local ip [$GetGlobalVar "myServerIp"]
+:put ("Server IP: " . $ip)
+# Output: Server IP: 192.168.88.1
+
+# Retrieve variable with fallback default if non-existent
+:local port [$GetGlobalVarOrDefault "myServerPort" 8080]
+:put ("Server Port: " . $port)
+# Output: Server Port: 8080
+
+# Remove a global variable
+$RemoveGlobalVar "myServerIp"
+```
+
+### 5. Date and Time Functions
+
+Convert timestamps, format duration strings, or parse RouterOS/ISO date-time formats:
+
+```routeros
+:global GetCurrentDateTime
+:global FromUnixTimestamp
+:global ToUnixTimestamp
+:global FormatSecondsLong
+:global FormatSecondsShort
+
+# Get current normalized system date-time
+:put ("Current Date Time: " . [$GetCurrentDateTime])
+# Output: Current Date Time: 2026-08-05 20:33:25
+
+# Convert Unix timestamp to ISO formatted string
+:local isoDate [$FromUnixTimestamp 1700000000]
+:put ("ISO Date: " . $isoDate)
+# Output: ISO Date: 2023-11-14 22:13:20
+
+# Convert ISO date-time string back to Unix timestamp
+:local ts [$ToUnixTimestamp "2023-11-14 22:13:20"]
+:put ("Unix Timestamp: " . $ts)
+# Output: Unix Timestamp: 1700000000
+
+# Format duration seconds into human-readable detailed string
+:local detailedDuration [$FormatSecondsLong 90184]
+:put ("Detailed Duration: " . $detailedDuration)
+# Output: Detailed Duration: 1d 1h 3m 4s
+
+# Format duration seconds into scaled short units
+:local shortDuration [$FormatSecondsShort 90184]
+:put ("Short Duration: " . $shortDuration)
+# Output: Short Duration: 1 days
+```
+
+# Tests
+
+## Files list
+* [`global_functions_array_str_tests_1.rsc`](global/global_functions_array_str_tests_1.rsc)
+* [`global_functions_array_str_tests_2.rsc`](global/global_functions_array_str_tests_2.rsc)
+* [`global_functions_datetime_tests_1.rsc`](global/global_functions_datetime_tests_1.rsc)
+* [`global_functions_datetime_tests_2.rsc`](global/global_functions_datetime_tests_2.rsc)
+* [`global_functions_encoding_tests.rsc`](global/global_functions_encoding_tests.rsc)
+* [`global_functions_global_vars_tests.rsc`](global/global_functions_global_vars_tests.rsc)
+* [`global_functions_hashes_tests.rsc`](global/global_functions_hashes_tests.rsc)
+* [`global_functions_utils_tests.rsc`](global/global_functions_utils_tests.rsc)
+
+### Array and String Functions Tests
+
+- **RunAllArrayStrTests1**: Executes the first suite of array and string utility tests, covering string operations, case transformations, trim logic, array manipulation, and formatting functions.
+- **RunAllArrayStrTests2**: Executes the second suite of array and string utility tests, covering search, splitting, joining, and array filtering operations.
+- **ParseKeyValueStoreTest**: Tests key-value pair parsing from strings or arrays into associative maps, validating custom delimiters, flag-only keys, boolean casting, duplicate overwrites, and empty element filtering.
+- **RandomTest**: Validates random generation utilities, checking string length, character printability, uniqueness, hexadecimal constraints, 32-bit integer boundaries, and uniform distribution across custom ranges.
+- **HexToNumTest**: Tests conversion of hexadecimal strings to numeric values, covering single/multi-digit inputs, case insensitivity, leading zeros, 32/64-bit boundaries, and invalid character handling.
+- **MapArrayTest**: Tests array mapping transformations, verifying operations on indexed and associative arrays, key/value combinations, boolean inversions, type conversions, and numeric key preservation.
+- **JoinArrayTest**: Tests array joining into delimited strings, validating custom single/multi-character separators, empty elements, single-item arrays, and special escape sequences.
+- **SplitStrTest**: Tests string splitting into arrays by single or multi-character delimiters, verifying maximum split limit constraints, empty tokens, and special character handling.
+- **TrimStrTest**: Tests trimming functions (`TrimStrLeft`, `TrimStrRight`, `TrimStr`), verifying removal of whitespace, custom character sets, control characters, and slashes from string edges.
+- **ReplaceStrTest**: Tests substring replacement, checking single and global matches, empty string edge cases, overlapping patterns, and special character replacements.
+- **RecursiveMergeSortTest**: Tests recursive merge sort logic for numeric arrays, validating unsorted sequences, duplicates, reverse order, zeros, and boundary numbers.
+- **RecursiveMergeSortStrTest**: Tests recursive merge sort for string arrays, validating alphabetical order, prefix length variations, ASCII case sensitivity, numbers as strings, and special characters.
+- **DivideIntAndRoundTest**: Tests integer division with precise decimal rounding and zero-padding, verifying round down/up/half-up cases, trailing zeros, division by zero guards, and small fraction handling.
+- **ToUpperCaseTest**: Tests string conversion to uppercase, ensuring lowercase letters are transformed while numbers, spaces, and special symbols remain intact.
+- **ToLowerCaseTest**: Tests string conversion to lowercase, ensuring uppercase letters are transformed while preserving non-alphabetic characters.
+- **HexToCharTest**: Tests conversion of 2-digit hex codes to ASCII characters, validating printable characters, spaces, control characters (`\t`, `\n`, `\r`), and boundary bytes.
+- **DecToCharTest**: Tests conversion of decimal ASCII codes to characters, covering standard printable ranges, digits, whitespace control characters, and boundary byte values.
+- **CompareStrTest**: Tests lexicographical comparison of two strings (`CompareStr`), validating ASCII ordering (uppercase vs lowercase), length variations, prefix matching, and special characters.
+- **ReverseStrTest**: Tests string reversal (`ReverseStr`), covering standard words, multi-word strings, palindromes, file paths, control characters, and non-string type inputs.
+- **IsPrintableStrTest**: Tests printable character validation (`IsPrintableStr`), verifying standard text and symbols while rejecting control characters (`0x00`-`0x1F`, DEL) and extended ASCII range values.
+- **ExtractFileNameTest**: Tests file name extraction from path strings (`ExtractFileName`), validating extension stripping/retention, hidden files (`.env`), multiple dots, directory slashes, and trailing spaces.
+- **ContainsStrTest**: Tests substring existence checks (`ContainsStr`), covering middle/start/end matches, case sensitivity, empty search targets, and special character handling.
+- **StartsWithStrTest**: Tests prefix matching (`StartsWithStr`), verifying exact prefixes, case sensitivity, empty inputs, path separators, and non-string type handling.
+- **EndsWithStrTest**: Tests suffix matching (`EndsWithStr`), validating file extension checks, trailing slashes/spaces, case sensitivity, and numeric/IP object parameters.
+- **CleanStrTest**: Tests string sanitization (`CleanStr`) against allowed character sets, verifying alphanumeric filtering, whitespace/control character stripping, quotes, path cleaning, and non-string parameter handling.
+
+### Date and Time Functions Tests
+
+- **RunAllDateTimeTests1**: Executes date and time conversion and parsing tests (`GetWeekdayTest`, `GetCurrentDateTimeTest`, `ParseDateTimeTest`, `FromUnixTimestampTest`, `ToUnixTimestampTest`, `GetUnixTimestampTest`)[cite: 3].
+- **RunAllDateTimeTests2**: Executes duration formatting tests (`FormatSecondsShortTest`, `FormatSecondsLongTest`)[cite: 4].
+- **GetWeekdayTest**: Validates the conversion of Unix timestamps to day-of-week strings (`thursday` through `wednesday`), covering epoch baselines, leap day transitions, 400-year Gregorian cycle alignments, far-future boundaries, and intra-day seconds shifts.
+- **GetCurrentDateTimeTest**: Validates live runtime fetches, confirming that real-time system date-time strings and timestamps are correctly structured and mutually convertible.
+- **ParseDateTimeTest**: Tests parsing and conversion of RouterOS format strings (`mmm/dd/yyyy hh:mm:ss`, case-insensitive) and standard ISO strings into normalized YYYY-MM-DD HH:MM:SS format, including error rejection for malformed layout structures.
+- **FromUnixTimestampTest**: Tests conversion of numeric Unix timestamps to formatted ISO date-time strings across all epoch boundaries, 32-bit limits, month end transitions, leap years, and leap century rules.
+- **ToUnixTimestampTest**: Tests conversion of ISO and RouterOS date-time strings into Unix timestamp integers, verifying accuracy across time-of-day edge cases, leap days, non-leap century boundaries, and 32-bit integer limits.
+- **GetUnixTimestampTest**: Verifies live runtime generation of current Unix timestamps and ensures round-trip conversion accuracy through intermediate date-time string representations.
+- **FormatSecondsLongTest**: Tests formatting of raw durations in seconds into multi-component detailed duration strings (`1d 2h 3m 4s`), validating single-unit boundaries, omitted zero components, double-digit days, and multi-thousand day durations.
+- **FormatSecondsShortTest**: Tests dynamic scaling of duration values into single short units (`sec`, `min`, `hrs`, `days`), checking boundary transitions, truncation rules, and multi-day thresholds.
+
+### Encoding and Decoding Functions Tests
+
+- **RunAllEncodingTests**: Executes string and binary encoding/decoding tests (`Base64EncodeTest`, `Base64DecodeTest`, `UrlEncodeTest`, `UrlDecodeTest`)[cite: 5].
+- **Base64EncodeTest**: Tests Base64 encoding functionality, verifying standard RFC 4648 test vectors, URL-safe alphabet substitution (`+`/`/` to `-`/`_`), padding elimination (`nopad`), whitespace preservation, and multi-block text encoding.
+- **Base64DecodeTest**: Tests Base64 decoding operations, validating standard padding rules, missing padding tolerance, strict padding enforcement (`mustpad`), URL-safe character set decoding, invalid character filtering (`ignoreotherchr`), error throwing on malformed inputs, and complete 256-byte binary round-trip conversion.
+- **UrlEncodeTest**: Tests URL percent-encoding according to RFC 3986, verifying pass-through of unreserved alphanumeric characters and proper hex-encoding for spaces (`%20`), delimiters, brackets, arithmetic symbols, and reserved punctuation.
+- **UrlDecodeTest**: Tests URL percent-decoding logic, verifying uppercase/lowercase hexadecimal sequence resolution, unreserved character pass-through, binary output safety checks via `IsPrintableStr`, and a complete 256-byte round-trip decoding test.
+
+### Named Global Variable Utility Functions Tests
+
+- **RunAllGlobalVarTests**: Executes global variable management and state persistence tests (`GlobalVarTest`)[cite: 6].
+- **GlobalVarTest**: Validates global variable lifecycle management (`SetGlobalVar`, `GetGlobalVar`, `GetGlobalVarOrDefault`, `RemoveGlobalVar`), covering primitive type persistence (strings, integers, floats, booleans, IP addresses, subnets, time values), structured arrays (indexed and associative), fallback default resolution for non-existent variables without side-effect creation, variable isolation, repeat updates, type overwriting, idempotent removal, complex string escape sequences, and complete 256-byte binary payload persistence.
+
+### Hashing Functions Tests
+
+- **RunAllHashesTests**: Executes hashing and checksum tests (`GetMd5SumTest`, `GetCrc32SumTest`)[cite: 7].
+- **GetMd5SumTest**: Tests MD5 hash generation (`GetMd5Sum`), validating standard RFC 1321 test vectors, empty string boundaries, single/multi-character strings, case sensitivity, whitespace preservation, 55/56/64/128-byte multi-block message boundaries, and a complete 256-byte binary payload hash.
+- **GetCrc32SumTest**: Tests CRC32 checksum calculation (`GetCrc32Sum`), verifying canonical test vectors (including `123456789`), empty inputs, single/multi-byte sequences, pangrams, numeric boundaries, case sensitivity, character ordering, null bytes, control whitespace, byte-range patterns, and length boundaries up to 257+ bytes.
+
+### Utility Functions Tests
+
+- **RunAllUtilsTests**: Executes system and framework utility tests (`GetArgOrDefaultTest`, `GetArgOrExitTest`, `SilentPingTest`, `RunScriptTest`, `ExportConfigurationTest`, `GetRouterOSVersionTest`)[cite: 8].
+- **GetArgOrDefaultTest**: Validates fallback option retrieval (`GetArgOrDefault`), checking default assignment for missing keys or empty strings, case-sensitive boolean conversion (`true`/`false`), native type retention (booleans, integers, zero values, empty keys), side-effect isolation on source maps, and exception assertions on invalid default parameters.
+- **GetArgOrExitTest**: Tests mandatory argument extraction (`GetArgOrExit`), verifying string-to-boolean parsing, preservation of native types (integers, booleans, zero values), custom/default context handling, map modification immutability, and controlled script exit traps (`LogAndExit`) when required parameters or maps are missing or empty.
+- **SilentPingTest**: Tests ICMP ping utility behavior (`SilentPing`), checking single-host ping packet counts, default parameter fallback, unreachable host zero-reply tracking, parallel execution over host dictionary maps, empty input handling, and environment state cleanliness.
+- **RunScriptTest**: Tests system script invocation wrappers (`RunScript`), verifying positional parameter passing up to 6 arguments, partial parameter truncation, non-existent script handling without system crashes, and internal syntax compilation error trapping.
+- **ExportConfigurationTest**: Validates automated configuration backups (`ExportConfiguration`), testing physical file creation on storage, root export operations, and graceful error handling (returning empty string) when attempting to export to non-existent directory paths.
+- **GetRouterOSVersionTest**: Validates system version parsing (`GetRouterOSVersion`), verifying non-empty string extraction, stripping of channel/build suffix metadata (e.g., removing spaces and `(stable)` flags), and exact alignment with sliced system resource queries.
+
+## Installation
+1. Save the scripts into your RouterOS environment using their respective module names (
+`global_functions_array_str_tests_1`,
+`global_functions_array_str_tests_2`,
+`global_functions_datetime_tests_1`,
+`global_functions_datetime_tests_2`,
+`global_functions_encoding_tests`,
+`global_functions_global_vars_tests`,
+`global_functions_hashes_tests`,
+`global_functions_utils_tests`).
+2. Add the following execution commands to your startup script to load all global functions at system boot:
+```routeros
+/system script run global_functions_array_str_tests_1
+/system script run global_functions_array_str_tests_2
+/system script run global_functions_datetime_tests_1
+/system script run global_functions_datetime_tests_2
+/system script run global_functions_encoding_tests
+/system script run global_functions_global_vars_tests
+/system script run global_functions_hashes_tests
+/system script run global_functions_utils_tests
+```
+## Test Execution Examples
+
+Below are practical examples demonstrating how to run test suites in RouterOS, ranging from executing individual test cases to running entire packages and chaining them into a full pipeline.
+
+### 1. Running Individual Test Functions
+
+Run a specific test function when debugging a single component:
+
+```routeros
+# Run Base64 encoding tests
+:global Base64EncodeTest
+:put [$Base64EncodeTest]
+
+# Run MD5 hash generation tests
+:global GetMd5SumTest
+:put [$GetMd5SumTest]
+
+# Run argument extraction utility tests
+:global GetArgOrDefaultTest
+:put [$GetArgOrDefaultTest]
+```
+### 2. Running Full Package Suites
+
+Execute all tests in a specific module using its corresponding RunAll entry point:
+
+```routeros
+# Run all encoding and decoding tests
+:global RunAllEncodingTests
+:put [$RunAllEncodingTests]
+
+# Run all global variable utility tests
+:global RunAllGlobalVarTests
+:put [$RunAllGlobalVarTests]
+
+# Run all hash and checksum tests
+:global RunAllHashesTests
+:put [$RunAllHashesTests]
+
+# Run all utility tests
+:global RunAllUtilsTests
+:put [$RunAllUtilsTests]
+```
+
+### 3. Chaining Multiple Packages (Continuous Integration Pipeline)
+
+Aggregate results across multiple test suites into a single execution pass to inspect cumulative passed and failed counters:
+
+```routeros
+:global RunAllArrayStrTests1
+:global RunAllArrayStrTests2
+:global RunAllDateTimeTests1
+:global RunAllDateTimeTests2
+:global RunAllEncodingTests
+:global RunAllGlobalVarTests
+:global RunAllHashesTests
+:global RunAllUtilsTests
+
+# Initialize result collector
+:local stats [:toarray ""]
+
+:set ($stats->"passed") 0
+:set ($stats->"failed") 0
+
+# Execute suites sequentially while passing the results map
+:set stats [$RunAllArrayStrTests1 $stats]
+:set stats [$RunAllArrayStrTests2 $stats]
+:set stats [$RunAllDateTimeTests1 $stats]
+:set stats [$RunAllDateTimeTests2 $stats]
+:set stats [$RunAllEncodingTests $stats]
+:set stats [$RunAllGlobalVarTests $stats]
+:set stats [$RunAllHashesTests $stats]
+:set stats [$RunAllUtilsTests $stats]
+
+# Output global execution summary
+:put ("\1B[35m=== FINAL TEST RESULTS ===\1B[0m")
+:put ("  Passed: " . ($stats->"passed"))
+:put ("  Failed: " . ($stats->"failed"))
+```
+
 Thanks for original scripts and ideas to its authors:
 
 * https://github.com/eworm-de/routeros-scripts.git

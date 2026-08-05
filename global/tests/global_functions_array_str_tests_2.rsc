@@ -23,6 +23,9 @@
     :local res [:toarray ""]
     :if ([:typeof $1] = "array") do={
         :set res $1
+    } else={
+        :set ($res->"passed") 0
+        :set ($res->"failed") 0
     }
 
     # Execute all test suites sequentially, passing and updating the same accumulator array
@@ -46,6 +49,9 @@
     :local res [:toarray ""]
     :if ([:typeof $1] = "array") do={
         :set res $1
+    } else={
+        :set ($res->"passed") 0
+        :set ($res->"failed") 0
     }
 
     :local RunTestCase do={
@@ -123,6 +129,9 @@
     :local res [:toarray ""]
     :if ([:typeof $1] = "array") do={
         :set res $1
+    } else={
+        :set ($res->"passed") 0
+        :set ($res->"failed") 0
     }
 
     :local RunTestCase do={
@@ -219,6 +228,9 @@
     :local res [:toarray ""]
     :if ([:typeof $1] = "array") do={
         :set res $1
+    } else={
+        :set ($res->"passed") 0
+        :set ($res->"failed") 0
     }
 
     :local RunTestCase do={
@@ -279,6 +291,9 @@
     :local res [:toarray ""]
     :if ([:typeof $1] = "array") do={
         :set res $1
+    } else={
+        :set ($res->"passed") 0
+        :set ($res->"failed") 0
     }
 
     :local RunTestCase do={
@@ -404,6 +419,9 @@
     :local res [:toarray ""]
     :if ([:typeof $1] = "array") do={
         :set res $1
+    } else={
+        :set ($res->"passed") 0
+        :set ($res->"failed") 0
     }
 
     :local RunTestCase do={
@@ -484,6 +502,9 @@
     :local res [:toarray ""]
     :if ([:typeof $1] = "array") do={
         :set res $1
+    } else={
+        :set ($res->"passed") 0
+        :set ($res->"failed") 0
     }
 
     :local RunTestCase do={
@@ -564,6 +585,9 @@
     :local res [:toarray ""]
     :if ([:typeof $1] = "array") do={
         :set res $1
+    } else={
+        :set ($res->"passed") 0
+        :set ($res->"failed") 0
     }
 
     :local RunTestCase do={
@@ -668,6 +692,9 @@
     :local res [:toarray ""]
     :if ([:typeof $1] = "array") do={
         :set res $1
+    } else={
+        :set ($res->"passed") 0
+        :set ($res->"failed") 0
     }
 
     :local RunTestCase do={

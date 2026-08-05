@@ -472,6 +472,8 @@
             :log info ("$prefix Finished in " . [$FormatSecondsLong $duration])
 
             :return true
+        } else={
+            :return false
         }
     } on-error={
         :log error ("$prefix Failed to download list from " . $listUrl)
@@ -531,6 +533,7 @@
     :local owner ""
     :local repo ""
     :local branch ""
+    :local filePath ""
 
     :local domain "github.com/"
     :local domainPos [:find $listUrl $domain]
@@ -555,17 +558,22 @@
             :local branchStart ($headsPos + [:len $headsMarker])
             :local slash3 [:find $urlPath "/" $branchStart]
             :set branch [:pick $urlPath $branchStart $slash3]
+
+            # Extract file path after branch
+            :if ([:type $slash3] = "num") do={
+                :set filePath [:pick $urlPath ($slash3 + 1) [:len $urlPath]]
+            }
         }
     } else={
         :log error "$prefix Failed to parse GitHub URL $listUrl"
-        $SendPrivateTelegramMessage ("$failEmoji <b>$deviceName:</b> failed to parse GitHub URL")
+        $SendPrivateTelegramMessage ("$failEmoji <b>$deviceName:</b> failed to parse GitHub URL $$listUrl")
         :return false
     }
 
     :local lastCommitHash [$GetGitHubLastCommitHash $owner $repo $branch]
 
     :if ([:len $lastCommitHash] = 0) do={
-        $SendPrivateTelegramMessage ("$failEmoji <b>$deviceName:</b> failed to get last commit hash from GitHub")
+        $SendPrivateTelegramMessage ("$failEmoji <b>$deviceName:</b> failed to get last commit hash from GitHub for $listUrl")
         :return false
     }
 
@@ -581,9 +589,9 @@
 
     :if ($result) do={
         $SetGlobalVar $lastCommitGlobalVarName $lastCommitHash
-        $SendPrivateTelegramMessage ("$successEmoji <b>$deviceName:</b> scripts updated successfully")
+        $SendPrivateTelegramMessage ("$successEmoji <b>$deviceName:</b> scripts updated successfully from $filePath")
     } else={
-        $SendPrivateTelegramMessage ("$failEmoji <b>$deviceName:</b> failed to update scripts")
+        $SendPrivateTelegramMessage ("$failEmoji <b>$deviceName:</b> failed to update scripts from $filePath")
     }
 
     :return result

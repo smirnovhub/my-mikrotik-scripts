@@ -485,6 +485,9 @@ Aggregate results across multiple test suites into a single execution pass to in
 # Initialize result collector
 :local stats [:toarray ""]
 
+:set ($stats->"passed") 0
+:set ($stats->"failed") 0
+
 # Execute suites sequentially while passing the results map
 :set stats [$RunAllArrayStrTests1 $stats]
 :set stats [$RunAllArrayStrTests2 $stats]

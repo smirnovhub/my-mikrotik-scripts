@@ -448,7 +448,7 @@ Convert timestamps, format duration strings, or parse RouterOS/ISO date-time for
 `global_functions_global_vars_tests`,
 `global_functions_hashes_tests`,
 `global_functions_utils_tests`).
-2. Add the following execution commands to your startup script to load all global functions at system boot:
+2. Add the following execution commands to your startup script to load all test suites at system boot:
 ```routeros
 /system script run global_functions_array_str_tests_1
 /system script run global_functions_array_str_tests_2

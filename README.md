@@ -258,6 +258,49 @@ The scripts are intended to be run at system startup or whenever modifications a
 /system script run global_functions_hashes_tests
 /system script run global_functions_utils_tests
 ```
+## Test Execution Examples
+
+Below are practical examples demonstrating how to run test suites in RouterOS, ranging from executing individual test cases to running entire packages and chaining them into a full pipeline.
+
+
+### 1. Running Individual Test Functions
+
+Run a specific test function when debugging a single component:
+
+```routeros
+# Run Base64 encoding tests
+:global Base64EncodeTest
+:put [$Base64EncodeTest]
+
+# Run MD5 hash generation tests
+:global GetMd5SumTest
+:put [$GetMd5SumTest]
+
+# Run argument extraction utility tests
+:global GetArgOrDefaultTest
+:put [$GetArgOrDefaultTest]
+```
+### 2. Running Full Package Suites
+
+Execute all tests in a specific module using its corresponding RunAll entry point:
+
+```routeros
+# Run all encoding and decoding tests
+:global RunAllEncodingTests
+:put [$RunAllEncodingTests]
+
+# Run all global variable utility tests
+:global RunAllGlobalVarTests
+:put [$RunAllGlobalVarTests]
+
+# Run all hash and checksum tests
+:global RunAllHashesTests
+:put [$RunAllHashesTests]
+
+# Run all utility tests
+:global RunAllUtilsTests
+:put [$RunAllUtilsTests]
+```
 
 Thanks for original scripts and ideas to its authors:
 

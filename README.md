@@ -18,7 +18,7 @@ My collection of **Mikrotik** scripts. All global scripts are tested on **Router
 These scripts are a comprehensive collection of global functions and utilities for RouterOS. They provide reusable functions for string manipulation, date-time conversion, networking checks, random number generation, external script auto-updates, and more.  
 The scripts are intended to be run at system startup or whenever modifications are made.
 
-### Global Variables
+### Global Pre-defined Variables
 
 - **globalFunctionsReady**: Boolean flag indicating global functions readiness (`false` by default, set to `true` at the end of `global_functions.rsc`)
 - **largeGreenCircleEmoji**: Stores the URL-encoded green circle emoji (`🟢`) used for successful status updates
@@ -68,6 +68,13 @@ The scripts are intended to be run at system startup or whenever modifications a
 - **CompareStr**: Compare two strings lexicographically using ASCII character codes.
 - **IsPrintableStr**: Check whether a string contains only printable characters.
 - **ExtractFileName**: Extract and return the file name from a path (with optional extension retention).
+
+### Named Global Variables Utilities
+
+- **GetGlobalVar**: Retrieves a value of a dynamically evaluated global variable by its base name.
+- **GetGlobalVarOrDefault**: Retrieves a global variable's value, returning a specified default value if the variable does not exist, is uninitialized, or evaluates to `nothing`/`nil`.
+- **SetGlobalVar**: Assigns a value to a dynamically created global variable in the system environment.
+- **RemoveGlobalVar**: Completely deletes a dynamic global variable from `/system script environment` by its name.
 
 ### Random & Numeric Utilities
 - **GetRandom20CharHex**: Generate a random 20-character hexadecimal string.

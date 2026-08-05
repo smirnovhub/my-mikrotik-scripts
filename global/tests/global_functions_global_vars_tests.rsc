@@ -7,6 +7,9 @@
     :local res [:toarray ""]
     :if ([:typeof $1] = "array") do={
         :set res $1
+    } else={
+        :set ($res->"passed") 0
+        :set ($res->"failed") 0
     }
 
     :put "\1B[35m=== STARTING ALL GLOBAL VAR TESTS ===\1B[0m"
@@ -29,6 +32,9 @@
     :local res [:toarray ""]
     :if ([:typeof $1] = "array") do={
         :set res $1
+    } else={
+        :set ($res->"passed") 0
+        :set ($res->"failed") 0
     }
 
     # Helper function to validate results and update counters

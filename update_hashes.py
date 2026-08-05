@@ -37,7 +37,7 @@ def process_list(list_file_path: Path, alg: str) -> bool:
     hash_func = HASH_FUNCTIONS.get(alg.lower())
     if not hash_func:
         print(
-            f"Error: Unsupported hash algorithm '{alg}'. Supported: {', '.join(HASH_FUNCTIONS.keys())}"
+            f"Error: unsupported hash algorithm '{alg}'. Supported: {', '.join(HASH_FUNCTIONS.keys())}"
         )
         return False
 
@@ -74,7 +74,7 @@ def process_list(list_file_path: Path, alg: str) -> bool:
                 print(f"{file_hash} {url}")
                 continue
             else:
-                print(f"Error: File missing at {local_file} for URL: {url}")
+                print(f"Error: file missing at {local_file} for URL: {url}")
                 return False
 
         # Preserve line if pattern matching fails or target file is missing
@@ -96,7 +96,7 @@ if __name__ == "__main__":
         type=str,
         required=True,
         choices=list(HASH_FUNCTIONS.keys()),
-        help="Hash algorithm to use (default: crc32)",
+        help="Hash algorithm to use",
     )
 
     args = parser.parse_args()

@@ -18,6 +18,16 @@ My collection of **Mikrotik** scripts. All global scripts are tested on **Router
 These scripts are a comprehensive collection of global functions and utilities for RouterOS. They provide reusable functions for string manipulation, date-time conversion, networking checks, random number generation, external script auto-updates, and more.  
 The scripts are intended to be run at system startup or whenever modifications are made.
 
+### Global Settings
+
+#### Telegram Notifications
+
+The following global settings are required to configure Telegram integration. These variables must be defined for the **Notifications** module (`SendPublicTelegramMessage` and `SendPrivateTelegramMessage`) to successfully send alerts to public or private channels.
+
+- **telegramBotToken**: Stores the token for the Telegram bot used to send messages
+- **telegramPublicChatID**: Stores the Telegram public chat ID where messages will be sent
+- **telegramPrivateChatID**: Stores the Telegram private chat ID where messages will be sent
+
 ### Global Pre-defined Variables
 
 - **globalFunctionsReady**: Boolean flag indicating global functions readiness (`false` by default, set to `true` at the end of `global_functions.rsc`)
@@ -28,9 +38,6 @@ The scripts are intended to be run at system startup or whenever modifications a
 - **backhandIndexPointingLeftEmoji**: Stores the URL-encoded left-pointing backhand index emoji (`👈`) used to highlight or draw attention to preceding text or values
 - **warningSignEmoji**: Stores the URL-encoded warning emoji (`⚠️`) used for alert messages
 - **squaredUpWithExclamationMark**: Stores the URL-encoded “squared up” emoji (`🆙`) with exclamation mark
-- **telegramBotToken**: Stores the token for the Telegram bot used to send messages
-- **telegramPublicChatID**: Stores the Telegram public chat ID where messages will be sent
-- **telegramPrivateChatID**: Stores the Telegram private chat ID where messages will be sent
 
 ## Features
 

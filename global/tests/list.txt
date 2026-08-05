@@ -1,0 +1,19 @@
+# Scrpt list to automatically download
+# and install all of following scripts
+#
+# :global DownloadAndImportScriptsFromList
+# $DownloadAndImportScriptsFromList https://github.com/smirnovhub/my-mikrotik-scripts/raw/refs/heads/master/global/tests/list.txt true
+#
+# Or with automatically check last commit hash:
+#
+# :global DownloadAndImportScriptsFromGitHubList
+# $DownloadAndImportScriptsFromGitHubList https://github.com/smirnovhub/my-mikrotik-scripts/raw/refs/heads/master/global/tests/list.txt true
+
+bf16225d9e5bd222c0840aed5a8b3d63 https://github.com/smirnovhub/my-mikrotik-scripts/raw/refs/heads/master/global/tests/global_functions_array_str_tests_1.rsc
+28ff6c9ba50798d5bc82cd6442e4d2f0 https://github.com/smirnovhub/my-mikrotik-scripts/raw/refs/heads/master/global/tests/global_functions_array_str_tests_2.rsc
+da706fd13fda216888bfa740c6a9a4c2 https://github.com/smirnovhub/my-mikrotik-scripts/raw/refs/heads/master/global/tests/global_functions_datetime_tests_1.rsc
+6307726cddc5a32c708328e5c90825aa https://github.com/smirnovhub/my-mikrotik-scripts/raw/refs/heads/master/global/tests/global_functions_datetime_tests_2.rsc
+1114b7bd03c9451019d4f5c1b60ddbe2 https://github.com/smirnovhub/my-mikrotik-scripts/raw/refs/heads/master/global/tests/global_functions_encoding_tests.rsc
+72db925de67529cdcde383848a6ca8a2 https://github.com/smirnovhub/my-mikrotik-scripts/raw/refs/heads/master/global/tests/global_functions_global_vars_tests.rsc
+cf1542b35b008504ae1c37970375eace https://github.com/smirnovhub/my-mikrotik-scripts/raw/refs/heads/master/global/tests/global_functions_hashes_tests.rsc
+1affa418edfb9f5c9e42d2287a9b0e84 https://github.com/smirnovhub/my-mikrotik-scripts/raw/refs/heads/master/global/tests/global_functions_utils_tests.rsc

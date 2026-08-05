@@ -155,6 +155,173 @@ The scripts are intended to be run at system startup or whenever modifications a
 /system script run global_functions_hashes
 /system script run global_functions_utils
 ```
+
+## Function Usage Examples
+
+Below are practical examples demonstrating how to execute common library functions directly within RouterOS.
+
+### 1. Hashing and Checksums
+
+Generate MD5 hashes or CRC32 checksums for strings or binary payloads:
+
+```routeros
+:global GetMd5Sum
+:global GetCrc32Sum
+
+# Generate an MD5 hash
+:local md5 [$GetMd5Sum "admin"]
+:put ("MD5: " . $md5)
+# Output: MD5: 21232f297a57a5a743894a0e4a801fc3
+
+# Generate a CRC32 checksum
+:local crc32 [$GetCrc32Sum "123456789"]
+:put ("CRC32: " . $crc32)
+# Output: CRC32: cbf43926
+```
+
+### 2. Base64 and URL Encoding / Decoding
+
+Encode and decode strings using Standard/URL-safe Base64 alphabets or URL percent-encoding:
+
+```routeros
+:global Base64Encode
+:global Base64Decode
+:global UrlEncode
+:global UrlDecode
+
+# Standard Base64 Encoding
+:local b64 [$Base64Encode "Hello World"]
+:put ("Base64 Encoded: " . $b64)
+# Output: Base64 Encoded: SGVsbG8gV29ybGQ=
+
+# URL-Safe Base64 Encoding without padding
+:local b64Url [$Base64Encode "subjects?" "url" "nopad"]
+:put ("Base64 URL-Safe: " . $b64Url)
+# Output: Base64 URL-Safe: c3ViamVjdHM_
+
+# Base64 Decoding
+:local plain [$Base64Decode "SGVsbG8gV29ybGQ="]
+:put ("Base64 Decoded: " . $plain)
+# Output: Base64 Decoded: Hello World
+
+# URL Percent Encoding
+:local urlEnc [$UrlEncode "search?q=test&a=1"]
+:put ("URL Encoded: " . $urlEnc)
+# Output: URL Encoded: search%3Fq%3Dtest%26a%3D1
+
+# URL Percent Decoding
+:local urlDec [$UrlDecode "search%3Fq%3Dtest%26a%3D1"]
+:put ("URL Decoded: " . $urlDec)
+# Output: URL Decoded: search?q=test&a=1
+```
+
+### 3. Network and Utility Functions (SilentPing, GetArgOrDefault, GetArgOrExit)
+
+```routeros
+:global SilentPing
+:global GetArgOrDefault
+:global GetArgOrExit
+
+# --- Silent Ping Examples ---
+
+# Ping a single host (returns successful packet count integer)
+:local pingsPassed [$SilentPing "127.0.0.1" 3]
+:put ("Localhost replies: " . $pingsPassed)
+
+# Ping multiple hosts in parallel (returns dictionary with results)
+:local targets {
+    "gateway"="192.168.88.1";
+    "dns"="8.8.8.8";
+    "deadHost"="198.51.100.254"
+}
+:local pingResults [$SilentPing$targets 2]
+:put ("Gateway replies: " . ($pingResults->"gateway"))
+:put ("DNS replies: " . ($pingResults->"dns"))
+:put ("Dead host replies: " . ($pingResults->"deadHost"))
+
+# --- Argument Extraction Examples ---
+
+:local config {
+    "host"="10.0.0.1";
+    "enabled"="true";
+    "port"=8080
+}
+
+# Safely fetch an optional parameter with fallback default
+:local timeout [$GetArgOrDefault$config "timeout" 30]
+:put ("Timeout: " . $timeout)
+# Output: Timeout: 30
+
+# String "true"/"false" values are automatically parsed into boolean primitives
+:local isEnabled [$GetArgOrDefault$config "enabled" false]
+:put ("Enabled type: " . [:typeof $isEnabled] . ", value: " . [:tostr $isEnabled])
+# Output: Enabled type: bool, value: true
+
+# Extract a mandatory parameter (will log and exit script execution if missing)
+:local host [$GetArgOrExit$config "host" "API Configuration"]
+:put ("Host: " . $host)
+# Output: Host: 10.0.0.1
+```
+
+### 4. Named Global Variable Utility Management
+
+Set, get, fallback, and remove global variables without polluting runtime scope:
+
+```routeros
+:global SetGlobalVar
+:global GetGlobalVar
+:global GetGlobalVarOrDefault
+:global RemoveGlobalVar
+
+# Set global variables (supports primitives, IP addresses, subnets, and arrays)
+$SetGlobalVar "myServerIp" 192.168.88.1
+$SetGlobalVar "mySubnet" 10.0.0.0/24
+
+# Retrieve a global variable value
+:local ip [$GetGlobalVar "myServerIp"]
+:put ("Server IP: " . $ip)
+
+# Retrieve variable with fallback default if non-existent
+:local port [$GetGlobalVarOrDefault "myServerPort" 8080]
+:put ("Server Port: " . $port)
+
+# Remove a global variable
+$RemoveGlobalVar "myServerIp"
+```
+
+### 5. Date and Time Functions
+
+Convert timestamps, format duration strings, or parse RouterOS/ISO date-time formats:
+
+```routeros
+:global GetCurrentDateTime
+:global FromUnixTimestamp
+:global ToUnixTimestamp
+:global FormatSecondsLong
+:global FormatSecondsShort
+
+# Get current normalized system date-time
+:put ("Current Date Time: " . [$GetCurrentDateTime])
+
+# Convert Unix timestamp to ISO formatted string
+:local isoDate [$FromUnixTimestamp 1700000000]
+:put ("ISO Date: " . $isoDate)
+
+# Convert ISO date-time string back to Unix timestamp
+:local ts [$ToUnixTimestamp "2023-11-14 22:13:20"]
+:put ("Unix Timestamp: " . $ts)
+
+# Format duration seconds into human-readable detailed string
+:local detailedDuration [$FormatSecondsLong 90184]
+:put ("Detailed Duration: " . $detailedDuration)
+# Output: Detailed Duration: 1d 1h 3m 4s
+
+# Format duration seconds into scaled short units
+:local shortDuration [$FormatSecondsShort 90184]
+:put ("Short Duration: " . $shortDuration)
+# Output: Short Duration: 1 days
+```
+
 # Tests
 
 ## Files list

@@ -40,6 +40,11 @@ The scripts are intended to be run at system startup or whenever modifications a
 - **TimeIsSync / WaitTimeSync**: Check or wait for NTP time synchronization.
 - **WaitFullyConnected**: Wait until network is fully ready (default route reachable, DNS resolving, and NTP synced).
 - **SilentPing**: Perform silent pings to a single host or multiple hosts in parallel.  
+- **GetHttpFileContent**: Downloads file content from an HTTP URL into memory, enforcing a 64 KB size limit.
+- **GetHttpFileContentWithRetry**: Fetches HTTP file content with automatic retries and incremental backoff delays between attempts.
+- **GetDhcpClientAddress**: Retrieves the assigned IPv4 address (without CIDR prefix) from a bound DHCP client on a specified interface.
+- **GetDhcpClientGateway**: Retrieves the default gateway IPv4 address provided by a bound DHCP client on a specified interface.
+- **GetRouterOSVersion**: Retrieves the system RouterOS version string, automatically stripping release channels or build suffixes (e.g., returning `"7.21.5"`).
 
 ### Logging & Error Handling
 - **LogAndExit**: Logs messages with severity (`info`, `warning`, `error`, `debug`) and stops execution if necessary.

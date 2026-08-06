@@ -24,19 +24,17 @@ jobs:
           sudo apt-get install -y qemu-system-x86 wget unzip sshpass openssh-client
 
       - name: Cache CHR Image
-        id: cache-chr
+        id: cache-chr-6.49.17
         uses: actions/cache@v6
         with:
-          path: chr.img.zip
-          key: chr-image-7.15.3
+          path: chr-6.49.17.img.zip
+          key: chr-6.49.17.img.zip
 
       - name: Download CHR Image
-        if: steps.cache-chr.outputs.cache-hit != 'true'
+        if: steps.cache-chr-6.49.17.outputs.cache-hit != 'true'
         run: |
-          wget -nv -O image.zip https://download.mikrotik.com/routeros/6.49.17/chr-6.49.17.img.zip
+          wget -nv https://download.mikrotik.com/routeros/6.49.17/chr-6.49.17.img.zip
 
       - name: Unzip Image
-        if: steps.cache-chr.outputs.cache-hit != 'true'
         run: |
-          unzip image.zip
-          rm -f image.zip
+          unzip -o chr-6.49.17.img.zip

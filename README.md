@@ -138,6 +138,7 @@ The following global settings are required to configure Telegram integration. Th
 
 - **GetCrc32Sum**: Calculate the standard IEEE 802.3 CRC32 checksum (8-character hexadecimal string) for a given input string using lookup table computation.
 - **GetMd5Sum**: Generate an MD5 hash (lowercase hexadecimal) from an input string according to RFC 1321.
+- **GetSha1Sum**: Generate an SHA1 hash (lowercase hexadecimal) from an input string according to RFC 3174.
 
 ### File & Script Utilities
 
@@ -216,12 +217,18 @@ Generate MD5 hashes or CRC32 checksums for strings or binary payloads:
 
 ```routeros
 :global GetMd5Sum
+:global GetSha1Sum
 :global GetCrc32Sum
 
 # Generate an MD5 hash
 :local md5 [$GetMd5Sum "admin"]
 :put ("MD5: " . $md5)
 # Output: MD5: 21232f297a57a5a743894a0e4a801fc3
+
+# Generate a SHA1 hash
+:local sha1 [$GetSha1Sum "nimda"]
+:put ("SHA1: " . $sha1)
+# Output: SHA1: a4cbb2f3933c5016da7e83fd135ab8a48b67bf61
 
 # Generate a CRC32 checksum
 :local crc32 [$GetCrc32Sum "123456789"]

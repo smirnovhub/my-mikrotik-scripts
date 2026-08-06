@@ -393,19 +393,25 @@
   :local h4 0xC3D2E1F0
 
   :local lWordArrLen ([:len $lWordArray] - 1)
-  :local w [:toarray ""]
-  :local tempW 0
 
   :for lcv from=0 to=$lWordArrLen step=16 do={
-
-    # Prepare message schedule array
-    :for j from=0 to=15 do={
-      :set ($w->$j) ($lWordArray->($lcv + $j))
-    }
-    :for j from=16 to=79 do={
-      :set tempW (($w->($j - 3)) ^ ($w->($j - 8)) ^ ($w->($j - 14)) ^ ($w->($j - 16)))
-      :set ($w->$j) (((($tempW << 1) | (($tempW >> 31) & 1))) & 0xFFFFFFFF)
-    }
+    # Direct scalar assignments for block words (0..15)
+    :local w0  ($lWordArray->($lcv + 0))
+    :local w1  ($lWordArray->($lcv + 1))
+    :local w2  ($lWordArray->($lcv + 2))
+    :local w3  ($lWordArray->($lcv + 3))
+    :local w4  ($lWordArray->($lcv + 4))
+    :local w5  ($lWordArray->($lcv + 5))
+    :local w6  ($lWordArray->($lcv + 6))
+    :local w7  ($lWordArray->($lcv + 7))
+    :local w8  ($lWordArray->($lcv + 8))
+    :local w9  ($lWordArray->($lcv + 9))
+    :local w10 ($lWordArray->($lcv + 10))
+    :local w11 ($lWordArray->($lcv + 11))
+    :local w12 ($lWordArray->($lcv + 12))
+    :local w13 ($lWordArray->($lcv + 13))
+    :local w14 ($lWordArray->($lcv + 14))
+    :local w15 ($lWordArray->($lcv + 15))
 
     :local a $h0
     :local b $h1
@@ -414,104 +420,284 @@
     :local e $h4
 
     # Fully unrolled Round 1 (0 to 19)
-    :set e (((($a << 5) | ($a >> 27)) + ($d ^ ($b & ($c ^ $d))) + $e + ($w->0) + 0x5A827999) & 0xFFFFFFFF); :set b ((($b << 30) | ($b >> 2)) & 0xFFFFFFFF)
-    :set d (((($e << 5) | ($e >> 27)) + ($c ^ ($a & ($b ^ $c))) + $d + ($w->1) + 0x5A827999) & 0xFFFFFFFF); :set a ((($a << 30) | ($a >> 2)) & 0xFFFFFFFF)
-    :set c (((($d << 5) | ($d >> 27)) + ($b ^ ($e & ($a ^ $b))) + $c + ($w->2) + 0x5A827999) & 0xFFFFFFFF); :set e ((($e << 30) | ($e >> 2)) & 0xFFFFFFFF)
-    :set b (((($c << 5) | ($c >> 27)) + ($a ^ ($d & ($e ^ $a))) + $b + ($w->3) + 0x5A827999) & 0xFFFFFFFF); :set d ((($d << 30) | ($d >> 2)) & 0xFFFFFFFF)
-    :set a (((($b << 5) | ($b >> 27)) + ($e ^ ($c & ($d ^ $e))) + $a + ($w->4) + 0x5A827999) & 0xFFFFFFFF); :set c ((($c << 30) | ($c >> 2)) & 0xFFFFFFFF)
+    :set e (((($a << 5) | ($a >> 27)) + ($d ^ ($b & ($c ^ $d))) + $e + $w0 + 0x5A827999) & 0xFFFFFFFF); :set b ((($b << 30) | ($b >> 2)) & 0xFFFFFFFF)
+    :set d (((($e << 5) | ($e >> 27)) + ($c ^ ($a & ($b ^ $c))) + $d + $w1 + 0x5A827999) & 0xFFFFFFFF); :set a ((($a << 30) | ($a >> 2)) & 0xFFFFFFFF)
+    :set c (((($d << 5) | ($d >> 27)) + ($b ^ ($e & ($a ^ $b))) + $c + $w2 + 0x5A827999) & 0xFFFFFFFF); :set e ((($e << 30) | ($e >> 2)) & 0xFFFFFFFF)
+    :set b (((($c << 5) | ($c >> 27)) + ($a ^ ($d & ($e ^ $a))) + $b + $w3 + 0x5A827999) & 0xFFFFFFFF); :set d ((($d << 30) | ($d >> 2)) & 0xFFFFFFFF)
+    :set a (((($b << 5) | ($b >> 27)) + ($e ^ ($c & ($d ^ $e))) + $a + $w4 + 0x5A827999) & 0xFFFFFFFF); :set c ((($c << 30) | ($c >> 2)) & 0xFFFFFFFF)
 
-    :set e (((($a << 5) | ($a >> 27)) + ($d ^ ($b & ($c ^ $d))) + $e + ($w->5) + 0x5A827999) & 0xFFFFFFFF); :set b ((($b << 30) | ($b >> 2)) & 0xFFFFFFFF)
-    :set d (((($e << 5) | ($e >> 27)) + ($c ^ ($a & ($b ^ $c))) + $d + ($w->6) + 0x5A827999) & 0xFFFFFFFF); :set a ((($a << 30) | ($a >> 2)) & 0xFFFFFFFF)
-    :set c (((($d << 5) | ($d >> 27)) + ($b ^ ($e & ($a ^ $b))) + $c + ($w->7) + 0x5A827999) & 0xFFFFFFFF); :set e ((($e << 30) | ($e >> 2)) & 0xFFFFFFFF)
-    :set b (((($c << 5) | ($c >> 27)) + ($a ^ ($d & ($e ^ $a))) + $b + ($w->8) + 0x5A827999) & 0xFFFFFFFF); :set d ((($d << 30) | ($d >> 2)) & 0xFFFFFFFF)
-    :set a (((($b << 5) | ($b >> 27)) + ($e ^ ($c & ($d ^ $e))) + $a + ($w->9) + 0x5A827999) & 0xFFFFFFFF); :set c ((($c << 30) | ($c >> 2)) & 0xFFFFFFFF)
+    :set e (((($a << 5) | ($a >> 27)) + ($d ^ ($b & ($c ^ $d))) + $e + $w5 + 0x5A827999) & 0xFFFFFFFF); :set b ((($b << 30) | ($b >> 2)) & 0xFFFFFFFF)
+    :set d (((($e << 5) | ($e >> 27)) + ($c ^ ($a & ($b ^ $c))) + $d + $w6 + 0x5A827999) & 0xFFFFFFFF); :set a ((($a << 30) | ($a >> 2)) & 0xFFFFFFFF)
+    :set c (((($d << 5) | ($d >> 27)) + ($b ^ ($e & ($a ^ $b))) + $c + $w7 + 0x5A827999) & 0xFFFFFFFF); :set e ((($e << 30) | ($e >> 2)) & 0xFFFFFFFF)
+    :set b (((($c << 5) | ($c >> 27)) + ($a ^ ($d & ($e ^ $a))) + $b + $w8 + 0x5A827999) & 0xFFFFFFFF); :set d ((($d << 30) | ($d >> 2)) & 0xFFFFFFFF)
+    :set a (((($b << 5) | ($b >> 27)) + ($e ^ ($c & ($d ^ $e))) + $a + $w9 + 0x5A827999) & 0xFFFFFFFF); :set c ((($c << 30) | ($c >> 2)) & 0xFFFFFFFF)
 
-    :set e (((($a << 5) | ($a >> 27)) + ($d ^ ($b & ($c ^ $d))) + $e + ($w->10) + 0x5A827999) & 0xFFFFFFFF); :set b ((($b << 30) | ($b >> 2)) & 0xFFFFFFFF)
-    :set d (((($e << 5) | ($e >> 27)) + ($c ^ ($a & ($b ^ $c))) + $d + ($w->11) + 0x5A827999) & 0xFFFFFFFF); :set a ((($a << 30) | ($a >> 2)) & 0xFFFFFFFF)
-    :set c (((($d << 5) | ($d >> 27)) + ($b ^ ($e & ($a ^ $b))) + $c + ($w->12) + 0x5A827999) & 0xFFFFFFFF); :set e ((($e << 30) | ($e >> 2)) & 0xFFFFFFFF)
-    :set b (((($c << 5) | ($c >> 27)) + ($a ^ ($d & ($e ^ $a))) + $b + ($w->13) + 0x5A827999) & 0xFFFFFFFF); :set d ((($d << 30) | ($d >> 2)) & 0xFFFFFFFF)
-    :set a (((($b << 5) | ($b >> 27)) + ($e ^ ($c & ($d ^ $e))) + $a + ($w->14) + 0x5A827999) & 0xFFFFFFFF); :set c ((($c << 30) | ($c >> 2)) & 0xFFFFFFFF)
+    :set e (((($a << 5) | ($a >> 27)) + ($d ^ ($b & ($c ^ $d))) + $e + $w10 + 0x5A827999) & 0xFFFFFFFF); :set b ((($b << 30) | ($b >> 2)) & 0xFFFFFFFF)
+    :set d (((($e << 5) | ($e >> 27)) + ($c ^ ($a & ($b ^ $c))) + $d + $w11 + 0x5A827999) & 0xFFFFFFFF); :set a ((($a << 30) | ($a >> 2)) & 0xFFFFFFFF)
+    :set c (((($d << 5) | ($d >> 27)) + ($b ^ ($e & ($a ^ $b))) + $c + $w12 + 0x5A827999) & 0xFFFFFFFF); :set e ((($e << 30) | ($e >> 2)) & 0xFFFFFFFF)
+    :set b (((($c << 5) | ($c >> 27)) + ($a ^ ($d & ($e ^ $a))) + $b + $w13 + 0x5A827999) & 0xFFFFFFFF); :set d ((($d << 30) | ($d >> 2)) & 0xFFFFFFFF)
+    :set a (((($b << 5) | ($b >> 27)) + ($e ^ ($c & ($d ^ $e))) + $a + $w14 + 0x5A827999) & 0xFFFFFFFF); :set c ((($c << 30) | ($c >> 2)) & 0xFFFFFFFF)
 
-    :set e (((($a << 5) | ($a >> 27)) + ($d ^ ($b & ($c ^ $d))) + $e + ($w->15) + 0x5A827999) & 0xFFFFFFFF); :set b ((($b << 30) | ($b >> 2)) & 0xFFFFFFFF)
-    :set d (((($e << 5) | ($e >> 27)) + ($c ^ ($a & ($b ^ $c))) + $d + ($w->16) + 0x5A827999) & 0xFFFFFFFF); :set a ((($a << 30) | ($a >> 2)) & 0xFFFFFFFF)
-    :set c (((($d << 5) | ($d >> 27)) + ($b ^ ($e & ($a ^ $b))) + $c + ($w->17) + 0x5A827999) & 0xFFFFFFFF); :set e ((($e << 30) | ($e >> 2)) & 0xFFFFFFFF)
-    :set b (((($c << 5) | ($c >> 27)) + ($a ^ ($d & ($e ^ $a))) + $b + ($w->18) + 0x5A827999) & 0xFFFFFFFF); :set d ((($d << 30) | ($d >> 2)) & 0xFFFFFFFF)
-    :set a (((($b << 5) | ($b >> 27)) + ($e ^ ($c & ($d ^ $e))) + $a + ($w->19) + 0x5A827999) & 0xFFFFFFFF); :set c ((($c << 30) | ($c >> 2)) & 0xFFFFFFFF)
+    :set e (((($a << 5) | ($a >> 27)) + ($d ^ ($b & ($c ^ $d))) + $e + $w15 + 0x5A827999) & 0xFFFFFFFF); :set b ((($b << 30) | ($b >> 2)) & 0xFFFFFFFF)
+
+    # w16 overwrites w0
+    :set w0 (((($w13 ^ $w8 ^ $w2 ^ $w0) << 1) | ((($w13 ^ $w8 ^ $w2 ^ $w0) >> 31) & 1)) & 0xFFFFFFFF)
+    :set d (((($e << 5) | ($e >> 27)) + ($c ^ ($a & ($b ^ $c))) + $d + $w0 + 0x5A827999) & 0xFFFFFFFF); :set a ((($a << 30) | ($a >> 2)) & 0xFFFFFFFF)
+
+    # w17 overwrites w1
+    :set w1 (((($w14 ^ $w9 ^ $w3 ^ $w1) << 1) | ((($w14 ^ $w9 ^ $w3 ^ $w1) >> 31) & 1)) & 0xFFFFFFFF)
+    :set c (((($d << 5) | ($d >> 27)) + ($b ^ ($e & ($a ^ $b))) + $c + $w1 + 0x5A827999) & 0xFFFFFFFF); :set e ((($e << 30) | ($e >> 2)) & 0xFFFFFFFF)
+
+    # w18 overwrites w2
+    :set w2 (((($w15 ^ $w10 ^ $w4 ^ $w2) << 1) | ((($w15 ^ $w10 ^ $w4 ^ $w2) >> 31) & 1)) & 0xFFFFFFFF)
+    :set b (((($c << 5) | ($c >> 27)) + ($a ^ ($d & ($e ^ $a))) + $b + $w2 + 0x5A827999) & 0xFFFFFFFF); :set d ((($d << 30) | ($d >> 2)) & 0xFFFFFFFF)
+
+    # w19 overwrites w3
+    :set w3 (((($w0 ^ $w11 ^ $w5 ^ $w3) << 1) | ((($w0 ^ $w11 ^ $w5 ^ $w3) >> 31) & 1)) & 0xFFFFFFFF)
+    :set a (((($b << 5) | ($b >> 27)) + ($e ^ ($c & ($d ^ $e))) + $a + $w3 + 0x5A827999) & 0xFFFFFFFF); :set c ((($c << 30) | ($c >> 2)) & 0xFFFFFFFF)
 
     # Fully unrolled Round 2 (20 to 39)
-    :set e (((($a << 5) | ($a >> 27)) + ($b ^ $c ^ $d) + $e + ($w->20) + 0x6ED9EBA1) & 0xFFFFFFFF); :set b ((($b << 30) | ($b >> 2)) & 0xFFFFFFFF)
-    :set d (((($e << 5) | ($e >> 27)) + ($a ^ $b ^ $c) + $d + ($w->21) + 0x6ED9EBA1) & 0xFFFFFFFF); :set a ((($a << 30) | ($a >> 2)) & 0xFFFFFFFF)
-    :set c (((($d << 5) | ($d >> 27)) + ($e ^ $a ^ $b) + $c + ($w->22) + 0x6ED9EBA1) & 0xFFFFFFFF); :set e ((($e << 30) | ($e >> 2)) & 0xFFFFFFFF)
-    :set b (((($c << 5) | ($c >> 27)) + ($d ^ $e ^ $a) + $b + ($w->23) + 0x6ED9EBA1) & 0xFFFFFFFF); :set d ((($d << 30) | ($d >> 2)) & 0xFFFFFFFF)
-    :set a (((($b << 5) | ($b >> 27)) + ($c ^ $d ^ $e) + $a + ($w->24) + 0x6ED9EBA1) & 0xFFFFFFFF); :set c ((($c << 30) | ($c >> 2)) & 0xFFFFFFFF)
+    # w20 overwrites w4
+    :set w4 (((($w1 ^ $w12 ^ $w6 ^ $w4) << 1) | ((($w1 ^ $w12 ^ $w6 ^ $w4) >> 31) & 1)) & 0xFFFFFFFF)
+    :set e (((($a << 5) | ($a >> 27)) + ($b ^ $c ^ $d) + $e + $w4 + 0x6ED9EBA1) & 0xFFFFFFFF); :set b ((($b << 30) | ($b >> 2)) & 0xFFFFFFFF)
 
-    :set e (((($a << 5) | ($a >> 27)) + ($b ^ $c ^ $d) + $e + ($w->25) + 0x6ED9EBA1) & 0xFFFFFFFF); :set b ((($b << 30) | ($b >> 2)) & 0xFFFFFFFF)
-    :set d (((($e << 5) | ($e >> 27)) + ($a ^ $b ^ $c) + $d + ($w->26) + 0x6ED9EBA1) & 0xFFFFFFFF); :set a ((($a << 30) | ($a >> 2)) & 0xFFFFFFFF)
-    :set c (((($d << 5) | ($d >> 27)) + ($e ^ $a ^ $b) + $c + ($w->27) + 0x6ED9EBA1) & 0xFFFFFFFF); :set e ((($e << 30) | ($e >> 2)) & 0xFFFFFFFF)
-    :set b (((($c << 5) | ($c >> 27)) + ($d ^ $e ^ $a) + $b + ($w->28) + 0x6ED9EBA1) & 0xFFFFFFFF); :set d ((($d << 30) | ($d >> 2)) & 0xFFFFFFFF)
-    :set a (((($b << 5) | ($b >> 27)) + ($c ^ $d ^ $e) + $a + ($w->29) + 0x6ED9EBA1) & 0xFFFFFFFF); :set c ((($c << 30) | ($c >> 2)) & 0xFFFFFFFF)
+    # w21 overwrites w5
+    :set w5 (((($w2 ^ $w13 ^ $w7 ^ $w5) << 1) | ((($w2 ^ $w13 ^ $w7 ^ $w5) >> 31) & 1)) & 0xFFFFFFFF)
+    :set d (((($e << 5) | ($e >> 27)) + ($a ^ $b ^ $c) + $d + $w5 + 0x6ED9EBA1) & 0xFFFFFFFF); :set a ((($a << 30) | ($a >> 2)) & 0xFFFFFFFF)
 
-    :set e (((($a << 5) | ($a >> 27)) + ($b ^ $c ^ $d) + $e + ($w->30) + 0x6ED9EBA1) & 0xFFFFFFFF); :set b ((($b << 30) | ($b >> 2)) & 0xFFFFFFFF)
-    :set d (((($e << 5) | ($e >> 27)) + ($a ^ $b ^ $c) + $d + ($w->31) + 0x6ED9EBA1) & 0xFFFFFFFF); :set a ((($a << 30) | ($a >> 2)) & 0xFFFFFFFF)
-    :set c (((($d << 5) | ($d >> 27)) + ($e ^ $a ^ $b) + $c + ($w->32) + 0x6ED9EBA1) & 0xFFFFFFFF); :set e ((($e << 30) | ($e >> 2)) & 0xFFFFFFFF)
-    :set b (((($c << 5) | ($c >> 27)) + ($d ^ $e ^ $a) + $b + ($w->33) + 0x6ED9EBA1) & 0xFFFFFFFF); :set d ((($d << 30) | ($d >> 2)) & 0xFFFFFFFF)
-    :set a (((($b << 5) | ($b >> 27)) + ($c ^ $d ^ $e) + $a + ($w->34) + 0x6ED9EBA1) & 0xFFFFFFFF); :set c ((($c << 30) | ($c >> 2)) & 0xFFFFFFFF)
+    # w22 overwrites w6
+    :set w6 (((($w3 ^ $w14 ^ $w8 ^ $w6) << 1) | ((($w3 ^ $w14 ^ $w8 ^ $w6) >> 31) & 1)) & 0xFFFFFFFF)
+    :set c (((($d << 5) | ($d >> 27)) + ($e ^ $a ^ $b) + $c + $w6 + 0x6ED9EBA1) & 0xFFFFFFFF); :set e ((($e << 30) | ($e >> 2)) & 0xFFFFFFFF)
 
-    :set e (((($a << 5) | ($a >> 27)) + ($b ^ $c ^ $d) + $e + ($w->35) + 0x6ED9EBA1) & 0xFFFFFFFF); :set b ((($b << 30) | ($b >> 2)) & 0xFFFFFFFF)
-    :set d (((($e << 5) | ($e >> 27)) + ($a ^ $b ^ $c) + $d + ($w->36) + 0x6ED9EBA1) & 0xFFFFFFFF); :set a ((($a << 30) | ($a >> 2)) & 0xFFFFFFFF)
-    :set c (((($d << 5) | ($d >> 27)) + ($e ^ $a ^ $b) + $c + ($w->37) + 0x6ED9EBA1) & 0xFFFFFFFF); :set e ((($e << 30) | ($e >> 2)) & 0xFFFFFFFF)
-    :set b (((($c << 5) | ($c >> 27)) + ($d ^ $e ^ $a) + $b + ($w->38) + 0x6ED9EBA1) & 0xFFFFFFFF); :set d ((($d << 30) | ($d >> 2)) & 0xFFFFFFFF)
-    :set a (((($b << 5) | ($b >> 27)) + ($c ^ $d ^ $e) + $a + ($w->39) + 0x6ED9EBA1) & 0xFFFFFFFF); :set c ((($c << 30) | ($c >> 2)) & 0xFFFFFFFF)
+    # w23 overwrites w7
+    :set w7 (((($w4 ^ $w15 ^ $w9 ^ $w7) << 1) | ((($w4 ^ $w15 ^ $w9 ^ $w7) >> 31) & 1)) & 0xFFFFFFFF)
+    :set b (((($c << 5) | ($c >> 27)) + ($d ^ $e ^ $a) + $b + $w7 + 0x6ED9EBA1) & 0xFFFFFFFF); :set d ((($d << 30) | ($d >> 2)) & 0xFFFFFFFF)
+
+    # w24 overwrites w8
+    :set w8 (((($w5 ^ $w0 ^ $w10 ^ $w8) << 1) | ((($w5 ^ $w0 ^ $w10 ^ $w8) >> 31) & 1)) & 0xFFFFFFFF)
+    :set a (((($b << 5) | ($b >> 27)) + ($c ^ $d ^ $e) + $a + $w8 + 0x6ED9EBA1) & 0xFFFFFFFF); :set c ((($c << 30) | ($c >> 2)) & 0xFFFFFFFF)
+
+    # w25 overwrites w9
+    :set w9 (((($w6 ^ $w1 ^ $w11 ^ $w9) << 1) | ((($w6 ^ $w1 ^ $w11 ^ $w9) >> 31) & 1)) & 0xFFFFFFFF)
+    :set e (((($a << 5) | ($a >> 27)) + ($b ^ $c ^ $d) + $e + $w9 + 0x6ED9EBA1) & 0xFFFFFFFF); :set b ((($b << 30) | ($b >> 2)) & 0xFFFFFFFF)
+
+    # w26 overwrites w10
+    :set w10 (((($w7 ^ $w2 ^ $w12 ^ $w10) << 1) | ((($w7 ^ $w2 ^ $w12 ^ $w10) >> 31) & 1)) & 0xFFFFFFFF)
+    :set d (((($e << 5) | ($e >> 27)) + ($a ^ $b ^ $c) + $d + $w10 + 0x6ED9EBA1) & 0xFFFFFFFF); :set a ((($a << 30) | ($a >> 2)) & 0xFFFFFFFF)
+
+    # w27 overwrites w11
+    :set w11 (((($w8 ^ $w3 ^ $w13 ^ $w11) << 1) | ((($w8 ^ $w3 ^ $w13 ^ $w11) >> 31) & 1)) & 0xFFFFFFFF)
+    :set c (((($d << 5) | ($d >> 27)) + ($e ^ $a ^ $b) + $c + $w11 + 0x6ED9EBA1) & 0xFFFFFFFF); :set e ((($e << 30) | ($e >> 2)) & 0xFFFFFFFF)
+
+    # w28 overwrites w12
+    :set w12 (((($w9 ^ $w4 ^ $w14 ^ $w12) << 1) | ((($w9 ^ $w4 ^ $w14 ^ $w12) >> 31) & 1)) & 0xFFFFFFFF)
+    :set b (((($c << 5) | ($c >> 27)) + ($d ^ $e ^ $a) + $b + $w12 + 0x6ED9EBA1) & 0xFFFFFFFF); :set d ((($d << 30) | ($d >> 2)) & 0xFFFFFFFF)
+
+    # w29 overwrites w13
+    :set w13 (((($w10 ^ $w5 ^ $w15 ^ $w13) << 1) | ((($w10 ^ $w5 ^ $w15 ^ $w13) >> 31) & 1)) & 0xFFFFFFFF)
+    :set a (((($b << 5) | ($b >> 27)) + ($c ^ $d ^ $e) + $a + $w13 + 0x6ED9EBA1) & 0xFFFFFFFF); :set c ((($c << 30) | ($c >> 2)) & 0xFFFFFFFF)
+
+    # w30 overwrites w14
+    :set w14 (((($w11 ^ $w6 ^ $w0 ^ $w14) << 1) | ((($w11 ^ $w6 ^ $w0 ^ $w14) >> 31) & 1)) & 0xFFFFFFFF)
+    :set e (((($a << 5) | ($a >> 27)) + ($b ^ $c ^ $d) + $e + $w14 + 0x6ED9EBA1) & 0xFFFFFFFF); :set b ((($b << 30) | ($b >> 2)) & 0xFFFFFFFF)
+
+    # w31 overwrites w15
+    :set w15 (((($w12 ^ $w7 ^ $w1 ^ $w15) << 1) | ((($w12 ^ $w7 ^ $w1 ^ $w15) >> 31) & 1)) & 0xFFFFFFFF)
+    :set d (((($e << 5) | ($e >> 27)) + ($a ^ $b ^ $c) + $d + $w15 + 0x6ED9EBA1) & 0xFFFFFFFF); :set a ((($a << 30) | ($a >> 2)) & 0xFFFFFFFF)
+
+    # w32 overwrites w0
+    :set w0 (((($w13 ^ $w8 ^ $w2 ^ $w0) << 1) | ((($w13 ^ $w8 ^ $w2 ^ $w0) >> 31) & 1)) & 0xFFFFFFFF)
+    :set c (((($d << 5) | ($d >> 27)) + ($e ^ $a ^ $b) + $c + $w0 + 0x6ED9EBA1) & 0xFFFFFFFF); :set e ((($e << 30) | ($e >> 2)) & 0xFFFFFFFF)
+
+    # w33 overwrites w1
+    :set w1 (((($w14 ^ $w9 ^ $w3 ^ $w1) << 1) | ((($w14 ^ $w9 ^ $w3 ^ $w1) >> 31) & 1)) & 0xFFFFFFFF)
+    :set b (((($c << 5) | ($c >> 27)) + ($d ^ $e ^ $a) + $b + $w1 + 0x6ED9EBA1) & 0xFFFFFFFF); :set d ((($d << 30) | ($d >> 2)) & 0xFFFFFFFF)
+
+    # w34 overwrites w2
+    :set w2 (((($w15 ^ $w10 ^ $w4 ^ $w2) << 1) | ((($w15 ^ $w10 ^ $w4 ^ $w2) >> 31) & 1)) & 0xFFFFFFFF)
+    :set a (((($b << 5) | ($b >> 27)) + ($c ^ $d ^ $e) + $a + $w2 + 0x6ED9EBA1) & 0xFFFFFFFF); :set c ((($c << 30) | ($c >> 2)) & 0xFFFFFFFF)
+
+    # w35 overwrites w3
+    :set w3 (((($w0 ^ $w11 ^ $w5 ^ $w3) << 1) | ((($w0 ^ $w11 ^ $w5 ^ $w3) >> 31) & 1)) & 0xFFFFFFFF)
+    :set e (((($a << 5) | ($a >> 27)) + ($b ^ $c ^ $d) + $e + $w3 + 0x6ED9EBA1) & 0xFFFFFFFF); :set b ((($b << 30) | ($b >> 2)) & 0xFFFFFFFF)
+
+    # w36 overwrites w4
+    :set w4 (((($w1 ^ $w12 ^ $w6 ^ $w4) << 1) | ((($w1 ^ $w12 ^ $w6 ^ $w4) >> 31) & 1)) & 0xFFFFFFFF)
+    :set d (((($e << 5) | ($e >> 27)) + ($a ^ $b ^ $c) + $d + $w4 + 0x6ED9EBA1) & 0xFFFFFFFF); :set a ((($a << 30) | ($a >> 2)) & 0xFFFFFFFF)
+
+    # w37 overwrites w5
+    :set w5 (((($w2 ^ $w13 ^ $w7 ^ $w5) << 1) | ((($w2 ^ $w13 ^ $w7 ^ $w5) >> 31) & 1)) & 0xFFFFFFFF)
+    :set c (((($d << 5) | ($d >> 27)) + ($e ^ $a ^ $b) + $c + $w5 + 0x6ED9EBA1) & 0xFFFFFFFF); :set e ((($e << 30) | ($e >> 2)) & 0xFFFFFFFF)
+
+    # w38 overwrites w6
+    :set w6 (((($w3 ^ $w14 ^ $w8 ^ $w6) << 1) | ((($w3 ^ $w14 ^ $w8 ^ $w6) >> 31) & 1)) & 0xFFFFFFFF)
+    :set b (((($c << 5) | ($c >> 27)) + ($d ^ $e ^ $a) + $b + $w6 + 0x6ED9EBA1) & 0xFFFFFFFF); :set d ((($d << 30) | ($d >> 2)) & 0xFFFFFFFF)
+
+    # w39 overwrites w7
+    :set w7 (((($w4 ^ $w15 ^ $w9 ^ $w7) << 1) | ((($w4 ^ $w15 ^ $w9 ^ $w7) >> 31) & 1)) & 0xFFFFFFFF)
+    :set a (((($b << 5) | ($b >> 27)) + ($c ^ $d ^ $e) + $a + $w7 + 0x6ED9EBA1) & 0xFFFFFFFF); :set c ((($c << 30) | ($c >> 2)) & 0xFFFFFFFF)
 
     # Fully unrolled Round 3 (40 to 59)
-    :set e (((($a << 5) | ($a >> 27)) + (($b & $c) | ($d & ($b ^ $c))) + $e + ($w->40) + 0x8F1BBCDC) & 0xFFFFFFFF); :set b ((($b << 30) | ($b >> 2)) & 0xFFFFFFFF)
-    :set d (((($e << 5) | ($e >> 27)) + (($a & $b) | ($c & ($a ^ $b))) + $d + ($w->41) + 0x8F1BBCDC) & 0xFFFFFFFF); :set a ((($a << 30) | ($a >> 2)) & 0xFFFFFFFF)
-    :set c (((($d << 5) | ($d >> 27)) + (($e & $a) | ($b & ($e ^ $a))) + $c + ($w->42) + 0x8F1BBCDC) & 0xFFFFFFFF); :set e ((($e << 30) | ($e >> 2)) & 0xFFFFFFFF)
-    :set b (((($c << 5) | ($c >> 27)) + (($d & $e) | ($a & ($d ^ $e))) + $b + ($w->43) + 0x8F1BBCDC) & 0xFFFFFFFF); :set d ((($d << 30) | ($d >> 2)) & 0xFFFFFFFF)
-    :set a (((($b << 5) | ($b >> 27)) + (($c & $d) | ($e & ($c ^ $d))) + $a + ($w->44) + 0x8F1BBCDC) & 0xFFFFFFFF); :set c ((($c << 30) | ($c >> 2)) & 0xFFFFFFFF)
+    # w40 overwrites w8
+    :set w8 (((($w5 ^ $w0 ^ $w10 ^ $w8) << 1) | ((($w5 ^ $w0 ^ $w10 ^ $w8) >> 31) & 1)) & 0xFFFFFFFF)
+    :set e (((($a << 5) | ($a >> 27)) + (($b & $c) | ($d & ($b ^ $c))) + $e + $w8 + 0x8F1BBCDC) & 0xFFFFFFFF); :set b ((($b << 30) | ($b >> 2)) & 0xFFFFFFFF)
 
-    :set e (((($a << 5) | ($a >> 27)) + (($b & $c) | ($d & ($b ^ $c))) + $e + ($w->45) + 0x8F1BBCDC) & 0xFFFFFFFF); :set b ((($b << 30) | ($b >> 2)) & 0xFFFFFFFF)
-    :set d (((($e << 5) | ($e >> 27)) + (($a & $b) | ($c & ($a ^ $b))) + $d + ($w->46) + 0x8F1BBCDC) & 0xFFFFFFFF); :set a ((($a << 30) | ($a >> 2)) & 0xFFFFFFFF)
-    :set c (((($d << 5) | ($d >> 27)) + (($e & $a) | ($b & ($e ^ $a))) + $c + ($w->47) + 0x8F1BBCDC) & 0xFFFFFFFF); :set e ((($e << 30) | ($e >> 2)) & 0xFFFFFFFF)
-    :set b (((($c << 5) | ($c >> 27)) + (($d & $e) | ($a & ($d ^ $e))) + $b + ($w->48) + 0x8F1BBCDC) & 0xFFFFFFFF); :set d ((($d << 30) | ($d >> 2)) & 0xFFFFFFFF)
-    :set a (((($b << 5) | ($b >> 27)) + (($c & $d) | ($e & ($c ^ $d))) + $a + ($w->49) + 0x8F1BBCDC) & 0xFFFFFFFF); :set c ((($c << 30) | ($c >> 2)) & 0xFFFFFFFF)
+    # w41 overwrites w9
+    :set w9 (((($w6 ^ $w1 ^ $w11 ^ $w9) << 1) | ((($w6 ^ $w1 ^ $w11 ^ $w9) >> 31) & 1)) & 0xFFFFFFFF)
+    :set d (((($e << 5) | ($e >> 27)) + (($a & $b) | ($c & ($a ^ $b))) + $d + $w9 + 0x8F1BBCDC) & 0xFFFFFFFF); :set a ((($a << 30) | ($a >> 2)) & 0xFFFFFFFF)
 
-    :set e (((($a << 5) | ($a >> 27)) + (($b & $c) | ($d & ($b ^ $c))) + $e + ($w->50) + 0x8F1BBCDC) & 0xFFFFFFFF); :set b ((($b << 30) | ($b >> 2)) & 0xFFFFFFFF)
-    :set d (((($e << 5) | ($e >> 27)) + (($a & $b) | ($c & ($a ^ $b))) + $d + ($w->51) + 0x8F1BBCDC) & 0xFFFFFFFF); :set a ((($a << 30) | ($a >> 2)) & 0xFFFFFFFF)
-    :set c (((($d << 5) | ($d >> 27)) + (($e & $a) | ($b & ($e ^ $a))) + $c + ($w->52) + 0x8F1BBCDC) & 0xFFFFFFFF); :set e ((($e << 30) | ($e >> 2)) & 0xFFFFFFFF)
-    :set b (((($c << 5) | ($c >> 27)) + (($d & $e) | ($a & ($d ^ $e))) + $b + ($w->53) + 0x8F1BBCDC) & 0xFFFFFFFF); :set d ((($d << 30) | ($d >> 2)) & 0xFFFFFFFF)
-    :set a (((($b << 5) | ($b >> 27)) + (($c & $d) | ($e & ($c ^ $d))) + $a + ($w->54) + 0x8F1BBCDC) & 0xFFFFFFFF); :set c ((($c << 30) | ($c >> 2)) & 0xFFFFFFFF)
+    # w42 overwrites w10
+    :set w10 (((($w7 ^ $w2 ^ $w12 ^ $w10) << 1) | ((($w7 ^ $w2 ^ $w12 ^ $w10) >> 31) & 1)) & 0xFFFFFFFF)
+    :set c (((($d << 5) | ($d >> 27)) + (($e & $a) | ($b & ($e ^ $a))) + $c + $w10 + 0x8F1BBCDC) & 0xFFFFFFFF); :set e ((($e << 30) | ($e >> 2)) & 0xFFFFFFFF)
 
-    :set e (((($a << 5) | ($a >> 27)) + (($b & $c) | ($d & ($b ^ $c))) + $e + ($w->55) + 0x8F1BBCDC) & 0xFFFFFFFF); :set b ((($b << 30) | ($b >> 2)) & 0xFFFFFFFF)
-    :set d (((($e << 5) | ($e >> 27)) + (($a & $b) | ($c & ($a ^ $b))) + $d + ($w->56) + 0x8F1BBCDC) & 0xFFFFFFFF); :set a ((($a << 30) | ($a >> 2)) & 0xFFFFFFFF)
-    :set c (((($d << 5) | ($d >> 27)) + (($e & $a) | ($b & ($e ^ $a))) + $c + ($w->57) + 0x8F1BBCDC) & 0xFFFFFFFF); :set e ((($e << 30) | ($e >> 2)) & 0xFFFFFFFF)
-    :set b (((($c << 5) | ($c >> 27)) + (($d & $e) | ($a & ($d ^ $e))) + $b + ($w->58) + 0x8F1BBCDC) & 0xFFFFFFFF); :set d ((($d << 30) | ($d >> 2)) & 0xFFFFFFFF)
-    :set a (((($b << 5) | ($b >> 27)) + (($c & $d) | ($e & ($c ^ $d))) + $a + ($w->59) + 0x8F1BBCDC) & 0xFFFFFFFF); :set c ((($c << 30) | ($c >> 2)) & 0xFFFFFFFF)
+    # w43 overwrites w11
+    :set w11 (((($w8 ^ $w3 ^ $w13 ^ $w11) << 1) | ((($w8 ^ $w3 ^ $w13 ^ $w11) >> 31) & 1)) & 0xFFFFFFFF)
+    :set b (((($c << 5) | ($c >> 27)) + (($d & $e) | ($a & ($d ^ $e))) + $b + $w11 + 0x8F1BBCDC) & 0xFFFFFFFF); :set d ((($d << 30) | ($d >> 2)) & 0xFFFFFFFF)
+
+    # w44 overwrites w12
+    :set w12 (((($w9 ^ $w4 ^ $w14 ^ $w12) << 1) | ((($w9 ^ $w4 ^ $w14 ^ $w12) >> 31) & 1)) & 0xFFFFFFFF)
+    :set a (((($b << 5) | ($b >> 27)) + (($c & $d) | ($e & ($c ^ $d))) + $a + $w12 + 0x8F1BBCDC) & 0xFFFFFFFF); :set c ((($c << 30) | ($c >> 2)) & 0xFFFFFFFF)
+
+    # w45 overwrites w13
+    :set w13 (((($w10 ^ $w5 ^ $w15 ^ $w13) << 1) | ((($w10 ^ $w5 ^ $w15 ^ $w13) >> 31) & 1)) & 0xFFFFFFFF)
+    :set e (((($a << 5) | ($a >> 27)) + (($b & $c) | ($d & ($b ^ $c))) + $e + $w13 + 0x8F1BBCDC) & 0xFFFFFFFF); :set b ((($b << 30) | ($b >> 2)) & 0xFFFFFFFF)
+
+    # w46 overwrites w14
+    :set w14 (((($w11 ^ $w6 ^ $w0 ^ $w14) << 1) | ((($w11 ^ $w6 ^ $w0 ^ $w14) >> 31) & 1)) & 0xFFFFFFFF)
+    :set d (((($e << 5) | ($e >> 27)) + (($a & $b) | ($c & ($a ^ $b))) + $d + $w14 + 0x8F1BBCDC) & 0xFFFFFFFF); :set a ((($a << 30) | ($a >> 2)) & 0xFFFFFFFF)
+
+    # w47 overwrites w15
+    :set w15 (((($w12 ^ $w7 ^ $w1 ^ $w15) << 1) | ((($w12 ^ $w7 ^ $w1 ^ $w15) >> 31) & 1)) & 0xFFFFFFFF)
+    :set c (((($d << 5) | ($d >> 27)) + (($e & $a) | ($b & ($e ^ $a))) + $c + $w15 + 0x8F1BBCDC) & 0xFFFFFFFF); :set e ((($e << 30) | ($e >> 2)) & 0xFFFFFFFF)
+
+    # w48 overwrites w0
+    :set w0 (((($w13 ^ $w8 ^ $w2 ^ $w0) << 1) | ((($w13 ^ $w8 ^ $w2 ^ $w0) >> 31) & 1)) & 0xFFFFFFFF)
+    :set b (((($c << 5) | ($c >> 27)) + (($d & $e) | ($a & ($d ^ $e))) + $b + $w0 + 0x8F1BBCDC) & 0xFFFFFFFF); :set d ((($d << 30) | ($d >> 2)) & 0xFFFFFFFF)
+
+    # w49 overwrites w1
+    :set w1 (((($w14 ^ $w9 ^ $w3 ^ $w1) << 1) | ((($w14 ^ $w9 ^ $w3 ^ $w1) >> 31) & 1)) & 0xFFFFFFFF)
+    :set a (((($b << 5) | ($b >> 27)) + (($c & $d) | ($e & ($c ^ $d))) + $a + $w1 + 0x8F1BBCDC) & 0xFFFFFFFF); :set c ((($c << 30) | ($c >> 2)) & 0xFFFFFFFF)
+
+    # w50 overwrites w2
+    :set w2 (((($w15 ^ $w10 ^ $w4 ^ $w2) << 1) | ((($w15 ^ $w10 ^ $w4 ^ $w2) >> 31) & 1)) & 0xFFFFFFFF)
+    :set e (((($a << 5) | ($a >> 27)) + (($b & $c) | ($d & ($b ^ $c))) + $e + $w2 + 0x8F1BBCDC) & 0xFFFFFFFF); :set b ((($b << 30) | ($b >> 2)) & 0xFFFFFFFF)
+
+    # w51 overwrites w3
+    :set w3 (((($w0 ^ $w11 ^ $w5 ^ $w3) << 1) | ((($w0 ^ $w11 ^ $w5 ^ $w3) >> 31) & 1)) & 0xFFFFFFFF)
+    :set d (((($e << 5) | ($e >> 27)) + (($a & $b) | ($c & ($a ^ $b))) + $d + $w3 + 0x8F1BBCDC) & 0xFFFFFFFF); :set a ((($a << 30) | ($a >> 2)) & 0xFFFFFFFF)
+
+    # w52 overwrites w4
+    :set w4 (((($w1 ^ $w12 ^ $w6 ^ $w4) << 1) | ((($w1 ^ $w12 ^ $w6 ^ $w4) >> 31) & 1)) & 0xFFFFFFFF)
+    :set c (((($d << 5) | ($d >> 27)) + (($e & $a) | ($b & ($e ^ $a))) + $c + $w4 + 0x8F1BBCDC) & 0xFFFFFFFF); :set e ((($e << 30) | ($e >> 2)) & 0xFFFFFFFF)
+
+    # w53 overwrites w5
+    :set w5 (((($w2 ^ $w13 ^ $w7 ^ $w5) << 1) | ((($w2 ^ $w13 ^ $w7 ^ $w5) >> 31) & 1)) & 0xFFFFFFFF)
+    :set b (((($c << 5) | ($c >> 27)) + (($d & $e) | ($a & ($d ^ $e))) + $b + $w5 + 0x8F1BBCDC) & 0xFFFFFFFF); :set d ((($d << 30) | ($d >> 2)) & 0xFFFFFFFF)
+
+    # w54 overwrites w6
+    :set w6 (((($w3 ^ $w14 ^ $w8 ^ $w6) << 1) | ((($w3 ^ $w14 ^ $w8 ^ $w6) >> 31) & 1)) & 0xFFFFFFFF)
+    :set a (((($b << 5) | ($b >> 27)) + (($c & $d) | ($e & ($c ^ $d))) + $a + $w6 + 0x8F1BBCDC) & 0xFFFFFFFF); :set c ((($c << 30) | ($c >> 2)) & 0xFFFFFFFF)
+
+    # w55 overwrites w7
+    :set w7 (((($w4 ^ $w15 ^ $w9 ^ $w7) << 1) | ((($w4 ^ $w15 ^ $w9 ^ $w7) >> 31) & 1)) & 0xFFFFFFFF)
+    :set e (((($a << 5) | ($a >> 27)) + (($b & $c) | ($d & ($b ^ $c))) + $e + $w7 + 0x8F1BBCDC) & 0xFFFFFFFF); :set b ((($b << 30) | ($b >> 2)) & 0xFFFFFFFF)
+
+    # w56 overwrites w8
+    :set w8 (((($w5 ^ $w0 ^ $w10 ^ $w8) << 1) | ((($w5 ^ $w0 ^ $w10 ^ $w8) >> 31) & 1)) & 0xFFFFFFFF)
+    :set d (((($e << 5) | ($e >> 27)) + (($a & $b) | ($c & ($a ^ $b))) + $d + $w8 + 0x8F1BBCDC) & 0xFFFFFFFF); :set a ((($a << 30) | ($a >> 2)) & 0xFFFFFFFF)
+
+    # w57 overwrites w9
+    :set w9 (((($w6 ^ $w1 ^ $w11 ^ $w9) << 1) | ((($w6 ^ $w1 ^ $w11 ^ $w9) >> 31) & 1)) & 0xFFFFFFFF)
+    :set c (((($d << 5) | ($d >> 27)) + (($e & $a) | ($b & ($e ^ $a))) + $c + $w9 + 0x8F1BBCDC) & 0xFFFFFFFF); :set e ((($e << 30) | ($e >> 2)) & 0xFFFFFFFF)
+
+    # w58 overwrites w10
+    :set w10 (((($w7 ^ $w2 ^ $w12 ^ $w10) << 1) | ((($w7 ^ $w2 ^ $w12 ^ $w10) >> 31) & 1)) & 0xFFFFFFFF)
+    :set b (((($c << 5) | ($c >> 27)) + (($d & $e) | ($a & ($d ^ $e))) + $b + $w10 + 0x8F1BBCDC) & 0xFFFFFFFF); :set d ((($d << 30) | ($d >> 2)) & 0xFFFFFFFF)
+
+    # w59 overwrites w11
+    :set w11 (((($w8 ^ $w3 ^ $w13 ^ $w11) << 1) | ((($w8 ^ $w3 ^ $w13 ^ $w11) >> 31) & 1)) & 0xFFFFFFFF)
+    :set a (((($b << 5) | ($b >> 27)) + (($c & $d) | ($e & ($c ^ $d))) + $a + $w11 + 0x8F1BBCDC) & 0xFFFFFFFF); :set c ((($c << 30) | ($c >> 2)) & 0xFFFFFFFF)
 
     # Fully unrolled Round 4 (60 to 79)
-    :set e (((($a << 5) | ($a >> 27)) + ($b ^ $c ^ $d) + $e + ($w->60) + 0xCA62C1D6) & 0xFFFFFFFF); :set b ((($b << 30) | ($b >> 2)) & 0xFFFFFFFF)
-    :set d (((($e << 5) | ($e >> 27)) + ($a ^ $b ^ $c) + $d + ($w->61) + 0xCA62C1D6) & 0xFFFFFFFF); :set a ((($a << 30) | ($a >> 2)) & 0xFFFFFFFF)
-    :set c (((($d << 5) | ($d >> 27)) + ($e ^ $a ^ $b) + $c + ($w->62) + 0xCA62C1D6) & 0xFFFFFFFF); :set e ((($e << 30) | ($e >> 2)) & 0xFFFFFFFF)
-    :set b (((($c << 5) | ($c >> 27)) + ($d ^ $e ^ $a) + $b + ($w->63) + 0xCA62C1D6) & 0xFFFFFFFF); :set d ((($d << 30) | ($d >> 2)) & 0xFFFFFFFF)
-    :set a (((($b << 5) | ($b >> 27)) + ($c ^ $d ^ $e) + $a + ($w->64) + 0xCA62C1D6) & 0xFFFFFFFF); :set c ((($c << 30) | ($c >> 2)) & 0xFFFFFFFF)
+    # w60 overwrites w12
+    :set w12 (((($w9 ^ $w4 ^ $w14 ^ $w12) << 1) | ((($w9 ^ $w4 ^ $w14 ^ $w12) >> 31) & 1)) & 0xFFFFFFFF)
+    :set e (((($a << 5) | ($a >> 27)) + ($b ^ $c ^ $d) + $e + $w12 + 0xCA62C1D6) & 0xFFFFFFFF); :set b ((($b << 30) | ($b >> 2)) & 0xFFFFFFFF)
 
-    :set e (((($a << 5) | ($a >> 27)) + ($b ^ $c ^ $d) + $e + ($w->65) + 0xCA62C1D6) & 0xFFFFFFFF); :set b ((($b << 30) | ($b >> 2)) & 0xFFFFFFFF)
-    :set d (((($e << 5) | ($e >> 27)) + ($a ^ $b ^ $c) + $d + ($w->66) + 0xCA62C1D6) & 0xFFFFFFFF); :set a ((($a << 30) | ($a >> 2)) & 0xFFFFFFFF)
-    :set c (((($d << 5) | ($d >> 27)) + ($e ^ $a ^ $b) + $c + ($w->67) + 0xCA62C1D6) & 0xFFFFFFFF); :set e ((($e << 30) | ($e >> 2)) & 0xFFFFFFFF)
-    :set b (((($c << 5) | ($c >> 27)) + ($d ^ $e ^ $a) + $b + ($w->68) + 0xCA62C1D6) & 0xFFFFFFFF); :set d ((($d << 30) | ($d >> 2)) & 0xFFFFFFFF)
-    :set a (((($b << 5) | ($b >> 27)) + ($c ^ $d ^ $e) + $a + ($w->69) + 0xCA62C1D6) & 0xFFFFFFFF); :set c ((($c << 30) | ($c >> 2)) & 0xFFFFFFFF)
+    # w61 overwrites w13
+    :set w13 (((($w10 ^ $w5 ^ $w15 ^ $w13) << 1) | ((($w10 ^ $w5 ^ $w15 ^ $w13) >> 31) & 1)) & 0xFFFFFFFF)
+    :set d (((($e << 5) | ($e >> 27)) + ($a ^ $b ^ $c) + $d + $w13 + 0xCA62C1D6) & 0xFFFFFFFF); :set a ((($a << 30) | ($a >> 2)) & 0xFFFFFFFF)
 
-    :set e (((($a << 5) | ($a >> 27)) + ($b ^ $c ^ $d) + $e + ($w->70) + 0xCA62C1D6) & 0xFFFFFFFF); :set b ((($b << 30) | ($b >> 2)) & 0xFFFFFFFF)
-    :set d (((($e << 5) | ($e >> 27)) + ($a ^ $b ^ $c) + $d + ($w->71) + 0xCA62C1D6) & 0xFFFFFFFF); :set a ((($a << 30) | ($a >> 2)) & 0xFFFFFFFF)
-    :set c (((($d << 5) | ($d >> 27)) + ($e ^ $a ^ $b) + $c + ($w->72) + 0xCA62C1D6) & 0xFFFFFFFF); :set e ((($e << 30) | ($e >> 2)) & 0xFFFFFFFF)
-    :set b (((($c << 5) | ($c >> 27)) + ($d ^ $e ^ $a) + $b + ($w->73) + 0xCA62C1D6) & 0xFFFFFFFF); :set d ((($d << 30) | ($d >> 2)) & 0xFFFFFFFF)
-    :set a (((($b << 5) | ($b >> 27)) + ($c ^ $d ^ $e) + $a + ($w->74) + 0xCA62C1D6) & 0xFFFFFFFF); :set c ((($c << 30) | ($c >> 2)) & 0xFFFFFFFF)
+    # w62 overwrites w14
+    :set w14 (((($w11 ^ $w6 ^ $w0 ^ $w14) << 1) | ((($w11 ^ $w6 ^ $w0 ^ $w14) >> 31) & 1)) & 0xFFFFFFFF)
+    :set c (((($d << 5) | ($d >> 27)) + ($e ^ $a ^ $b) + $c + $w14 + 0xCA62C1D6) & 0xFFFFFFFF); :set e ((($e << 30) | ($e >> 2)) & 0xFFFFFFFF)
 
-    :set e (((($a << 5) | ($a >> 27)) + ($b ^ $c ^ $d) + $e + ($w->75) + 0xCA62C1D6) & 0xFFFFFFFF); :set b ((($b << 30) | ($b >> 2)) & 0xFFFFFFFF)
-    :set d (((($e << 5) | ($e >> 27)) + ($a ^ $b ^ $c) + $d + ($w->76) + 0xCA62C1D6) & 0xFFFFFFFF); :set a ((($a << 30) | ($a >> 2)) & 0xFFFFFFFF)
-    :set c (((($d << 5) | ($d >> 27)) + ($e ^ $a ^ $b) + $c + ($w->77) + 0xCA62C1D6) & 0xFFFFFFFF); :set e ((($e << 30) | ($e >> 2)) & 0xFFFFFFFF)
-    :set b (((($c << 5) | ($c >> 27)) + ($d ^ $e ^ $a) + $b + ($w->78) + 0xCA62C1D6) & 0xFFFFFFFF); :set d ((($d << 30) | ($d >> 2)) & 0xFFFFFFFF)
-    :set a (((($b << 5) | ($b >> 27)) + ($c ^ $d ^ $e) + $a + ($w->79) + 0xCA62C1D6) & 0xFFFFFFFF); :set c ((($c << 30) | ($c >> 2)) & 0xFFFFFFFF)
+    # w63 overwrites w15
+    :set w15 (((($w12 ^ $w7 ^ $w1 ^ $w15) << 1) | ((($w12 ^ $w7 ^ $w1 ^ $w15) >> 31) & 1)) & 0xFFFFFFFF)
+    :set b (((($c << 5) | ($c >> 27)) + ($d ^ $e ^ $a) + $b + $w15 + 0xCA62C1D6) & 0xFFFFFFFF); :set d ((($d << 30) | ($d >> 2)) & 0xFFFFFFFF)
+
+    # w64 overwrites w0
+    :set w0 (((($w13 ^ $w8 ^ $w2 ^ $w0) << 1) | ((($w13 ^ $w8 ^ $w2 ^ $w0) >> 31) & 1)) & 0xFFFFFFFF)
+    :set a (((($b << 5) | ($b >> 27)) + ($c ^ $d ^ $e) + $a + $w0 + 0xCA62C1D6) & 0xFFFFFFFF); :set c ((($c << 30) | ($c >> 2)) & 0xFFFFFFFF)
+
+    # w65 overwrites w1
+    :set w1 (((($w14 ^ $w9 ^ $w3 ^ $w1) << 1) | ((($w14 ^ $w9 ^ $w3 ^ $w1) >> 31) & 1)) & 0xFFFFFFFF)
+    :set e (((($a << 5) | ($a >> 27)) + ($b ^ $c ^ $d) + $e + $w1 + 0xCA62C1D6) & 0xFFFFFFFF); :set b ((($b << 30) | ($b >> 2)) & 0xFFFFFFFF)
+
+    # w66 overwrites w2
+    :set w2 (((($w15 ^ $w10 ^ $w4 ^ $w2) << 1) | ((($w15 ^ $w10 ^ $w4 ^ $w2) >> 31) & 1)) & 0xFFFFFFFF)
+    :set d (((($e << 5) | ($e >> 27)) + ($a ^ $b ^ $c) + $d + $w2 + 0xCA62C1D6) & 0xFFFFFFFF); :set a ((($a << 30) | ($a >> 2)) & 0xFFFFFFFF)
+
+    # w67 overwrites w3
+    :set w3 (((($w0 ^ $w11 ^ $w5 ^ $w3) << 1) | ((($w0 ^ $w11 ^ $w5 ^ $w3) >> 31) & 1)) & 0xFFFFFFFF)
+    :set c (((($d << 5) | ($d >> 27)) + ($e ^ $a ^ $b) + $c + $w3 + 0xCA62C1D6) & 0xFFFFFFFF); :set e ((($e << 30) | ($e >> 2)) & 0xFFFFFFFF)
+
+    # w68 overwrites w4
+    :set w4 (((($w1 ^ $w12 ^ $w6 ^ $w4) << 1) | ((($w1 ^ $w12 ^ $w6 ^ $w4) >> 31) & 1)) & 0xFFFFFFFF)
+    :set b (((($c << 5) | ($c >> 27)) + ($d ^ $e ^ $a) + $b + $w4 + 0xCA62C1D6) & 0xFFFFFFFF); :set d ((($d << 30) | ($d >> 2)) & 0xFFFFFFFF)
+
+    # w69 overwrites w5
+    :set w5 (((($w2 ^ $w13 ^ $w7 ^ $w5) << 1) | ((($w2 ^ $w13 ^ $w7 ^ $w5) >> 31) & 1)) & 0xFFFFFFFF)
+    :set a (((($b << 5) | ($b >> 27)) + ($c ^ $d ^ $e) + $a + $w5 + 0xCA62C1D6) & 0xFFFFFFFF); :set c ((($c << 30) | ($c >> 2)) & 0xFFFFFFFF)
+
+    # w70 overwrites w6
+    :set w6 (((($w3 ^ $w14 ^ $w8 ^ $w6) << 1) | ((($w3 ^ $w14 ^ $w8 ^ $w6) >> 31) & 1)) & 0xFFFFFFFF)
+    :set e (((($a << 5) | ($a >> 27)) + ($b ^ $c ^ $d) + $e + $w6 + 0xCA62C1D6) & 0xFFFFFFFF); :set b ((($b << 30) | ($b >> 2)) & 0xFFFFFFFF)
+
+    # w71 overwrites w7
+    :set w7 (((($w4 ^ $w15 ^ $w9 ^ $w7) << 1) | ((($w4 ^ $w15 ^ $w9 ^ $w7) >> 31) & 1)) & 0xFFFFFFFF)
+    :set d (((($e << 5) | ($e >> 27)) + ($a ^ $b ^ $c) + $d + $w7 + 0xCA62C1D6) & 0xFFFFFFFF); :set a ((($a << 30) | ($a >> 2)) & 0xFFFFFFFF)
+
+    # w72 overwrites w8
+    :set w8 (((($w5 ^ $w0 ^ $w10 ^ $w8) << 1) | ((($w5 ^ $w0 ^ $w10 ^ $w8) >> 31) & 1)) & 0xFFFFFFFF)
+    :set c (((($d << 5) | ($d >> 27)) + ($e ^ $a ^ $b) + $c + $w8 + 0xCA62C1D6) & 0xFFFFFFFF); :set e ((($e << 30) | ($e >> 2)) & 0xFFFFFFFF)
+
+    # w73 overwrites w9
+    :set w9 (((($w6 ^ $w1 ^ $w11 ^ $w9) << 1) | ((($w6 ^ $w1 ^ $w11 ^ $w9) >> 31) & 1)) & 0xFFFFFFFF)
+    :set b (((($c << 5) | ($c >> 27)) + ($d ^ $e ^ $a) + $b + $w9 + 0xCA62C1D6) & 0xFFFFFFFF); :set d ((($d << 30) | ($d >> 2)) & 0xFFFFFFFF)
+
+    # w74 overwrites w10
+    :set w10 (((($w7 ^ $w2 ^ $w12 ^ $w10) << 1) | ((($w7 ^ $w2 ^ $w12 ^ $w10) >> 31) & 1)) & 0xFFFFFFFF)
+    :set a (((($b << 5) | ($b >> 27)) + ($c ^ $d ^ $e) + $a + $w10 + 0xCA62C1D6) & 0xFFFFFFFF); :set c ((($c << 30) | ($c >> 2)) & 0xFFFFFFFF)
+
+    # w75 overwrites w11
+    :set w11 (((($w8 ^ $w3 ^ $w13 ^ $w11) << 1) | ((($w8 ^ $w3 ^ $w13 ^ $w11) >> 31) & 1)) & 0xFFFFFFFF)
+    :set e (((($a << 5) | ($a >> 27)) + ($b ^ $c ^ $d) + $e + $w11 + 0xCA62C1D6) & 0xFFFFFFFF); :set b ((($b << 30) | ($b >> 2)) & 0xFFFFFFFF)
+
+    # w76 overwrites w12
+    :set w12 (((($w9 ^ $w4 ^ $w14 ^ $w12) << 1) | ((($w9 ^ $w4 ^ $w14 ^ $w12) >> 31) & 1)) & 0xFFFFFFFF)
+    :set d (((($e << 5) | ($e >> 27)) + ($a ^ $b ^ $c) + $d + $w12 + 0xCA62C1D6) & 0xFFFFFFFF); :set a ((($a << 30) | ($a >> 2)) & 0xFFFFFFFF)
+
+    # w77 overwrites w13
+    :set w13 (((($w10 ^ $w5 ^ $w15 ^ $w13) << 1) | ((($w10 ^ $w5 ^ $w15 ^ $w13) >> 31) & 1)) & 0xFFFFFFFF)
+    :set c (((($d << 5) | ($d >> 27)) + ($e ^ $a ^ $b) + $c + $w13 + 0xCA62C1D6) & 0xFFFFFFFF); :set e ((($e << 30) | ($e >> 2)) & 0xFFFFFFFF)
+
+    # w78 overwrites w14
+    :set w14 (((($w11 ^ $w6 ^ $w0 ^ $w14) << 1) | ((($w11 ^ $w6 ^ $w0 ^ $w14) >> 31) & 1)) & 0xFFFFFFFF)
+    :set b (((($c << 5) | ($c >> 27)) + ($d ^ $e ^ $a) + $b + $w14 + 0xCA62C1D6) & 0xFFFFFFFF); :set d ((($d << 30) | ($d >> 2)) & 0xFFFFFFFF)
+
+    # w79 overwrites w15
+    :set w15 (((($w12 ^ $w7 ^ $w1 ^ $w15) << 1) | ((($w12 ^ $w7 ^ $w1 ^ $w15) >> 31) & 1)) & 0xFFFFFFFF)
+    :set a (((($b << 5) | ($b >> 27)) + ($c ^ $d ^ $e) + $a + $w15 + 0xCA62C1D6) & 0xFFFFFFFF); :set c ((($c << 30) | ($c >> 2)) & 0xFFFFFFFF)
 
     :set h0 (($h0 + $a) & 0xFFFFFFFF)
     :set h1 (($h1 + $b) & 0xFFFFFFFF)

@@ -459,6 +459,10 @@
         :local inputDisplay $input
         :if (![$IsPrintableStr $inputDisplay]) do={
             :set inputDisplay "<binary string>"
+        } else={
+            :if ([:len $input] > 30) do={
+                :set inputDisplay ([:pick $input 0 30] . "<truncated>")
+            }
         }
 
         :local actualDisplay $actual

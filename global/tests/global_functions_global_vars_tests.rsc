@@ -50,28 +50,30 @@
         :local actual [:tostr $2]
         :local expected [:tostr $3]
         :local name [:tostr $4]
-        :local input $5
-
-        :local inputDisplay $input
-        :if (![$IsPrintableStr $inputDisplay]) do={
-            :set inputDisplay "<binary string>"
-        }
 
         :local actualDisplay $actual
         :if (![$IsPrintableStr $actualDisplay]) do={
             :set actualDisplay "<binary string>"
+        } else={
+            :if ([:len $actual] > 30) do={
+                :set actualDisplay ([:pick $actual 0 30] . "<truncated>")
+            }
         }
 
         :local expectedDisplay $expected
         :if (![$IsPrintableStr $expectedDisplay]) do={
             :set expectedDisplay "<binary string>"
+        } else={
+            :if ([:len $expected] > 30) do={
+                :set expectedDisplay ([:pick $expected 0 30] . "<truncated>")
+            }
         }
 
         :if ($actual = $expected) do={
-            :put ("  \1B[32m[PASS]\1B[0m " . $name . ": '" . $inputDisplay . "' -> '" . $actualDisplay . "'")
+            :put ("  \1B[32m[PASS]\1B[0m " . $name . ": '" . $expectedDisplay . "' -> '" . $actualDisplay . "'")
             :set ($state->"passed") (($state->"passed") + 1)
         } else={
-            :put ("  \1B[31m[FAIL]\1B[0m " . $name . ": '" . $inputDisplay . "' | Expected: '" . $expectedDisplay . "', Got: '" . $actualDisplay . "'")
+            :put ("  \1B[31m[FAIL]\1B[0m " . $name . ": '" . $expectedDisplay . "' | Expected: '" . $expectedDisplay . "', Got: '" . $actualDisplay . "'")
             :set ($state->"failed") (($state->"failed") + 1)
         }
         :return $state

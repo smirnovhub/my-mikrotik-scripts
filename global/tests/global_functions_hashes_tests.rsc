@@ -57,6 +57,10 @@
         :local inputDisplay $inputStr
         :if (![$IsPrintableStr $inputDisplay]) do={
             :set inputDisplay "<binary string>"
+        } else={
+            :if ([:len $inputStr] > 30) do={
+                :set inputDisplay ([:pick $inputStr 0 30] . "<truncated>")
+            }
         }
 
         # Use an explicit check for the test execution block to handle empty strings safely
@@ -258,6 +262,10 @@
         :local inputDisplay $inputStr
         :if (![$IsPrintableStr $inputDisplay]) do={
             :set inputDisplay "<binary string>"
+        } else={
+            :if ([:len $inputStr] > 30) do={
+                :set inputDisplay ([:pick $inputStr 0 30] . "<truncated>")
+            }
         }
 
         :local actual [$GetSha1Sum $inputStr]
@@ -580,9 +588,36 @@
         "c8d7d0ef0eedfa82d2ea1aa592845b9a6d4b02b7" \
         "64 zero-byte message hash"]
 
-    :put "Testing completed."
+    # Escape and control characters (RouterOS safe syntax)
+    :set res [$RunTestCase $res ("hello\nworld") \
+        "7db827c10afc1719863502cf95397731b23b8bae" \
+        "Newline Unix control character hash"]
+
+    :set res [$RunTestCase $res ("hello\r\nworld") \
+        "d07cff009c449bfdf131d865e1dc4413256e5f52" \
+        "CRLF Windows control sequence hash"]
+
+    :set res [$RunTestCase $res ("\"\\\$") \
+        "17ef2c5fff42a2ff7d1675d60bbadf87ef4180be" \
+        "Escaped characters quote backslash dollar hash"]
+
+    # Embedded null byte inside non-empty string
+    :set testStr ("abc" . [$DecToChar 0] . "def")
+    :set res [$RunTestCase $res $testStr \
+        "487b1975d97215516d7267dff3557c0676956056" \
+        "Embedded null byte string truncation check"]
+
+    # 4096 bytes long string (counter overflow validation)
+    :set testStr ""
+    :for i from=1 to=4096 do={
+        :set testStr ($testStr . "a")
+    }
+    :set res [$RunTestCase $res $testStr \
+        "8c51fb6a0b587ec95ca74acfa43df7539b486297" \
+        "4096-byte large buffer length counter hash"]
 
     :put "Testing completed."
+
     :return $res
 }
 
@@ -616,6 +651,10 @@
         :local inputDisplay $inputStr
         :if (![$IsPrintableStr $inputDisplay]) do={
             :set inputDisplay "<binary string>"
+        } else={
+            :if ([:len $inputStr] > 30) do={
+                :set inputDisplay ([:pick $inputStr 0 30] . "<truncated>")
+            }
         }
 
         # Use an explicit check for the test execution block to handle empty strings safely

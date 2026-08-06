@@ -142,7 +142,7 @@ The following global settings are required to configure Telegram integration. Th
 
 #### Checksum Benchmark on RB750Gr3
 
-All hash algorithms are highly optimized for RouterOS. Exact benchmarks for RB750Gr3 are listed below.
+All hash algorithms are highly optimized for RouterOS. Exact benchmarks for RB750Gr3 are listed below:
 
 - **GetCrc32Sum**: 1.0x baseline
 - **GetMd5Sum**: 1.04x slower than CRC32

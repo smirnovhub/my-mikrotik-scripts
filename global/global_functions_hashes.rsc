@@ -24,6 +24,7 @@
 #
 # global functions
 :global GetMd5Sum
+:global GetSha1Sum
 :global GetCrc32Sum
 
 # 256-entry byte-to-hex lookup table
@@ -298,6 +299,242 @@
     ($md5HexByteTable->(($d >> 8) & 0xFF)) . \
     ($md5HexByteTable->(($d >> 16) & 0xFF)) . \
     ($md5HexByteTable->(($d >> 24) & 0xFF)) \
+  )
+}
+
+:set GetSha1Sum do={
+  :global DecToChar
+
+  :global asciiCodeTable
+  :global md5HexByteTable
+
+  :local strMessage $1
+  :local lMessageLength [:len $strMessage]
+
+  # Fast return for empty string
+  :if ($lMessageLength = 0) do={
+    :return "da39a3ee5e6b4b0d3255bfef95601890afd80709"
+  }
+
+  # Initialize ASCII lookup table on first use
+  :if ([:typeof $asciiCodeTable] = "nothing") do={
+      :set asciiCodeTable [:toarray ""]
+      :for i from=0 to=255 do={
+          :set ($asciiCodeTable->[$DecToChar $i]) $i
+      }
+  }
+
+  # Initialize 256-entry byte-to-hex lookup table on first use
+  :if ([:typeof $md5HexByteTable] = "nothing") do={
+      :local strHex "0123456789abcdef"
+      :set md5HexByteTable [:toarray ""]
+      :for i from=0 to=255 do={
+          :local high [:pick $strHex ($i >> 4) (($i >> 4) + 1)]
+          :local low [:pick $strHex ($i & 0xF) (($i & 0xF) + 1)]
+          :set ($md5HexByteTable->$i) ($high . $low)
+      }
+  }
+
+  :local lWordArray [:toarray ""]
+
+  # Pack message bytes into 32-bit words
+  :local i 0
+  :while (($i + 3) < $lMessageLength) do={
+    :set ($lWordArray->($i >> 2)) ( \
+      (($asciiCodeTable->[:pick $strMessage $i]) << 24) | \
+      (($asciiCodeTable->[:pick $strMessage ($i + 1)]) << 16) | \
+      (($asciiCodeTable->[:pick $strMessage ($i + 2)]) << 8) | \
+      ($asciiCodeTable->[:pick $strMessage ($i + 3)]) \
+    )
+    :set i ($i + 4)
+  }
+
+  # Pack remaining bytes
+  :local curVal 0
+
+  :if ($i < $lMessageLength) do={
+    :set curVal (($asciiCodeTable->[:pick $strMessage $i]) << 24)
+    :if (($i + 1) < $lMessageLength) do={
+      :set curVal ($curVal | (($asciiCodeTable->[:pick $strMessage ($i + 1)]) << 16))
+    }
+    :if (($i + 2) < $lMessageLength) do={
+      :set curVal ($curVal | (($asciiCodeTable->[:pick $strMessage ($i + 2)]) << 8))
+    }
+  }
+
+  # Add padding byte 0x80
+  :local padWIndex ($i >> 2)
+  :local padBPos ((3 - ($lMessageLength % 4)) * 8)
+  :set ($lWordArray->$padWIndex) ($curVal | (0x80 << $padBPos))
+
+  # Fill remaining words with 0 and append bit length
+  :local lNumberOfWords (((($lMessageLength + 8) / 64) + 1) * 16)
+  :for w from=($padWIndex + 1) to=($lNumberOfWords - 1) do={
+    :set ($lWordArray->$w) 0
+  }
+
+  # High 32-bit length is 0 for RouterOS strings under 536MB
+  :set ($lWordArray->($lNumberOfWords - 2)) 0
+  :set ($lWordArray->($lNumberOfWords - 1)) (($lMessageLength * 8) & 0xFFFFFFFF)
+
+  ### Initial Hash State ###
+
+  :local h0 0x67452301
+  :local h1 0xEFCDAB89
+  :local h2 0x98BADCFE
+  :local h3 0x10325476
+  :local h4 0xC3D2E1F0
+
+  :local lWordArrLen ([:len $lWordArray] - 1)
+  :local w [:toarray ""]
+  :local tempW 0
+
+  :for lcv from=0 to=$lWordArrLen step=16 do={
+
+    # Prepare message schedule array
+    :for j from=0 to=15 do={
+      :set ($w->$j) ($lWordArray->($lcv + $j))
+    }
+    :for j from=16 to=79 do={
+      :set tempW (($w->($j - 3)) ^ ($w->($j - 8)) ^ ($w->($j - 14)) ^ ($w->($j - 16)))
+      :set ($w->$j) (((($tempW << 1) | (($tempW >> 31) & 1))) & 0xFFFFFFFF)
+    }
+
+    :local a $h0
+    :local b $h1
+    :local c $h2
+    :local d $h3
+    :local e $h4
+
+    # Fully unrolled Round 1 (0 to 19)
+    :set e (((($a << 5) | ($a >> 27)) + ($d ^ ($b & ($c ^ $d))) + $e + ($w->0) + 0x5A827999) & 0xFFFFFFFF); :set b ((($b << 30) | ($b >> 2)) & 0xFFFFFFFF)
+    :set d (((($e << 5) | ($e >> 27)) + ($c ^ ($a & ($b ^ $c))) + $d + ($w->1) + 0x5A827999) & 0xFFFFFFFF); :set a ((($a << 30) | ($a >> 2)) & 0xFFFFFFFF)
+    :set c (((($d << 5) | ($d >> 27)) + ($b ^ ($e & ($a ^ $b))) + $c + ($w->2) + 0x5A827999) & 0xFFFFFFFF); :set e ((($e << 30) | ($e >> 2)) & 0xFFFFFFFF)
+    :set b (((($c << 5) | ($c >> 27)) + ($a ^ ($d & ($e ^ $a))) + $b + ($w->3) + 0x5A827999) & 0xFFFFFFFF); :set d ((($d << 30) | ($d >> 2)) & 0xFFFFFFFF)
+    :set a (((($b << 5) | ($b >> 27)) + ($e ^ ($c & ($d ^ $e))) + $a + ($w->4) + 0x5A827999) & 0xFFFFFFFF); :set c ((($c << 30) | ($c >> 2)) & 0xFFFFFFFF)
+
+    :set e (((($a << 5) | ($a >> 27)) + ($d ^ ($b & ($c ^ $d))) + $e + ($w->5) + 0x5A827999) & 0xFFFFFFFF); :set b ((($b << 30) | ($b >> 2)) & 0xFFFFFFFF)
+    :set d (((($e << 5) | ($e >> 27)) + ($c ^ ($a & ($b ^ $c))) + $d + ($w->6) + 0x5A827999) & 0xFFFFFFFF); :set a ((($a << 30) | ($a >> 2)) & 0xFFFFFFFF)
+    :set c (((($d << 5) | ($d >> 27)) + ($b ^ ($e & ($a ^ $b))) + $c + ($w->7) + 0x5A827999) & 0xFFFFFFFF); :set e ((($e << 30) | ($e >> 2)) & 0xFFFFFFFF)
+    :set b (((($c << 5) | ($c >> 27)) + ($a ^ ($d & ($e ^ $a))) + $b + ($w->8) + 0x5A827999) & 0xFFFFFFFF); :set d ((($d << 30) | ($d >> 2)) & 0xFFFFFFFF)
+    :set a (((($b << 5) | ($b >> 27)) + ($e ^ ($c & ($d ^ $e))) + $a + ($w->9) + 0x5A827999) & 0xFFFFFFFF); :set c ((($c << 30) | ($c >> 2)) & 0xFFFFFFFF)
+
+    :set e (((($a << 5) | ($a >> 27)) + ($d ^ ($b & ($c ^ $d))) + $e + ($w->10) + 0x5A827999) & 0xFFFFFFFF); :set b ((($b << 30) | ($b >> 2)) & 0xFFFFFFFF)
+    :set d (((($e << 5) | ($e >> 27)) + ($c ^ ($a & ($b ^ $c))) + $d + ($w->11) + 0x5A827999) & 0xFFFFFFFF); :set a ((($a << 30) | ($a >> 2)) & 0xFFFFFFFF)
+    :set c (((($d << 5) | ($d >> 27)) + ($b ^ ($e & ($a ^ $b))) + $c + ($w->12) + 0x5A827999) & 0xFFFFFFFF); :set e ((($e << 30) | ($e >> 2)) & 0xFFFFFFFF)
+    :set b (((($c << 5) | ($c >> 27)) + ($a ^ ($d & ($e ^ $a))) + $b + ($w->13) + 0x5A827999) & 0xFFFFFFFF); :set d ((($d << 30) | ($d >> 2)) & 0xFFFFFFFF)
+    :set a (((($b << 5) | ($b >> 27)) + ($e ^ ($c & ($d ^ $e))) + $a + ($w->14) + 0x5A827999) & 0xFFFFFFFF); :set c ((($c << 30) | ($c >> 2)) & 0xFFFFFFFF)
+
+    :set e (((($a << 5) | ($a >> 27)) + ($d ^ ($b & ($c ^ $d))) + $e + ($w->15) + 0x5A827999) & 0xFFFFFFFF); :set b ((($b << 30) | ($b >> 2)) & 0xFFFFFFFF)
+    :set d (((($e << 5) | ($e >> 27)) + ($c ^ ($a & ($b ^ $c))) + $d + ($w->16) + 0x5A827999) & 0xFFFFFFFF); :set a ((($a << 30) | ($a >> 2)) & 0xFFFFFFFF)
+    :set c (((($d << 5) | ($d >> 27)) + ($b ^ ($e & ($a ^ $b))) + $c + ($w->17) + 0x5A827999) & 0xFFFFFFFF); :set e ((($e << 30) | ($e >> 2)) & 0xFFFFFFFF)
+    :set b (((($c << 5) | ($c >> 27)) + ($a ^ ($d & ($e ^ $a))) + $b + ($w->18) + 0x5A827999) & 0xFFFFFFFF); :set d ((($d << 30) | ($d >> 2)) & 0xFFFFFFFF)
+    :set a (((($b << 5) | ($b >> 27)) + ($e ^ ($c & ($d ^ $e))) + $a + ($w->19) + 0x5A827999) & 0xFFFFFFFF); :set c ((($c << 30) | ($c >> 2)) & 0xFFFFFFFF)
+
+    # Fully unrolled Round 2 (20 to 39)
+    :set e (((($a << 5) | ($a >> 27)) + ($b ^ $c ^ $d) + $e + ($w->20) + 0x6ED9EBA1) & 0xFFFFFFFF); :set b ((($b << 30) | ($b >> 2)) & 0xFFFFFFFF)
+    :set d (((($e << 5) | ($e >> 27)) + ($a ^ $b ^ $c) + $d + ($w->21) + 0x6ED9EBA1) & 0xFFFFFFFF); :set a ((($a << 30) | ($a >> 2)) & 0xFFFFFFFF)
+    :set c (((($d << 5) | ($d >> 27)) + ($e ^ $a ^ $b) + $c + ($w->22) + 0x6ED9EBA1) & 0xFFFFFFFF); :set e ((($e << 30) | ($e >> 2)) & 0xFFFFFFFF)
+    :set b (((($c << 5) | ($c >> 27)) + ($d ^ $e ^ $a) + $b + ($w->23) + 0x6ED9EBA1) & 0xFFFFFFFF); :set d ((($d << 30) | ($d >> 2)) & 0xFFFFFFFF)
+    :set a (((($b << 5) | ($b >> 27)) + ($c ^ $d ^ $e) + $a + ($w->24) + 0x6ED9EBA1) & 0xFFFFFFFF); :set c ((($c << 30) | ($c >> 2)) & 0xFFFFFFFF)
+
+    :set e (((($a << 5) | ($a >> 27)) + ($b ^ $c ^ $d) + $e + ($w->25) + 0x6ED9EBA1) & 0xFFFFFFFF); :set b ((($b << 30) | ($b >> 2)) & 0xFFFFFFFF)
+    :set d (((($e << 5) | ($e >> 27)) + ($a ^ $b ^ $c) + $d + ($w->26) + 0x6ED9EBA1) & 0xFFFFFFFF); :set a ((($a << 30) | ($a >> 2)) & 0xFFFFFFFF)
+    :set c (((($d << 5) | ($d >> 27)) + ($e ^ $a ^ $b) + $c + ($w->27) + 0x6ED9EBA1) & 0xFFFFFFFF); :set e ((($e << 30) | ($e >> 2)) & 0xFFFFFFFF)
+    :set b (((($c << 5) | ($c >> 27)) + ($d ^ $e ^ $a) + $b + ($w->28) + 0x6ED9EBA1) & 0xFFFFFFFF); :set d ((($d << 30) | ($d >> 2)) & 0xFFFFFFFF)
+    :set a (((($b << 5) | ($b >> 27)) + ($c ^ $d ^ $e) + $a + ($w->29) + 0x6ED9EBA1) & 0xFFFFFFFF); :set c ((($c << 30) | ($c >> 2)) & 0xFFFFFFFF)
+
+    :set e (((($a << 5) | ($a >> 27)) + ($b ^ $c ^ $d) + $e + ($w->30) + 0x6ED9EBA1) & 0xFFFFFFFF); :set b ((($b << 30) | ($b >> 2)) & 0xFFFFFFFF)
+    :set d (((($e << 5) | ($e >> 27)) + ($a ^ $b ^ $c) + $d + ($w->31) + 0x6ED9EBA1) & 0xFFFFFFFF); :set a ((($a << 30) | ($a >> 2)) & 0xFFFFFFFF)
+    :set c (((($d << 5) | ($d >> 27)) + ($e ^ $a ^ $b) + $c + ($w->32) + 0x6ED9EBA1) & 0xFFFFFFFF); :set e ((($e << 30) | ($e >> 2)) & 0xFFFFFFFF)
+    :set b (((($c << 5) | ($c >> 27)) + ($d ^ $e ^ $a) + $b + ($w->33) + 0x6ED9EBA1) & 0xFFFFFFFF); :set d ((($d << 30) | ($d >> 2)) & 0xFFFFFFFF)
+    :set a (((($b << 5) | ($b >> 27)) + ($c ^ $d ^ $e) + $a + ($w->34) + 0x6ED9EBA1) & 0xFFFFFFFF); :set c ((($c << 30) | ($c >> 2)) & 0xFFFFFFFF)
+
+    :set e (((($a << 5) | ($a >> 27)) + ($b ^ $c ^ $d) + $e + ($w->35) + 0x6ED9EBA1) & 0xFFFFFFFF); :set b ((($b << 30) | ($b >> 2)) & 0xFFFFFFFF)
+    :set d (((($e << 5) | ($e >> 27)) + ($a ^ $b ^ $c) + $d + ($w->36) + 0x6ED9EBA1) & 0xFFFFFFFF); :set a ((($a << 30) | ($a >> 2)) & 0xFFFFFFFF)
+    :set c (((($d << 5) | ($d >> 27)) + ($e ^ $a ^ $b) + $c + ($w->37) + 0x6ED9EBA1) & 0xFFFFFFFF); :set e ((($e << 30) | ($e >> 2)) & 0xFFFFFFFF)
+    :set b (((($c << 5) | ($c >> 27)) + ($d ^ $e ^ $a) + $b + ($w->38) + 0x6ED9EBA1) & 0xFFFFFFFF); :set d ((($d << 30) | ($d >> 2)) & 0xFFFFFFFF)
+    :set a (((($b << 5) | ($b >> 27)) + ($c ^ $d ^ $e) + $a + ($w->39) + 0x6ED9EBA1) & 0xFFFFFFFF); :set c ((($c << 30) | ($c >> 2)) & 0xFFFFFFFF)
+
+    # Fully unrolled Round 3 (40 to 59)
+    :set e (((($a << 5) | ($a >> 27)) + (($b & $c) | ($d & ($b ^ $c))) + $e + ($w->40) + 0x8F1BBCDC) & 0xFFFFFFFF); :set b ((($b << 30) | ($b >> 2)) & 0xFFFFFFFF)
+    :set d (((($e << 5) | ($e >> 27)) + (($a & $b) | ($c & ($a ^ $b))) + $d + ($w->41) + 0x8F1BBCDC) & 0xFFFFFFFF); :set a ((($a << 30) | ($a >> 2)) & 0xFFFFFFFF)
+    :set c (((($d << 5) | ($d >> 27)) + (($e & $a) | ($b & ($e ^ $a))) + $c + ($w->42) + 0x8F1BBCDC) & 0xFFFFFFFF); :set e ((($e << 30) | ($e >> 2)) & 0xFFFFFFFF)
+    :set b (((($c << 5) | ($c >> 27)) + (($d & $e) | ($a & ($d ^ $e))) + $b + ($w->43) + 0x8F1BBCDC) & 0xFFFFFFFF); :set d ((($d << 30) | ($d >> 2)) & 0xFFFFFFFF)
+    :set a (((($b << 5) | ($b >> 27)) + (($c & $d) | ($e & ($c ^ $d))) + $a + ($w->44) + 0x8F1BBCDC) & 0xFFFFFFFF); :set c ((($c << 30) | ($c >> 2)) & 0xFFFFFFFF)
+
+    :set e (((($a << 5) | ($a >> 27)) + (($b & $c) | ($d & ($b ^ $c))) + $e + ($w->45) + 0x8F1BBCDC) & 0xFFFFFFFF); :set b ((($b << 30) | ($b >> 2)) & 0xFFFFFFFF)
+    :set d (((($e << 5) | ($e >> 27)) + (($a & $b) | ($c & ($a ^ $b))) + $d + ($w->46) + 0x8F1BBCDC) & 0xFFFFFFFF); :set a ((($a << 30) | ($a >> 2)) & 0xFFFFFFFF)
+    :set c (((($d << 5) | ($d >> 27)) + (($e & $a) | ($b & ($e ^ $a))) + $c + ($w->47) + 0x8F1BBCDC) & 0xFFFFFFFF); :set e ((($e << 30) | ($e >> 2)) & 0xFFFFFFFF)
+    :set b (((($c << 5) | ($c >> 27)) + (($d & $e) | ($a & ($d ^ $e))) + $b + ($w->48) + 0x8F1BBCDC) & 0xFFFFFFFF); :set d ((($d << 30) | ($d >> 2)) & 0xFFFFFFFF)
+    :set a (((($b << 5) | ($b >> 27)) + (($c & $d) | ($e & ($c ^ $d))) + $a + ($w->49) + 0x8F1BBCDC) & 0xFFFFFFFF); :set c ((($c << 30) | ($c >> 2)) & 0xFFFFFFFF)
+
+    :set e (((($a << 5) | ($a >> 27)) + (($b & $c) | ($d & ($b ^ $c))) + $e + ($w->50) + 0x8F1BBCDC) & 0xFFFFFFFF); :set b ((($b << 30) | ($b >> 2)) & 0xFFFFFFFF)
+    :set d (((($e << 5) | ($e >> 27)) + (($a & $b) | ($c & ($a ^ $b))) + $d + ($w->51) + 0x8F1BBCDC) & 0xFFFFFFFF); :set a ((($a << 30) | ($a >> 2)) & 0xFFFFFFFF)
+    :set c (((($d << 5) | ($d >> 27)) + (($e & $a) | ($b & ($e ^ $a))) + $c + ($w->52) + 0x8F1BBCDC) & 0xFFFFFFFF); :set e ((($e << 30) | ($e >> 2)) & 0xFFFFFFFF)
+    :set b (((($c << 5) | ($c >> 27)) + (($d & $e) | ($a & ($d ^ $e))) + $b + ($w->53) + 0x8F1BBCDC) & 0xFFFFFFFF); :set d ((($d << 30) | ($d >> 2)) & 0xFFFFFFFF)
+    :set a (((($b << 5) | ($b >> 27)) + (($c & $d) | ($e & ($c ^ $d))) + $a + ($w->54) + 0x8F1BBCDC) & 0xFFFFFFFF); :set c ((($c << 30) | ($c >> 2)) & 0xFFFFFFFF)
+
+    :set e (((($a << 5) | ($a >> 27)) + (($b & $c) | ($d & ($b ^ $c))) + $e + ($w->55) + 0x8F1BBCDC) & 0xFFFFFFFF); :set b ((($b << 30) | ($b >> 2)) & 0xFFFFFFFF)
+    :set d (((($e << 5) | ($e >> 27)) + (($a & $b) | ($c & ($a ^ $b))) + $d + ($w->56) + 0x8F1BBCDC) & 0xFFFFFFFF); :set a ((($a << 30) | ($a >> 2)) & 0xFFFFFFFF)
+    :set c (((($d << 5) | ($d >> 27)) + (($e & $a) | ($b & ($e ^ $a))) + $c + ($w->57) + 0x8F1BBCDC) & 0xFFFFFFFF); :set e ((($e << 30) | ($e >> 2)) & 0xFFFFFFFF)
+    :set b (((($c << 5) | ($c >> 27)) + (($d & $e) | ($a & ($d ^ $e))) + $b + ($w->58) + 0x8F1BBCDC) & 0xFFFFFFFF); :set d ((($d << 30) | ($d >> 2)) & 0xFFFFFFFF)
+    :set a (((($b << 5) | ($b >> 27)) + (($c & $d) | ($e & ($c ^ $d))) + $a + ($w->59) + 0x8F1BBCDC) & 0xFFFFFFFF); :set c ((($c << 30) | ($c >> 2)) & 0xFFFFFFFF)
+
+    # Fully unrolled Round 4 (60 to 79)
+    :set e (((($a << 5) | ($a >> 27)) + ($b ^ $c ^ $d) + $e + ($w->60) + 0xCA62C1D6) & 0xFFFFFFFF); :set b ((($b << 30) | ($b >> 2)) & 0xFFFFFFFF)
+    :set d (((($e << 5) | ($e >> 27)) + ($a ^ $b ^ $c) + $d + ($w->61) + 0xCA62C1D6) & 0xFFFFFFFF); :set a ((($a << 30) | ($a >> 2)) & 0xFFFFFFFF)
+    :set c (((($d << 5) | ($d >> 27)) + ($e ^ $a ^ $b) + $c + ($w->62) + 0xCA62C1D6) & 0xFFFFFFFF); :set e ((($e << 30) | ($e >> 2)) & 0xFFFFFFFF)
+    :set b (((($c << 5) | ($c >> 27)) + ($d ^ $e ^ $a) + $b + ($w->63) + 0xCA62C1D6) & 0xFFFFFFFF); :set d ((($d << 30) | ($d >> 2)) & 0xFFFFFFFF)
+    :set a (((($b << 5) | ($b >> 27)) + ($c ^ $d ^ $e) + $a + ($w->64) + 0xCA62C1D6) & 0xFFFFFFFF); :set c ((($c << 30) | ($c >> 2)) & 0xFFFFFFFF)
+
+    :set e (((($a << 5) | ($a >> 27)) + ($b ^ $c ^ $d) + $e + ($w->65) + 0xCA62C1D6) & 0xFFFFFFFF); :set b ((($b << 30) | ($b >> 2)) & 0xFFFFFFFF)
+    :set d (((($e << 5) | ($e >> 27)) + ($a ^ $b ^ $c) + $d + ($w->66) + 0xCA62C1D6) & 0xFFFFFFFF); :set a ((($a << 30) | ($a >> 2)) & 0xFFFFFFFF)
+    :set c (((($d << 5) | ($d >> 27)) + ($e ^ $a ^ $b) + $c + ($w->67) + 0xCA62C1D6) & 0xFFFFFFFF); :set e ((($e << 30) | ($e >> 2)) & 0xFFFFFFFF)
+    :set b (((($c << 5) | ($c >> 27)) + ($d ^ $e ^ $a) + $b + ($w->68) + 0xCA62C1D6) & 0xFFFFFFFF); :set d ((($d << 30) | ($d >> 2)) & 0xFFFFFFFF)
+    :set a (((($b << 5) | ($b >> 27)) + ($c ^ $d ^ $e) + $a + ($w->69) + 0xCA62C1D6) & 0xFFFFFFFF); :set c ((($c << 30) | ($c >> 2)) & 0xFFFFFFFF)
+
+    :set e (((($a << 5) | ($a >> 27)) + ($b ^ $c ^ $d) + $e + ($w->70) + 0xCA62C1D6) & 0xFFFFFFFF); :set b ((($b << 30) | ($b >> 2)) & 0xFFFFFFFF)
+    :set d (((($e << 5) | ($e >> 27)) + ($a ^ $b ^ $c) + $d + ($w->71) + 0xCA62C1D6) & 0xFFFFFFFF); :set a ((($a << 30) | ($a >> 2)) & 0xFFFFFFFF)
+    :set c (((($d << 5) | ($d >> 27)) + ($e ^ $a ^ $b) + $c + ($w->72) + 0xCA62C1D6) & 0xFFFFFFFF); :set e ((($e << 30) | ($e >> 2)) & 0xFFFFFFFF)
+    :set b (((($c << 5) | ($c >> 27)) + ($d ^ $e ^ $a) + $b + ($w->73) + 0xCA62C1D6) & 0xFFFFFFFF); :set d ((($d << 30) | ($d >> 2)) & 0xFFFFFFFF)
+    :set a (((($b << 5) | ($b >> 27)) + ($c ^ $d ^ $e) + $a + ($w->74) + 0xCA62C1D6) & 0xFFFFFFFF); :set c ((($c << 30) | ($c >> 2)) & 0xFFFFFFFF)
+
+    :set e (((($a << 5) | ($a >> 27)) + ($b ^ $c ^ $d) + $e + ($w->75) + 0xCA62C1D6) & 0xFFFFFFFF); :set b ((($b << 30) | ($b >> 2)) & 0xFFFFFFFF)
+    :set d (((($e << 5) | ($e >> 27)) + ($a ^ $b ^ $c) + $d + ($w->76) + 0xCA62C1D6) & 0xFFFFFFFF); :set a ((($a << 30) | ($a >> 2)) & 0xFFFFFFFF)
+    :set c (((($d << 5) | ($d >> 27)) + ($e ^ $a ^ $b) + $c + ($w->77) + 0xCA62C1D6) & 0xFFFFFFFF); :set e ((($e << 30) | ($e >> 2)) & 0xFFFFFFFF)
+    :set b (((($c << 5) | ($c >> 27)) + ($d ^ $e ^ $a) + $b + ($w->78) + 0xCA62C1D6) & 0xFFFFFFFF); :set d ((($d << 30) | ($d >> 2)) & 0xFFFFFFFF)
+    :set a (((($b << 5) | ($b >> 27)) + ($c ^ $d ^ $e) + $a + ($w->79) + 0xCA62C1D6) & 0xFFFFFFFF); :set c ((($c << 30) | ($c >> 2)) & 0xFFFFFFFF)
+
+    :set h0 (($h0 + $a) & 0xFFFFFFFF)
+    :set h1 (($h1 + $b) & 0xFFFFFFFF)
+    :set h2 (($h2 + $c) & 0xFFFFFFFF)
+    :set h3 (($h3 + $d) & 0xFFFFFFFF)
+    :set h4 (($h4 + $e) & 0xFFFFFFFF)
+  }
+
+  # Build final Hex string
+  :return ( \
+    ($md5HexByteTable->(($h0 >> 24) & 0xFF)) . \
+    ($md5HexByteTable->(($h0 >> 16) & 0xFF)) . \
+    ($md5HexByteTable->(($h0 >> 8) & 0xFF)) . \
+    ($md5HexByteTable->($h0 & 0xFF)) . \
+    ($md5HexByteTable->(($h1 >> 24) & 0xFF)) . \
+    ($md5HexByteTable->(($h1 >> 16) & 0xFF)) . \
+    ($md5HexByteTable->(($h1 >> 8) & 0xFF)) . \
+    ($md5HexByteTable->($h1 & 0xFF)) . \
+    ($md5HexByteTable->(($h2 >> 24) & 0xFF)) . \
+    ($md5HexByteTable->(($h2 >> 16) & 0xFF)) . \
+    ($md5HexByteTable->(($h2 >> 8) & 0xFF)) . \
+    ($md5HexByteTable->($h2 & 0xFF)) . \
+    ($md5HexByteTable->(($h3 >> 24) & 0xFF)) . \
+    ($md5HexByteTable->(($h3 >> 16) & 0xFF)) . \
+    ($md5HexByteTable->(($h3 >> 8) & 0xFF)) . \
+    ($md5HexByteTable->($h3 & 0xFF)) . \
+    ($md5HexByteTable->(($h4 >> 24) & 0xFF)) . \
+    ($md5HexByteTable->(($h4 >> 16) & 0xFF)) . \
+    ($md5HexByteTable->(($h4 >> 8) & 0xFF)) . \
+    ($md5HexByteTable->($h4 & 0xFF)) \
   )
 }
 

@@ -18,7 +18,7 @@ jobs:
         with:
           python-version: '3.14'
 
-      - name: Install QEMU & SSH tools
+      - name: Install QEMU & Tools
         run: |
           sudo apt-get update
           sudo apt-get install -y qemu-system-x86 wget unzip sshpass openssh-client

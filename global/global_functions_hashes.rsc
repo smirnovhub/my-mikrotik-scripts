@@ -70,7 +70,7 @@
     0xB3667A2E; 0xC4614AB8; 0x5D681B02; 0x2A6F2B94; 0xB40BBE37; 0xC30C8EA1; 0x5A05DF1B; 0x2D02EF8D
 }
 
-# Purpose: Calculate the MD5 hash checksum for a given string or array of bytes.
+# Purpose: Calculate the MD5 hash checksum for a given string.
 # Parameters:
 #   $1 - String to calculate the hash for
 # Returns: MD5 checksum as a hex string
@@ -302,7 +302,7 @@
   )
 }
 
-# Purpose: Calculate the SHA1 hash checksum for a given string or array of bytes.
+# Purpose: Calculate the SHA1 hash checksum for a given string.
 # Parameters:
 #   $1 - String to calculate the hash for
 # Returns: SHA1 checksum as a hex string
@@ -545,7 +545,7 @@
   )
 }
 
-# Purpose: Calculate the CRC32 checksum for a given string or array of bytes.
+# Purpose: Calculate the CRC32 checksum for a given string.
 # Parameters:
 #   $1 - String to calculate the checksum for
 # Returns: CRC32 checksum as a string or number

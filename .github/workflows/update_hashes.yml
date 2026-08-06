@@ -1,4 +1,4 @@
-name: Update Hashes
+name: update hashes
 
 on:
   pull_request:

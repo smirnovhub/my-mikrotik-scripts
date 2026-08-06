@@ -302,6 +302,13 @@
   )
 }
 
+# Purpose: Calculate the SHA1 hash checksum for a given string or array of bytes.
+# Parameters:
+#   $1 - String to calculate the hash for
+# Returns: SHA1 checksum as a hex string
+# Example: :put [$GetSha1Sum "Hello World"]
+# Output:
+#   0a4d55a8d778e5022fab701977c5d840bbc486d0
 :set GetSha1Sum do={
   :global DecToChar
 

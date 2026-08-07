@@ -470,6 +470,7 @@ Convert timestamps, format duration strings, or parse RouterOS/ISO date-time for
 - **RunAllHashesTests**: Executes hashing and checksum tests (`GetMd5SumTest`, `GetCrc32SumTest`).
 - **GetCrc32SumTest**: Tests CRC32 checksum calculation (`GetCrc32Sum`), verifying canonical test vectors (including `123456789`), empty inputs, single/multi-byte sequences, pangrams, numeric boundaries, case sensitivity, character ordering, null bytes, control whitespace, byte-range patterns, and length boundaries up to 257+ bytes.
 - **GetMd5SumTest**: Tests MD5 hash generation (`GetMd5Sum`), validating standard RFC 1321 test vectors, empty string boundaries, single/multi-character strings, case sensitivity, whitespace preservation, 55/56/64/128-byte multi-block message boundaries, and a complete 256-byte binary payload hash.
+- **GetSha1SumTest**: Tests SHA-1 hash generation (`GetSha1Sum`), validating standard FIPS PUB 180-4 test vectors, empty string boundaries, single/multi-character strings, case sensitivity, whitespace preservation, short message packing boundaries, 512-bit block boundary/overflow sequences (55/56/57, 63/64/65, 119/120/121, 127/128/129, 191/192/193, 255/256/257 bytes), 512/1024-byte multi-block messages, a complete 256-byte binary payload, 64 zero-byte messages, escape/control characters, embedded null-byte handling, and large 4096-byte buffer length counter overflows.
 
 ### Utility Functions Tests
 

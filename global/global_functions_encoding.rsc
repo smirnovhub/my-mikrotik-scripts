@@ -45,62 +45,83 @@
 #   $3 - Optional string containing "nopad" to remove padding character '='
 # Returns: Base64 encoded string
 :set Base64Encode do={
-    :local input   [:tostr "$1"]
+    :global DecToChar
+
+    :global asciiCodeTable
+
+    :local input [:tostr "$1"]
     :local options "$2$3"
 
-    # Prepare a character string for hex lookup (0x00 to 0xFF)
-    :local charsString ""
-    :for x from=0 to=15 step=1 do={ :for y from=0 to=15 step=1 do={
-        :local tmpHex "$[:pick "0123456789ABCDEF" $x ($x+1)]$[:pick "0123456789ABCDEF" $y ($y+1)]"
-        :set charsString "$charsString$[[:parse "(\"\\$tmpHex\")"]]"
-    } }
-
-    # Function to convert a single character to its integer code
-    :local chr2int do={:if (($1="") or ([:len $1] > 1) or ([:typeof $1] = "nothing")) do={:return -1}; :return [:find $2 $1 -1]}
+    # Initialize ASCII lookup table on first use
+    :if ([:typeof $asciiCodeTable] = "nothing") do={
+        :set asciiCodeTable [:toarray ""]
+        :for i from=0 to=255 do={
+            :set ($asciiCodeTable->[$DecToChar $i]) $i
+        }
+    }
 
     # RFC 4648 base64 Standard
-    :local arrb64 [:toarray "A,B,C,D,E,F,G,H,I,J,K,L,M,N,O,P,Q,R,S,T,U,V,W,X,Y,Z\
-                            ,a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p,q,r,s,t,u,v,w,x,y,z\
-                            ,0,1,2,3,4,5,6,7,8,9,+,/,="]
+    :local arrb64 [:toarray "A,B,C,D,E,F,G,H,I,J,K,L,M,N,O,P,Q,R,S,T,U,V,W,X,Y,Z,\
+                            a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p,q,r,s,t,u,v,w,x,y,z,\
+                            0,1,2,3,4,5,6,7,8,9,+,/,="]
+
     # If "url" option is present, switch to Base64 URL-safe alphabet
     :if ($options~"url") do={
-        # RFC 4648 base64url URL and filename-safe standard
-        :set arrb64 [:toarray "A,B,C,D,E,F,G,H,I,J,K,L,M,N,O,P,Q,R,S,T,U,V,W,X,Y,Z\
-                              ,a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p,q,r,s,t,u,v,w,x,y,z\
-                              ,0,1,2,3,4,5,6,7,8,9,-,_,="]
+        :set arrb64 [:toarray "A,B,C,D,E,F,G,H,I,J,K,L,M,N,O,P,Q,R,S,T,U,V,W,X,Y,Z,\
+                              a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p,q,r,s,t,u,v,w,x,y,z,\
+                              0,1,2,3,4,5,6,7,8,9,-,_,="]
     }
 
     # If "nopad" option is present, remove the padding character '='
-    :if ($options~"nopad") do={:set ($arrb64->64) ""}
+    :if ($options~"nopad") do={
+        :set ($arrb64->64) ""
+    }
 
     # Initialize variables for processing
     :local position 0
-    :local output   "" ; :local work ""
-    :local v1 "" ; :local v2 "" ; :local v3 "" ; :local f6bit 0 ; :local s6bit 0 ; :local t6bit 0 ; :local q6bit 0
+    :local output ""
+
+    :local inputLen [:len $input]
 
     # Loop over input string in 3-byte chunks
-    :while ($position < [:len $input]) do={
-        # Extract up to 3 bytes from input
-        :set work [:pick $input $position ($position + 3)]
-        :set v1 [$chr2int [:pick $work 0 1] $charsString]
-        :set v2 [$chr2int [:pick $work 1 2] $charsString]
-        :set v3 [$chr2int [:pick $work 2 3] $charsString]
+    :while (($position + 3) <= $inputLen) do={
+        # Extract single characters from input
+        :local v1 ($asciiCodeTable->[:pick $input $position ($position + 1)])
+        :local v2 ($asciiCodeTable->[:pick $input ($position + 1) ($position + 2)])
+        :local v3 ($asciiCodeTable->[:pick $input ($position + 2) ($position + 3)])
 
         # Convert three 8-bit bytes into four 6-bit Base64 values
-        :set f6bit   ($v1 >> 2)
-        :set s6bit ((($v1 &  3) * 16) + ($v2 >> 4))
-        :set t6bit ((($v2 & 15) *  4) + ($v3 >> 6))
-        :set q6bit   ($v3 & 63)
+        :local f6bit   ($v1 >> 2)
+        :local s6bit ((($v1 &  3) << 4) + ($v2 >> 4))
+        :local t6bit ((($v2 & 15) << 2) + ($v3 >> 6))
+        :local q6bit   ($v3 & 63)
 
-        # Handle padding for input less than 3 bytes
-        :if ([:len $work] < 2) do={ :set t6bit 64}
-        :if ([:len $work] < 3) do={ :set q6bit 64}
-
-        # Append the Base64 characters to the output string
-        :set output   "$output$($arrb64->$f6bit)$($arrb64->$s6bit)$($arrb64->$t6bit)$($arrb64->$q6bit)"
+        # Append the Base64 characters to output string
+        :set output "$output$($arrb64->$f6bit)$($arrb64->$s6bit)$($arrb64->$t6bit)$($arrb64->$q6bit)"
 
         # Move to next chunk of input
         :set position ($position + 3)
+    }
+
+    # Handle remaining tail (1 or 2 bytes) outside the main loop
+    :local remaining ($inputLen - $position)
+    :if ($remaining > 0) do={
+        :local v1 ($asciiCodeTable->[:pick $input $position ($position + 1)])
+        :local v2 0
+        :local v3 0
+
+        :local t6bit 64
+        :local q6bit 64
+
+        :if ($remaining = 2) do={
+            :set v2 ($asciiCodeTable->[:pick $input ($position + 1) ($position + 2)])
+            :set t6bit ((($v2 & 15) << 2) + ($v3 >> 6))
+        }
+
+        :local f6bit ($v1 >> 2)
+        :local s6bit ((($v1 & 3) << 4) + ($v2 >> 4))
+
+        :set output "$output$($arrb64->$f6bit)$($arrb64->$s6bit)$($arrb64->$t6bit)$($arrb64->$q6bit)"
     }
 
     # Return the final Base64 encoded string
@@ -136,15 +157,18 @@
                               ,0,1,2,3,4,5,6,7,8,9,-,_,="]
     }
 
+    :local isIgnoreOtherChr ($options~"ignoreotherchr")
+
     :if ($options~"mustpad") do={
         :if (([:len $input] % 4) != 0) do={:error "Invalid length, must be padded with one or more ="}
     }
 
-    :if ($options~"ignoreotherchr") do={
+    :if ($isIgnoreOtherChr) do={
         :local position 0
         :local tmpchar   ""
         :local tmpstring ""
-        :while ($position < [:len $input]) do={
+        :local inputLen  [:len $input]
+        :while ($position < $inputLen) do={
             :set tmpchar [:pick $input $position ($position + 1)]
             :if ([:typeof [:find $arrb64 $tmpchar]] != "nil") do={:set tmpstring "$tmpstring$tmpchar"}
             :set position ($position + 1)
@@ -152,66 +176,109 @@
         :set input $tmpstring
     }
 
+    :local inputLen [:len $input]
+    :local rem ($inputLen % 4)
+    :local mainLen ($inputLen - $rem)
+
     :local position 0
     :local output ""
-    :local work ""
-    :local v1 0
-    :local v2 0
-    :local v3 0
-    :local v4 0
-    :local fchr ""
-    :local schr ""
-    :local tchr ""
 
-    :while ($position < [:len $input]) do={
-        :set work [:pick $input $position ($position + 4)]
-
-        # Safely extract parts to determine missing padding elements
-        :local p1 [:pick $work 0 1]
-        :local p2 [:pick $work 1 2]
-        :local p3 [:pick $work 2 3]
-        :local p4 [:pick $work 3 4]
-
-        # Explicitly fallback to padding index 64 if tokens are physically missing
-        :set v1 [:find $arrb64 $p1]
-        :set v2 [:find $arrb64 $p2]
-
-        :if ([:len $p3] = 0) do={ :set v3 64 } else={ :set v3 [:find $arrb64 $p3] }
-        :if ([:len $p4] = 0) do={ :set v4 64 } else={ :set v4 [:find $arrb64 $p4] }
+    # Process full 4-character Base64 blocks
+    :while ($position < $mainLen) do={
+        :local v1 [:find $arrb64 [:pick $input $position ($position + 1)]]
+        :local v2 [:find $arrb64 [:pick $input ($position + 1) ($position + 2)]]
+        :local v3 [:find $arrb64 [:pick $input ($position + 2) ($position + 3)]]
+        :local v4 [:find $arrb64 [:pick $input ($position + 3) ($position + 4)]]
 
         :if (([:typeof $v1] = "nil") or ([:typeof $v2] = "nil") or ([:typeof $v3] = "nil") or ([:typeof $v4] = "nil")) do={
             :error "Unexpected character, invalid Base64 sequence"
         }
 
-        :if ([:len $p2] = 0) do={
-            :if ($options~"ignoreotherchr") do={:set v2 64 ; :set v3 64 ; :set v4 64} else={:error "Required 2nd character is missing"}
+        :local fchr [:pick $charsString  (($v1 << 2)       + ($v2 >> 4))]
+        :local schr [:pick $charsString ((($v2 & 15) << 4) + ($v3 >> 2))]
+        :local tchr [:pick $charsString ((($v3 &  3) << 6) +  $v4     ) ]
+
+        :if ($v4 = 64) do={
+            :set tchr ""
+            :set position $mainLen
         }
 
-        :if (([:len $p3] = 0) and (($v2 & 15) != 0)) do={
-            :if ($options~"ignoreotherchr") do={:set v3 64 ; :set v4 64} else={:error "Required 3rd character is missing"}
+        :if ($v3 = 64) do={
+            :set schr ""
+            :set position $mainLen
         }
 
-        :if (([:len $p4] = 0) and (($v3 &  3) != 0)) do={
-            :if ($options~"ignoreotherchr") do={:set v4 64} else={:error "Required 4th character is missing"}
-        }
-
-        :set fchr [:pick $charsString  (($v1 << 2)       + ($v2 >> 4))]
-        :set schr [:pick $charsString ((($v2 & 15) << 4) + ($v3 >> 2))]
-        :set tchr [:pick $charsString ((($v3 &  3) << 6) +  $v4     ) ]
-
-        :if ($v4 = 64) do={:set tchr "" ; :set position [:len $input]}
-        :if ($v3 = 64) do={:set schr "" ; :set position [:len $input]}
         :if ($v2 = 64) do={
             :set fchr ""
-            :if ($options~"ignoreotherchr") do={
-                :set position [:len $input]
+            :if ($isIgnoreOtherChr) do={
+                :set position $mainLen
             } else={
                 :error "Unexpected padding character ="
             }
         }
-        :set output   "$output$fchr$schr$tchr"
+
+        :set output "$output$fchr$schr$tchr"
         :set position ($position + 4)
     }
+
+    # Handle remaining tail characters for unpadded input
+    :if ($rem > 0) do={
+        :local v1 [:find $arrb64 [:pick $input $mainLen ($mainLen + 1)]]
+        :local v2 64
+        :local v3 64
+
+        :if ([:typeof $v1] = "nil") do={
+            :error "Unexpected character, invalid Base64 sequence"
+        }
+
+        :if ($rem >= 2) do={
+            :set v2 [:find $arrb64 [:pick $input ($mainLen + 1) ($mainLen + 2)]]
+            :if ([:typeof $v2] = "nil") do={
+                :error "Unexpected character, invalid Base64 sequence"
+            }
+        }
+
+        :if ($rem = 3) do={
+            :set v3 [:find $arrb64 [:pick $input ($mainLen + 2) ($mainLen + 3)]]
+            :if ([:typeof $v3] = "nil") do={
+                :error "Unexpected character, invalid Base64 sequence"
+            }
+        }
+
+        :if ($rem = 1) do={
+            :if ($isIgnoreOtherChr) do={
+                :set v2 64
+                :set v3 64
+            } else={
+                :error "Required 2nd character is missing"
+            }
+        }
+
+        :if (($rem = 2) and (($v2 & 15) != 0)) do={
+            :if ($isIgnoreOtherChr) do={
+                :set v3 64
+            } else={
+                :error "Required 3rd character is missing"
+            }
+        }
+
+        :if (($rem = 3) and (($v3 & 3) != 0)) do={
+            :if ($isIgnoreOtherChr) do={
+                # Unused padding fallback for 3rd byte boundary
+            } else={
+                :error "Required 4th character is missing"
+            }
+        }
+
+        :local fchr [:pick $charsString (($v1 << 2) + ($v2 >> 4))]
+        :local schr [:pick $charsString ((($v2 & 15) << 4) + ($v3 >> 2))]
+
+        :if ($v3 = 64) do={ :set schr "" }
+        :if ($v2 = 64) do={ :set fchr "" }
+
+        :set output "$output$fchr$schr"
+    }
+
     :return $output
 }
 
@@ -273,8 +340,10 @@
         "%F8"; "%F9"; "%FA"; "%FB"; "%FC"; "%FD"; "%FE"; "%FF"
     }
 
+    :local inputLen ([:len $input] - 1)
+
     # Loop over each character in the input string
-    :for i from=0 to=([:len $input] - 1) do={
+    :for i from=0 to=$inputLen do={
 
         # Get the current character
         :local currentChar [:pick $input $i]
@@ -319,8 +388,10 @@
     # Initialize loop index
     :local index 0
 
+    :local inputStringLen [:len $inputString]
+
     # Loop over each character in the input string
-    :while ($index < [:len $inputString]) do={
+    :while ($index < $inputStringLen) do={
 
         # Get the current character
         :local currentChar [:pick $inputString $index ($index+1)]

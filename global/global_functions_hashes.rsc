@@ -28,7 +28,7 @@
 :global GetCrc32Sum
 
 # 256-entry byte-to-hex lookup table
-:global md5HexByteTable
+:global hexByteTable
 
 # Automatically generated ASCII code table
 :global asciiCodeTable
@@ -81,7 +81,7 @@
   :global DecToChar
 
   :global asciiCodeTable
-  :global md5HexByteTable
+  :global hexByteTable
 
   :local strMessage $1
   :local lMessageLength [:len $strMessage]
@@ -100,13 +100,13 @@
   }
 
   # Initialize 256-entry byte-to-hex lookup table on first use
-  :if ([:typeof $md5HexByteTable] = "nothing") do={
+  :if ([:typeof $hexByteTable] = "nothing") do={
       :local strHex "0123456789abcdef"
-      :set md5HexByteTable [:toarray ""]
+      :set hexByteTable [:toarray ""]
       :for i from=0 to=255 do={
           :local high [:pick $strHex ($i >> 4) (($i >> 4) + 1)]
           :local low [:pick $strHex ($i & 0xF) (($i & 0xF) + 1)]
-          :set ($md5HexByteTable->$i) ($high . $low)
+          :set ($hexByteTable->$i) ($high . $low)
       }
   }
 
@@ -283,22 +283,22 @@
 
   # Direct conversion of MD5 state (a, b, c, d) to hex string using lookup table
   :return ( \
-    ($md5HexByteTable->($a & 0xFF)) . \
-    ($md5HexByteTable->(($a >> 8) & 0xFF)) . \
-    ($md5HexByteTable->(($a >> 16) & 0xFF)) . \
-    ($md5HexByteTable->(($a >> 24) & 0xFF)) . \
-    ($md5HexByteTable->($b & 0xFF)) . \
-    ($md5HexByteTable->(($b >> 8) & 0xFF)) . \
-    ($md5HexByteTable->(($b >> 16) & 0xFF)) . \
-    ($md5HexByteTable->(($b >> 24) & 0xFF)) . \
-    ($md5HexByteTable->($c & 0xFF)) . \
-    ($md5HexByteTable->(($c >> 8) & 0xFF)) . \
-    ($md5HexByteTable->(($c >> 16) & 0xFF)) . \
-    ($md5HexByteTable->(($c >> 24) & 0xFF)) . \
-    ($md5HexByteTable->($d & 0xFF)) . \
-    ($md5HexByteTable->(($d >> 8) & 0xFF)) . \
-    ($md5HexByteTable->(($d >> 16) & 0xFF)) . \
-    ($md5HexByteTable->(($d >> 24) & 0xFF)) \
+    ($hexByteTable->($a & 0xFF)) . \
+    ($hexByteTable->(($a >> 8) & 0xFF)) . \
+    ($hexByteTable->(($a >> 16) & 0xFF)) . \
+    ($hexByteTable->(($a >> 24) & 0xFF)) . \
+    ($hexByteTable->($b & 0xFF)) . \
+    ($hexByteTable->(($b >> 8) & 0xFF)) . \
+    ($hexByteTable->(($b >> 16) & 0xFF)) . \
+    ($hexByteTable->(($b >> 24) & 0xFF)) . \
+    ($hexByteTable->($c & 0xFF)) . \
+    ($hexByteTable->(($c >> 8) & 0xFF)) . \
+    ($hexByteTable->(($c >> 16) & 0xFF)) . \
+    ($hexByteTable->(($c >> 24) & 0xFF)) . \
+    ($hexByteTable->($d & 0xFF)) . \
+    ($hexByteTable->(($d >> 8) & 0xFF)) . \
+    ($hexByteTable->(($d >> 16) & 0xFF)) . \
+    ($hexByteTable->(($d >> 24) & 0xFF)) \
   )
 }
 
@@ -313,7 +313,7 @@
   :global DecToChar
 
   :global asciiCodeTable
-  :global md5HexByteTable
+  :global hexByteTable
 
   :local strMessage $1
   :local lMessageLength [:len $strMessage]
@@ -332,13 +332,13 @@
   }
 
   # Initialize 256-entry byte-to-hex lookup table on first use
-  :if ([:typeof $md5HexByteTable] = "nothing") do={
+  :if ([:typeof $hexByteTable] = "nothing") do={
       :local strHex "0123456789abcdef"
-      :set md5HexByteTable [:toarray ""]
+      :set hexByteTable [:toarray ""]
       :for i from=0 to=255 do={
           :local high [:pick $strHex ($i >> 4) (($i >> 4) + 1)]
           :local low [:pick $strHex ($i & 0xF) (($i & 0xF) + 1)]
-          :set ($md5HexByteTable->$i) ($high . $low)
+          :set ($hexByteTable->$i) ($high . $low)
       }
   }
 
@@ -708,26 +708,26 @@
 
   # Build final Hex string
   :return ( \
-    ($md5HexByteTable->(($h0 >> 24) & 0xFF)) . \
-    ($md5HexByteTable->(($h0 >> 16) & 0xFF)) . \
-    ($md5HexByteTable->(($h0 >> 8) & 0xFF)) . \
-    ($md5HexByteTable->($h0 & 0xFF)) . \
-    ($md5HexByteTable->(($h1 >> 24) & 0xFF)) . \
-    ($md5HexByteTable->(($h1 >> 16) & 0xFF)) . \
-    ($md5HexByteTable->(($h1 >> 8) & 0xFF)) . \
-    ($md5HexByteTable->($h1 & 0xFF)) . \
-    ($md5HexByteTable->(($h2 >> 24) & 0xFF)) . \
-    ($md5HexByteTable->(($h2 >> 16) & 0xFF)) . \
-    ($md5HexByteTable->(($h2 >> 8) & 0xFF)) . \
-    ($md5HexByteTable->($h2 & 0xFF)) . \
-    ($md5HexByteTable->(($h3 >> 24) & 0xFF)) . \
-    ($md5HexByteTable->(($h3 >> 16) & 0xFF)) . \
-    ($md5HexByteTable->(($h3 >> 8) & 0xFF)) . \
-    ($md5HexByteTable->($h3 & 0xFF)) . \
-    ($md5HexByteTable->(($h4 >> 24) & 0xFF)) . \
-    ($md5HexByteTable->(($h4 >> 16) & 0xFF)) . \
-    ($md5HexByteTable->(($h4 >> 8) & 0xFF)) . \
-    ($md5HexByteTable->($h4 & 0xFF)) \
+    ($hexByteTable->(($h0 >> 24) & 0xFF)) . \
+    ($hexByteTable->(($h0 >> 16) & 0xFF)) . \
+    ($hexByteTable->(($h0 >> 8) & 0xFF)) . \
+    ($hexByteTable->($h0 & 0xFF)) . \
+    ($hexByteTable->(($h1 >> 24) & 0xFF)) . \
+    ($hexByteTable->(($h1 >> 16) & 0xFF)) . \
+    ($hexByteTable->(($h1 >> 8) & 0xFF)) . \
+    ($hexByteTable->($h1 & 0xFF)) . \
+    ($hexByteTable->(($h2 >> 24) & 0xFF)) . \
+    ($hexByteTable->(($h2 >> 16) & 0xFF)) . \
+    ($hexByteTable->(($h2 >> 8) & 0xFF)) . \
+    ($hexByteTable->($h2 & 0xFF)) . \
+    ($hexByteTable->(($h3 >> 24) & 0xFF)) . \
+    ($hexByteTable->(($h3 >> 16) & 0xFF)) . \
+    ($hexByteTable->(($h3 >> 8) & 0xFF)) . \
+    ($hexByteTable->($h3 & 0xFF)) . \
+    ($hexByteTable->(($h4 >> 24) & 0xFF)) . \
+    ($hexByteTable->(($h4 >> 16) & 0xFF)) . \
+    ($hexByteTable->(($h4 >> 8) & 0xFF)) . \
+    ($hexByteTable->($h4 & 0xFF)) \
   )
 }
 

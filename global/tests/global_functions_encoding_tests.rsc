@@ -31,6 +31,7 @@
 }
 
 :set Base64EncodeTest do={
+    :global DecToChar
     :global Base64Encode
 
     :local res [:toarray ""]
@@ -42,6 +43,7 @@
     }
 
     :local RunTestCase do={
+        :global IsPrintableStr
         :global Base64Encode
 
         # Workaround for the MikroTik RouterOS interpreter bug (phantom execution)
@@ -56,13 +58,28 @@
         :local expected [:tostr $5]
         :local name [:tostr $6]
 
+        :local inputDisplay $inputStr
+        :if (![$IsPrintableStr $inputDisplay]) do={
+            :set inputDisplay "<binary string>"
+        } else={
+            :if ([:len $inputStr] > 30) do={
+                :set inputDisplay ([:pick $inputStr 0 30] . "<truncated>")
+            }
+        }
+
         :local actual [$Base64Encode $input $opt1 $opt2]
+
+        :local actualDisplay $actual
+        :if ([:len $actual] > 30) do={
+            :set actualDisplay ([:pick $actual 0 30] . "<truncated>")
+        }
+
         :if ($actual = $expected) do={
             :set ($state->"passed") (($state->"passed") + 1)
-            :put ("  \1B[32m[PASS]\1B[0m " . $name . ": '" . $input . "' -> '" . $actual . "'")
+            :put ("  \1B[32m[PASS]\1B[0m " . $name . ": '" . $inputDisplay . "' -> '" . $actualDisplay . "'")
         } else={
             :set ($state->"failed") (($state->"failed") + 1)
-            :put ("  \1B[31m[FAIL]\1B[0m " . $name . ": '" . $input . "' | Expected: '" . $expected . "', Got: '" . $actual . "'")
+            :put ("  \1B[31m[FAIL]\1B[0m " . $name . ": '" . $inputDisplay . "' | Expected: '" . $expected . "', Got: '" . $actualDisplay . "'")
         }
         :return $state
     }
@@ -114,6 +131,46 @@
     # URL-safe + no padding where padding would normally exist
     :set res [$RunTestCase $res "f" "url" "nopad" "Zg" "URL-safe alphabet single byte without padding validation"]
     :set res [$RunTestCase $res "fo" "url" "nopad" "Zm8" "URL-safe alphabet double byte without padding validation"]
+
+    # Tail checks: 1-byte, 2-byte, 3-byte remainders with standard padding
+    :set res [$RunTestCase $res "a" "" "" "YQ==" "Standard alphabet tail remainder 1 byte check"]
+    :set res [$RunTestCase $res "ab" "" "" "YWI=" "Standard alphabet tail remainder 2 bytes check"]
+    :set res [$RunTestCase $res "abc" "" "" "YWJj" "Standard alphabet tail remainder 3 bytes exact block check"]
+    :set res [$RunTestCase $res "abcd" "" "" "YWJjZA==" "Standard alphabet tail remainder 4 bytes (1 byte tail) check"]
+    :set res [$RunTestCase $res "abcde" "" "" "YWJjZGU=" "Standard alphabet tail remainder 5 bytes (2 bytes tail) check"]
+    :set res [$RunTestCase $res "abcdef" "" "" "YWJjZGVm" "Standard alphabet tail remainder 6 bytes exact block check"]
+
+    # Tail checks: URL-safe alphabet WITH padding (nopad flag IS NOT set)
+    :set res [$RunTestCase $res ("\FB") "url" "" "-w==" "URL-safe 1-byte tail with standard padding check"]
+    :set res [$RunTestCase $res ("\FF") "url" "" "_w==" "URL-safe 1-byte slash replacement with padding check"]
+    :set res [$RunTestCase $res ("\FB\FF") "url" "" "-_8=" "URL-safe 2-byte tail both special characters with padding check"]
+
+    # Special characters check for Standard '+' and '/'
+    :set res [$RunTestCase $res ("\FB") "" "" "+w==" "Standard alphabet plus character byte check"]
+    :set res [$RunTestCase $res ("\FF") "" "" "/w==" "Standard alphabet slash character byte check"]
+    :set res [$RunTestCase $res ("\FB\FF") "" "" "+/8=" "Standard alphabet consecutive special characters check"]
+
+    # Boundary and non-printable ASCII bytes
+    :set res [$RunTestCase $res ("\00") "" "" "AA==" "Single null byte encoding check"]
+    :set res [$RunTestCase $res ("\00\00") "" "" "AAA=" "Double null byte encoding check"]
+    :set res [$RunTestCase $res ("\00\00\00") "" "" "AAAA" "Triple null byte encoding check"]
+    :set res [$RunTestCase $res ("\01\02\03") "" "" "AQID" "Low non-printable ASCII bytes encoding check"]
+    :set res [$RunTestCase $res ("\7F") "" "" "fw==" "ASCII DEL byte 0x7F encoding check"]
+    :set res [$RunTestCase $res ("\80") "" "" "gA==" "Extended ASCII byte 0x80 encoding check"]
+    :set res [$RunTestCase $res ("\FF") "" "" "/w==" "Extended ASCII byte 0xFF encoding check"]
+
+    # Multi-block binary sequence with URL-safe and nopad options
+    :set res [$RunTestCase $res ("\FB\FF\FB\FF") "url" "nopad" "-__7_w" "URL-safe no-pad 4-byte complex tail check"]
+    :set res [$RunTestCase $res ("\FF\FB\FF\FB\FF") "url" "nopad" "__v_-_8" "URL-safe no-pad 5-byte complex tail check"]
+
+    # All 256 byte values
+    :local allChars ""
+
+    :for i from=0 to=255 do={
+        :set allChars ($allChars . [$DecToChar $i])
+    }
+
+    :set res [$RunTestCase $res $allChars "" "" "AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8gISIjJCUmJygpKissLS4vMDEyMzQ1Njc4OTo7PD0+P0BBQkNERUZHSElKS0xNTk9QUVJTVFVWV1hZWltcXV5fYGFiY2RlZmdoaWprbG1ub3BxcnN0dXZ3eHl6e3x9fn+AgYKDhIWGh4iJiouMjY6PkJGSk5SVlpeYmZqbnJ2en6ChoqOkpaanqKmqq6ytrq+wsbKztLW2t7i5uru8vb6/wMHCw8TFxsfIycrLzM3Oz9DR0tPU1dbX2Nna29zd3t/g4eLj5OXm5+jp6uvs7e7v8PHy8/T19vf4+fr7/P3+/w==" "All 256 byte values"]
 
     :put "Testing completed."
     :return $res

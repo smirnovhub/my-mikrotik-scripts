@@ -258,8 +258,9 @@
 # Returns: true on successful script update and execution, or false on failure
 # Example: $DownloadAndImportScript "https://example.com/scripts/my_script.rsc"
 :set DownloadAndImportScript do={
-    :global GetMd5Sum
     :global GetCrc32Sum
+    :global GetMd5Sum
+    :global GetSha1Sum
     :global EndsWithStr
     :global FetchWithRedirect
 
@@ -278,13 +279,15 @@
         :return false
     }
 
-    :if ([:len $expectedHashSum] = 0) do={
+    :local expectedHashLen [:len $expectedHashSum]
+
+    :if ($expectedHashLen = 0) do={
         :log error "$prefix Hash sum parameter is missing."
         :return false
     }
 
-    :if ([:len $expectedHashSum] != 8 && [:len $expectedHashSum] != 32) do={
-        :log error "$prefix Wrong hash. Only CRC32 and MD5 supported."
+    :if ($expectedHashLen != 8 && $expectedHashLen != 32 && $expectedHashLen != 40) do={
+        :log error "$prefix Wrong hash. Only CRC32, MD5 and SHA1 supported."
         :return false
     }
 
@@ -314,12 +317,17 @@
         :local newSource [$FetchWithRedirect $rawUrl]
         :if ([:len $newSource] > 0) do={
             :local actualHashSum ""
-            :if ([:len $expectedHashSum] = 8) do={
+            :if ($expectedHashLen = 8) do={
                 :log info "$prefix Checking CRC32 sum..."
                 :set actualHashSum [$GetCrc32Sum $newSource]
             } else={
-                :log info "$prefix Checking MD5 sum..."
-                :set actualHashSum [$GetMd5Sum $newSource]
+                :if ($expectedHashLen = 32) do={
+                    :log info "$prefix Checking MD5 sum..."
+                    :set actualHashSum [$GetMd5Sum $newSource]
+                } else={
+                    :log info "$prefix Checking SHA1 sum..."
+                    :set actualHashSum [$GetSha1Sum $newSource]
+                }
             }
 
             :if ($expectedHashSum != $actualHashSum) do={
@@ -491,7 +499,7 @@
 # Example: $DownloadAndImportScriptsFromGitHubList "https://github.com/smirnovhub/my-mikrotik-scripts/raw/refs/heads/master/list.txt" true
 :set DownloadAndImportScriptsFromGitHubList do={
     :global EndsWithStr
-    :global GetMd5Sum
+    :global GetSha1Sum
     :global SetGlobalVar
     :global GetGlobalVarOrDefault
     :global GetGitHubLastCommitHash
@@ -577,7 +585,7 @@
         :return false
     }
 
-    :local lastCommitGlobalVarName ([$GetMd5Sum $listUrl] . "-last-commit")
+    :local lastCommitGlobalVarName ([$GetSha1Sum $listUrl] . "-last-commit")
     :local storedLastCommitHash [$GetGlobalVarOrDefault $lastCommitGlobalVarName ""]
 
     :if ($storedLastCommitHash = $lastCommitHash) do={

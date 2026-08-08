@@ -138,7 +138,7 @@
 # Returns: A sanitized string with non-alphanumeric characters removed
 # Example: :put [$CreateGlobalVarName "my-var@1"]
 # Output:
-#   globalVarmyvar1
+#   globalVar-my-var1
 :set CreateGlobalVarName do={
   :global CleanStr
   :global TrimStr

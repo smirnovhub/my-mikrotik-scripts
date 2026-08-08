@@ -22,9 +22,9 @@ jobs:
 
       - name: Run hash update script for list files
         run: |
-          python update_hashes.py -a sha1 global/list.txt
-          python update_hashes.py -a sha1 global/tests/list.txt
-          python update_hashes.py -a sha1 other/list.txt
+          python update_hashes.py -a md5 global/list.txt
+          python update_hashes.py -a md5 global/tests/list.txt
+          python update_hashes.py -a md5 other/list.txt
 
       - name: Commit and push changes
         uses: nick-fields/retry@v4

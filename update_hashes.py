@@ -10,11 +10,6 @@ from pathlib import Path
 URL_PATTERN = re.compile(r"^http.*/refs/heads/[^/]+/(?P<rel_path>.+)$")
 
 
-def calculate_md5(filepath: Path) -> str:
-    # Read bytes and calculate MD5 checksum
-    return hashlib.md5(filepath.read_bytes()).hexdigest()
-
-
 def calculate_crc32(filepath: Path) -> str:
     # Read bytes and calculate CRC32 checksum
     crc_val = zlib.crc32(filepath.read_bytes())
@@ -22,10 +17,21 @@ def calculate_crc32(filepath: Path) -> str:
     return f"{crc_val:08x}"
 
 
+def calculate_md5(filepath: Path) -> str:
+    # Read bytes and calculate MD5 checksum
+    return hashlib.md5(filepath.read_bytes()).hexdigest()
+
+
+def calculate_sha1(filepath: Path) -> str:
+    # Read bytes and calculate SHA1 checksum
+    return hashlib.sha1(filepath.read_bytes()).hexdigest()
+
+
 # Registry mapping algorithm names to their handler functions
 HASH_FUNCTIONS = {
     "crc32": calculate_crc32,
     "md5": calculate_md5,
+    "sha1": calculate_sha1,
 }
 
 

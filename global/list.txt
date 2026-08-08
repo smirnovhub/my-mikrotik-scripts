@@ -9,11 +9,11 @@
 # :global DownloadAndImportScriptsFromGitHubList
 # $DownloadAndImportScriptsFromGitHubList https://github.com/smirnovhub/my-mikrotik-scripts/raw/refs/heads/master/global/list.txt true
 
-f16ffc6002d598945c368b506c8a8424 https://github.com/smirnovhub/my-mikrotik-scripts/raw/refs/heads/master/global/global_functions.rsc
-8982b5d68dfb807532c9f48a9dd5f784 https://github.com/smirnovhub/my-mikrotik-scripts/raw/refs/heads/master/global/global_functions_array_str.rsc
-ad0b7c1ce9fbfbf0f9335f304c5d52b1 https://github.com/smirnovhub/my-mikrotik-scripts/raw/refs/heads/master/global/global_functions_auto_update.rsc
-69953216e6e4a8fad9958e079327cacd https://github.com/smirnovhub/my-mikrotik-scripts/raw/refs/heads/master/global/global_functions_datetime.rsc
-c9b7fc1cdae773b95ce16ba8b48f18c2 https://github.com/smirnovhub/my-mikrotik-scripts/raw/refs/heads/master/global/global_functions_encoding.rsc
-9ae3d8cc7bd895d41bf85b6f7d75325a https://github.com/smirnovhub/my-mikrotik-scripts/raw/refs/heads/master/global/global_functions_global_vars.rsc
-308935edc8a9983da42978f2fe9c8da3 https://github.com/smirnovhub/my-mikrotik-scripts/raw/refs/heads/master/global/global_functions_hashes.rsc
-0d8c6858fc541ca4363132186f1a4eb0 https://github.com/smirnovhub/my-mikrotik-scripts/raw/refs/heads/master/global/global_functions_utils.rsc
+9ced0361539b9190284b1489a9e600f28ba1be15 https://github.com/smirnovhub/my-mikrotik-scripts/raw/refs/heads/master/global/global_functions.rsc
+9f1fb58764f4105b137a3ae0bc3d9a077c775035 https://github.com/smirnovhub/my-mikrotik-scripts/raw/refs/heads/master/global/global_functions_array_str.rsc
+997a36b7e039964be1c34840690aed60ba0f15df https://github.com/smirnovhub/my-mikrotik-scripts/raw/refs/heads/master/global/global_functions_auto_update.rsc
+2d88e7b28312ca2e2672bf07f499287afed5e943 https://github.com/smirnovhub/my-mikrotik-scripts/raw/refs/heads/master/global/global_functions_datetime.rsc
+716f4a0c886a885a22f990394f1f2ff9cfe15955 https://github.com/smirnovhub/my-mikrotik-scripts/raw/refs/heads/master/global/global_functions_encoding.rsc
+3631fec4c82ce0cf21ee7f3882ce32798da848ff https://github.com/smirnovhub/my-mikrotik-scripts/raw/refs/heads/master/global/global_functions_global_vars.rsc
+9b7d47ec551f54050ca5d5696aa11cd95d7ed217 https://github.com/smirnovhub/my-mikrotik-scripts/raw/refs/heads/master/global/global_functions_hashes.rsc
+4e2ff63e24ba96b335cff9c0f3cb28e6993eb75b https://github.com/smirnovhub/my-mikrotik-scripts/raw/refs/heads/master/global/global_functions_utils.rsc

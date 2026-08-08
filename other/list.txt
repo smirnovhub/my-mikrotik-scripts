@@ -9,6 +9,6 @@
 # :global DownloadAndImportScriptsFromGitHubList
 # $DownloadAndImportScriptsFromGitHubList https://github.com/smirnovhub/my-mikrotik-scripts/raw/refs/heads/master/other/list.txt
 
-e13ab0d07eb6df99a4f213b84d90d73e https://github.com/smirnovhub/my-mikrotik-scripts/raw/refs/heads/master/other/check_dhcp_dynamic_leases.rsc
-692fa1d722de69dcd1039a7ed3fd96e7 https://github.com/smirnovhub/my-mikrotik-scripts/raw/refs/heads/master/other/on_startup.rsc
-97cd300373b68128b179fa55591025e3 https://github.com/smirnovhub/my-mikrotik-scripts/raw/refs/heads/master/other/reboot.rsc
+608372af83121c573a89c1360c903bb58c429521 https://github.com/smirnovhub/my-mikrotik-scripts/raw/refs/heads/master/other/check_dhcp_dynamic_leases.rsc
+7b4bba465c1a7be7195492d0f08069e99f7d470f https://github.com/smirnovhub/my-mikrotik-scripts/raw/refs/heads/master/other/on_startup.rsc
+0eea456d874c66b65818ba6b6312d03f5d77db2c https://github.com/smirnovhub/my-mikrotik-scripts/raw/refs/heads/master/other/reboot.rsc

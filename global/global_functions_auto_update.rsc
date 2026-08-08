@@ -279,12 +279,14 @@
         :return false
     }
 
-    :if ([:len $expectedHashSum] = 0) do={
+    :local expectedHashLen [:len $expectedHashSum]
+
+    :if ($expectedHashLen = 0) do={
         :log error "$prefix Hash sum parameter is missing."
         :return false
     }
 
-    :if ([:len $expectedHashSum] != 8 && [:len $expectedHashSum] != 32 && [:len $expectedHashSum] != 40) do={
+    :if ($expectedHashLen != 8 && $expectedHashLen != 32 && $expectedHashLen != 40) do={
         :log error "$prefix Wrong hash. Only CRC32, MD5 and SHA1 supported."
         :return false
     }
@@ -315,11 +317,11 @@
         :local newSource [$FetchWithRedirect $rawUrl]
         :if ([:len $newSource] > 0) do={
             :local actualHashSum ""
-            :if ([:len $expectedHashSum] = 8) do={
+            :if ($expectedHashLen = 8) do={
                 :log info "$prefix Checking CRC32 sum..."
                 :set actualHashSum [$GetCrc32Sum $newSource]
             } else={
-                :if ([:len $expectedHashSum] = 32) do={
+                :if ($expectedHashLen = 32) do={
                     :log info "$prefix Checking MD5 sum..."
                     :set actualHashSum [$GetMd5Sum $newSource]
                 } else={

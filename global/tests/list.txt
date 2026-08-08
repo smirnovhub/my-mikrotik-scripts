@@ -9,11 +9,11 @@
 # :global DownloadAndImportScriptsFromGitHubList
 # $DownloadAndImportScriptsFromGitHubList https://github.com/smirnovhub/my-mikrotik-scripts/raw/refs/heads/master/global/tests/list.txt true
 
-43baa9bd6e1842bfc0253789e0c2457aeb2ca5a3 https://github.com/smirnovhub/my-mikrotik-scripts/raw/refs/heads/master/global/tests/global_functions_array_str_tests_1.rsc
-062d9333bf98159b4adb726dfc1d400631e1ae58 https://github.com/smirnovhub/my-mikrotik-scripts/raw/refs/heads/master/global/tests/global_functions_array_str_tests_2.rsc
-f8d3c3eddbce5b235d7f69c3ce4f8094f60cab7e https://github.com/smirnovhub/my-mikrotik-scripts/raw/refs/heads/master/global/tests/global_functions_datetime_tests_1.rsc
-86dccce3a61fc3300ba5d2a90d66110b64347617 https://github.com/smirnovhub/my-mikrotik-scripts/raw/refs/heads/master/global/tests/global_functions_datetime_tests_2.rsc
-188be3d588a78f937e95e8aa03fd5719638ac283 https://github.com/smirnovhub/my-mikrotik-scripts/raw/refs/heads/master/global/tests/global_functions_encoding_tests.rsc
-26eaf66180939baf357fe009ca232340c398a33c https://github.com/smirnovhub/my-mikrotik-scripts/raw/refs/heads/master/global/tests/global_functions_global_vars_tests.rsc
-062cf0fd04019aab94626c064a38da3a84bfe9a3 https://github.com/smirnovhub/my-mikrotik-scripts/raw/refs/heads/master/global/tests/global_functions_hashes_tests.rsc
-9198a00bf458b3365a0b9cad0a095ef5ef086dc8 https://github.com/smirnovhub/my-mikrotik-scripts/raw/refs/heads/master/global/tests/global_functions_utils_tests.rsc
+f5e038d1ce9f885ce36ee0182fe44526 https://github.com/smirnovhub/my-mikrotik-scripts/raw/refs/heads/master/global/tests/global_functions_array_str_tests_1.rsc
+b230188c2ee9994e33c9436ad8ac2e0c https://github.com/smirnovhub/my-mikrotik-scripts/raw/refs/heads/master/global/tests/global_functions_array_str_tests_2.rsc
+3938a8cb17a273dc2065f2c66afffca5 https://github.com/smirnovhub/my-mikrotik-scripts/raw/refs/heads/master/global/tests/global_functions_datetime_tests_1.rsc
+70868c64f482e0271eb38de365408010 https://github.com/smirnovhub/my-mikrotik-scripts/raw/refs/heads/master/global/tests/global_functions_datetime_tests_2.rsc
+ae491e339e395a0fe72756ff87d08c5c https://github.com/smirnovhub/my-mikrotik-scripts/raw/refs/heads/master/global/tests/global_functions_encoding_tests.rsc
+f84fa8516ba99df98c546ea7383c1a38 https://github.com/smirnovhub/my-mikrotik-scripts/raw/refs/heads/master/global/tests/global_functions_global_vars_tests.rsc
+48c8f9b516eb636c7c2833c5eb9c447c https://github.com/smirnovhub/my-mikrotik-scripts/raw/refs/heads/master/global/tests/global_functions_hashes_tests.rsc
+26b1a06f3d0f04b777e78fdd557eb10e https://github.com/smirnovhub/my-mikrotik-scripts/raw/refs/heads/master/global/tests/global_functions_utils_tests.rsc

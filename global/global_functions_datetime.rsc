@@ -49,10 +49,18 @@
     :global ParseDateTime
 
     # Get current date and time from system clock
-    :local currentDate [/system clock get date]; # Example: "aug/17/2025"
-    :local currentTime [/system clock get time]; # Example: "14:32:07"
+    :local date ""
+    :local time ""
+
+    # This loop protects in the rare event we hit
+    # midnight between getting the date and time
+    do {
+        :set date [/system clock get date]; # Example: "aug/17/2025"
+        :set time [/system clock get time]; # Example: "14:32:07"
+    } while=($date != [/system clock get date])
+
     # Return parsed date and time
-    :return [$ParseDateTime ($currentDate . " " . $currentTime)]
+    :return [$ParseDateTime ($date . " " . $time)]
 }
 
 # Purpose: Parse RouterOS date-time string like "aug/22/2025 12:03:04"
@@ -295,14 +303,18 @@
 :set GetUnixTimestamp do={
     :global ToUnixTimestamp
 
-    # Get current system date in format "aug/17/2025"
-    :local date [/system clock get date]    
+    # Get current date and time from system clock
+    :local date ""
+    :local time ""
 
-    # Get current system time in format "22:10:45"
-    :local time [/system clock get time]    
+    # This loop protects in the rare event we hit
+    # midnight between getting the date and time
+    do {
+        :set date [/system clock get date]; # Example: "aug/17/2025"
+        :set time [/system clock get time]; # Example: "14:32:07"
+    } while=($date != [/system clock get date])
 
-    :local dateTime "$date $time"
-    :return [$ToUnixTimestamp $dateTime]
+    :return [$ToUnixTimestamp ($date . " " . $time)]
 }
 
 # Purpose: Convert a Unix timestamp (seconds since 1970-01-01 00:00:00 UTC) to a formatted date-time string "YYYY-MM-DD HH:MM:SS"

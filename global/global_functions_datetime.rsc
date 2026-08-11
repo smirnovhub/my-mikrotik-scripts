@@ -93,11 +93,11 @@
 
     :global ToLowerCase
 
-    :local input [$ToLowerCase [:tostr $1]]
+    :local input [:tostr $1]
 
     # Regex patterns
     :local regexISO "^[0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2}\$"
-    :local regexROS "^[a-z]{3}/[0-9]{2}/[0-9]{4} [0-9]{2}:[0-9]{2}:[0-9]{2}\$"
+    :local regexROS "^[a-zA-Z]{3}/[0-9]{2}/[0-9]{4} [0-9]{2}:[0-9]{2}:[0-9]{2}\$"
 
     # Parse based on detected format
     :if ($input ~ $regexISO) do={
@@ -106,7 +106,7 @@
         :if ($input ~ $regexROS) do={
             # Declare time variables
             :local month ""
-            :local monthStr [:pick $input 0 3]
+            :local monthStr [$ToLowerCase [:pick $input 0 3]]
 
             :if ($monthStr = "jan") do={ :set month "01" } else={
             :if ($monthStr = "feb") do={ :set month "02" } else={

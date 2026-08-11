@@ -189,6 +189,7 @@
 :set HexToNum do={
     # Convert input to string in case it isn't already
     :local input [:tostr $1]
+    :local len ([:len $input] - 1)
 
     # String containing all hexadecimal digits (both lowercase and uppercase)
     :local hex "0123456789abcdef0123456789ABCDEF"
@@ -200,15 +201,14 @@
     :local result 0
 
     # Loop over each character in the input string from rightmost to leftmost
-    :for i from=([:len $input] - 1) to=0 do={
-
+    :for i from=$len to=0 do={
         # Find the position of the current hex character in the hex string
         # Use modulo 16 to map both lowercase and uppercase letters correctly
         # Multiply by the positional multiplier and add to the result
         :set result ($result + (([:find $hex [:pick $input $i]] % 16) * $multiplier))
 
         # Update multiplier for next left character (multiply by 16)
-        :set multiplier ($multiplier * 16)
+        :set multiplier ($multiplier << 4)
     }
 
     # Return the final numeric value
@@ -346,31 +346,23 @@
 # Output:
 #   immedString
 :set TrimStrLeft do={
-    :local s $1
-
-    :local chars ("\r\n\t ")
+    :local s [:tostr $1]
+    :local chars "\r\n\t "
 
     :if ([:len $2] > 0) do={
-        :set chars $2
+        :set chars [:tostr $2]
     }
 
-    :local cont true
+    :local sLen [:len $s]
+    :local idx 0
 
-    :while (($cont = true) and ([:len $s] > 0)) do={
-        :set cont false
-        :local first [:pick $s 0 1]
-
-        # check if first char is in trim set
-        :for i from=0 to=([:len $chars] - 1) do={
-            :local ch [:pick $chars $i ($i + 1)]
-            :if ($ch = $first) do={
-                :set s [:pick $s 1 [:len $s]]
-                :set cont true
-            }
-        }
+    # Advance index while character at $idx exists in $chars
+    :while ($idx < $sLen && [:len [:find $chars [:pick $s $idx ($idx + 1)]]] > 0) do={
+        :set idx ($idx + 1)
     }
 
-    :return [:tostr $s]
+    # Slice string exactly once
+    :return [:pick $s $idx $sLen]
 }
 
 # Purpose: Remove all trailing characters from a string that match any character in a given set.
@@ -382,31 +374,22 @@
 # Output:
 #   TrimmedStri
 :set TrimStrRight do={
-    :local s $1
-
-    :local chars ("\r\n\t ")
+    :local s [:tostr $1]
+    :local chars "\r\n\t "
 
     :if ([:len $2] > 0) do={
-        :set chars $2
+        :set chars [:tostr $2]
     }
 
-    :local cont true
+    :local idx [:len $s]
 
-    :while (($cont = true) and ([:len $s] > 0)) do={
-        :set cont false
-        :local last [:pick $s ([:len $s] - 1) [:len $s]]
-
-        # check if last char is in trim set
-        :for i from=0 to=([:len $chars] - 1) do={
-            :local ch [:pick $chars $i ($i + 1)]
-            :if ($ch = $last) do={
-                :set s [:pick $s 0 ([:len $s] - 1)]
-                :set cont true
-            }
-        }
+    # Move index backwards while character at ($idx - 1) exists in $chars
+    :while ($idx > 0 && [:len [:find $chars [:pick $s ($idx - 1) $idx]]] > 0) do={
+        :set idx ($idx - 1)
     }
 
-    :return [:tostr $s]
+    # Slice string exactly once from start to the last valid index
+    :return [:pick $s 0 $idx]
 }
 
 # Purpose: Remove all leading and trailing characters from a string
@@ -422,15 +405,13 @@
     :global TrimStrLeft
     :global TrimStrRight
 
-    :local s $1
-
     # Trim left using TrimStrLeft
-    :set s [$TrimStrLeft $s $2]
+    :local result [$TrimStrLeft $1 $2]
 
     # Trim right using TrimStrRight
-    :set s [$TrimStrRight $s $2]
+    :set result [$TrimStrRight $result $2]
 
-    :return [:tostr $s]
+    :return $result
 }
 
 # Purpose: Replace all occurrences of a substring within a string with another substring.
@@ -443,22 +424,27 @@
 # Output:
 #   StringToR777plac777
 :set ReplaceStr do={
-  :local string [:tostr $1]
-  :local replaceFrom [:tostr $2]
-  :local replaceWith [:tostr $3]
-  :local result ""
+    :local string [:tostr $1]
+    :local replaceFrom [:tostr $2]
+    :local replaceWith [:tostr $3]
 
-  :if ($replaceFrom = "") do={
-    :return $string
-  }
+    :local fromLen [:len $replaceFrom]
+    :if ($fromLen = 0) do={
+        :return $string
+    }
 
-  :while ([:typeof [:find $string $replaceFrom]] != "nil") do={
-    :local pos [:find $string $replaceFrom]
-    :set result ($result . [:pick $string 0 $pos] . $replaceWith)
-    :set string [:pick $string ($pos + [:len $replaceFrom]) [:len $string]]
-  }
+    :local result ""
+    :local offset 0
+    :local strLen [:len $string]
+    :local pos [:find $string $replaceFrom $offset]
 
-  :return ($result . $string)
+    :while ([:len $pos] > 0) do={
+        :set result ($result . [:pick $string $offset $pos] . $replaceWith)
+        :set offset ($pos + $fromLen)
+        :set pos [:find $string $replaceFrom $offset]
+    }
+
+    :return ($result . [:pick $string $offset $strLen])
 }
 
 # Purpose: Check if a substring exists within a string.
@@ -577,11 +563,11 @@
 
   :local out [:toarray $1]
   :local l [:len $out]
-  :if ($l>1) do={
+  :if ($l > 1) do={
     # Split the list in two, recursively sort, then merge results
 
     # Pick split point index:
-    :local s ($l/2)
+    :local s ($l >> 1)
 
     # Recursively sort each half-list:
     :local a [$RecursiveMergeSort [:pick $out 0 $s]]
@@ -593,16 +579,16 @@
     :local s 0; # Use $s as index into array $b
     :foreach i in=$a do={
       :local j [:pick $b $s]
-      :while ($s<$l && $j<$i) do={
-        :set out ($out,$j)
-        :set s ($s+1)
+      :while ($s < $l && $j < $i) do={
+        :set out ($out, $j)
+        :set s ($s + 1)
         :set j [:pick $b $s]
       }
-      :set out ($out,$i)
+      :set out ($out, $i)
     }
-    :while ($s<$l) do={
-      :set out ($out,[:pick $b $s])
-      :set s ($s+1)
+    :while ($s < $l) do={
+      :set out ($out, [:pick $b $s])
+      :set s ($s + 1)
     }
   }
   :return $out
@@ -621,11 +607,11 @@
 
   :local out [:toarray $1]
   :local l [:len $out]
-  :if ($l>1) do={
+  :if ($l > 1) do={
     # Split the list in two, recursively sort, then merge results
 
     # Pick split point index:
-    :local s ($l/2)
+    :local s ($l >> 1)
 
     # Recursively sort each half-list:
     :local a [$RecursiveMergeSortStr [:pick $out 0 $s]]
@@ -638,15 +624,15 @@
     :foreach i in=$a do={
       :local j [:pick $b $s]
       :while (($s < $l) && ([$CompareStr $j $i] < 0)) do={
-        :set out ($out,$j)
-        :set s ($s+1)
+        :set out ($out, $j)
+        :set s ($s + 1)
         :set j [:pick $b $s]
       }
-      :set out ($out,$i)
+      :set out ($out, $i)
     }
-    :while ($s<$l) do={
-      :set out ($out,[:pick $b $s])
-      :set s ($s+1)
+    :while ($s < $l) do={
+      :set out ($out, [:pick $b $s])
+      :set s ($s + 1)
     }
   }
   :return $out
@@ -764,22 +750,25 @@
 # Output:
 #   CONVERT ALL LOWERCASE LETTERS
 :set ToUpperCase do={
-    :local lower [:toarray "a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p,q,r,s,t,u,v,w,x,y,z"]
-    :local upper [:toarray "A,B,C,D,E,F,G,H,I,J,K,L,M,N,O,P,Q,R,S,T,U,V,W,X,Y,Z"]
+    :local input [:tostr $1]
+    :local len ([:len $input] - 1)
+    :local upper "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+    :local lower "abcdefghijklmnopqrstuvwxyz"
     :local result ""
 
-    :for idx from=0 to=([:len $1] - 1) do={ 
-        :local char [:pick $1 $idx]
-        :local match
-        :for i from=0 to=([:len $lower] - 1) do={
-            :set match ($lower->$i)
-            :if ($char = $match) do={:set char ($upper->$i)}
+    :for idx from=0 to=$len do={
+        :local char [:pick $input $idx]
+        :local pos [:find $lower $char]
+
+        :if ([:len $pos] > 0) do={
+            :set char [:pick $upper $pos]
         }
-        :set result ($result.$char)
+
+        :set result ($result . $char)
     }
+
     :return $result
 }
-
 # Purpose: Convert all uppercase letters in a string to lowercase.
 # Parameters:
 #   $1 - Input string
@@ -788,19 +777,23 @@
 # Output:
 #   convert all lowercase letters
 :set ToLowerCase do={
-    :local lower [:toarray "a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p,q,r,s,t,u,v,w,x,y,z"]
-    :local upper [:toarray "A,B,C,D,E,F,G,H,I,J,K,L,M,N,O,P,Q,R,S,T,U,V,W,X,Y,Z"]
+    :local input [:tostr $1]
+    :local len ([:len $input] - 1)
+    :local upper "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+    :local lower "abcdefghijklmnopqrstuvwxyz"
     :local result ""
 
-    :for idx from=0 to=([:len $1] - 1) do={ 
-        :local char [:pick $1 $idx]
-        :local match
-        :for i from=0 to=([:len $upper] - 1) do={
-            :set match ($upper->$i)
-            :if ($char = $match) do={:set char ($lower->$i)}
+    :for idx from=0 to=$len do={
+        :local char [:pick $input $idx]
+        :local pos [:find $upper $char]
+
+        :if ([:len $pos] > 0) do={
+            :set char [:pick $lower $pos]
         }
-        :set result ($result.$char)
+
+        :set result ($result . $char)
     }
+
     :return $result
 }
 
@@ -855,7 +848,6 @@
     # Initialize ASCII lookup table on first use
     :if ([:typeof $asciiCodeTable] = "nothing") do={
         :set asciiCodeTable [:toarray ""]
-
         :for i from=0 to=255 do={
             :set ($asciiCodeTable->[$DecToChar $i]) $i
         }
@@ -894,24 +886,30 @@
 # Returns: true if the string contains no characters in the ranges 0x00-0x1F or 0x7F-0xFF; otherwise false.
 :set IsPrintableStr do={
     :global DecToChar
+    :global asciiCodeTable
 
-    # Workaround for the MikroTik RouterOS interpreter bug (phantom execution)
+    # Workaround for the MikroTik RouterOS interpreter bug
     :if ([:len $0] = 0) do={
         :return false
     }
 
-    :local input [:tostr $1]
-
-    # Check ASCII control characters (0x00-0x1F)
-    :for i from=0 to=31 do={
-        :if ([:find $input [$DecToChar $i]] >= 0) do={
-            :return false
+    # Initialize ASCII lookup table on first use
+    :if ([:typeof $asciiCodeTable] = "nothing") do={
+        :set asciiCodeTable [:toarray ""]
+        :for i from=0 to=255 do={
+            :set ($asciiCodeTable->[$DecToChar $i]) $i
         }
     }
 
-    # Check DEL and extended characters (0x7F-0xFF)
-    :for i from=127 to=255 do={
-        :if ([:find $input [$DecToChar $i]] >= 0) do={
+    :local input [:tostr $1]
+    :local len [:len $input]
+
+    :for i from=0 to=($len - 1) do={
+        :local char [:pick $input $i ($i + 1)]
+        :local code ($asciiCodeTable->$char)
+
+        # If char is missing in table (e.g. multi-byte UTF-8) or out of printable ASCII range (32..126)
+        :if ([:len $code] = 0 || $code < 32 || $code > 126) do={
             :return false
         }
     }

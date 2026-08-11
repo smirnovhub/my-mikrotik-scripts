@@ -135,90 +135,86 @@
     }
 
     :local RunTestCase do={
+        :global ReverseStr
+
         # Workaround for the MikroTik RouterOS interpreter bug (phantom execution)
         :if ([:len $0] = 0) do={
             :return $1
         }
 
         :local state [:toarray $1]
-        :local actual $2
+        :local input $2
         :local expected $3
         :local name [:tostr $4]
 
-        # Convert both to string to avoid RouterOS type mismatch bugs
-        :if ([:tostr $actual] = [:tostr $expected]) do={
-            :put ("\1B[32m  [PASS]\1B[0m " . $name . " -> '" . [:tostr $actual] . "'")
-            :set ($state->"passed") (($state->"passed") + 1)
-        } else={
-            :put ("\1B[31m  [FAIL]\1B[0m " . $name . " | Expected: '" . [:tostr $expected] . "', Got: '" . [:tostr $actual] . "'")
+        # Execute target function internally
+        :local actual [$ReverseStr $input]
+        :local actualType [:typeof $actual]
+
+        :if ($actualType != "str") do={
+            :put ("\1B[31m  [FAIL]\1B[0m " . $name . " | Type error! Expected 'str', Got '" . $actualType . "'")
             :set ($state->"failed") (($state->"failed") + 1)
+        } else={
+            :if ($actual = $expected) do={
+                :put ("\1B[32m  [PASS]\1B[0m " . $name . " -> '" . $actual . "'")
+                :set ($state->"passed") (($state->"passed") + 1)
+            } else={
+                :put ("\1B[31m  [FAIL]\1B[0m " . $name . " | Expected: '" . $expected . "', Got: '" . $actual . "'")
+                :set ($state->"failed") (($state->"failed") + 1)
+            }
         }
 
         :return $state
     }
 
     :put "Starting ReverseStr tests..."
-    :global ReverseStr
 
     # --- Base & Standard Cases ---
 
     # Test Case 1: Standard word reversal
-    :local r1 [$ReverseStr "hello"]
-    :set res [$RunTestCase $res $r1 "olleh" "Standard word reversal"]
+    :set res [$RunTestCase $res "hello" "olleh" "Standard word reversal"]
 
     # Test Case 2: Multi-word string reversal
-    :local r2 [$ReverseStr "hello world"]
-    :set res [$RunTestCase $res $r2 "dlrow olleh" "Multi-word string reversal"]
+    :set res [$RunTestCase $res "hello world" "dlrow olleh" "Multi-word string reversal"]
 
     # Test Case 3: Palindrome reversal
-    :local r3 [$ReverseStr "radar"]
-    :set res [$RunTestCase $res $r3 "radar" "Palindrome reversal"]
+    :set res [$RunTestCase $res "radar" "radar" "Palindrome reversal"]
 
     # --- Edge Cases & Boundaries ---
 
     # Test Case 4: Empty string
-    :local r4 [$ReverseStr ""]
-    :set res [$RunTestCase $res $r4 "" "Empty string"]
+    :set res [$RunTestCase $res "" "" "Empty string"]
 
     # Test Case 5: Single character string
-    :local r5 [$ReverseStr "a"]
-    :set res [$RunTestCase $res $r5 "a" "Single character string"]
+    :set res [$RunTestCase $res "a" "a" "Single character string"]
 
     # Test Case 6: Two character string
-    :local r6 [$ReverseStr "ab"]
-    :set res [$RunTestCase $res $r6 "ba" "Two character string"]
+    :set res [$RunTestCase $res "ab" "ba" "Two character string"]
 
     # --- Formatting & Special Characters ---
 
     # Test Case 7: Mixed case string
-    :local r7 [$ReverseStr "RouterOS"]
-    :set res [$RunTestCase $res $r7 "SOretuoR" "Mixed case string"]
+    :set res [$RunTestCase $res "RouterOS" "SOretuoR" "Mixed case string"]
 
     # Test Case 8: File path reversal
-    :local r8 [$ReverseStr "flash/backups/cfg.rsc"]
-    :set res [$RunTestCase $res $r8 "csr.gfc/spukcab/hsalf" "File path reversal"]
+    :set res [$RunTestCase $res "flash/backups/cfg.rsc" "csr.gfc/spukcab/hsalf" "File path reversal"]
 
     # Test Case 9: String with spaces and tabs
-    :local r9 [$ReverseStr ("a b\tc")]
-    :set res [$RunTestCase $res $r9 ("c\tb a") "String with spaces and tabs"]
+    :set res [$RunTestCase $res ("a b\tc") ("c\tb a") "String with spaces and tabs"]
 
     # Test Case 10: Punctuation and symbols
-    :local r10 [$ReverseStr "192.168.88.1/24"]
-    :set res [$RunTestCase $res $r10 "42/1.88.861.291" "Punctuation and symbols"]
+    :set res [$RunTestCase $res "192.168.88.1/24" "42/1.88.861.291" "Punctuation and symbols"]
 
     # --- Non-string Parameters ---
 
     # Test Case 11: Non-string parameters (Numeric types)
-    :local r11 [$ReverseStr 12345]
-    :set res [$RunTestCase $res $r11 "54321" "Non-string parameters (Numeric types)"]
+    :set res [$RunTestCase $res 12345 "54321" "Non-string parameters (Numeric types)"]
 
     # Test Case 12: Boolean parameter
-    :local r12 [$ReverseStr true]
-    :set res [$RunTestCase $res $r12 "eurt" "Boolean parameter"]
+    :set res [$RunTestCase $res true "eurt" "Boolean parameter"]
 
     # Test Case 13: IP address type parameter
-    :local r13 [$ReverseStr 10.0.0.1]
-    :set res [$RunTestCase $res $r13 "1.0.0.01" "IP address type parameter"]
+    :set res [$RunTestCase $res 10.0.0.1 "1.0.0.01" "IP address type parameter"]
 
     :put "Testing completed."
     :return $res

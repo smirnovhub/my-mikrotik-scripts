@@ -189,7 +189,7 @@
 :set HexToNum do={
     # Convert input to string in case it isn't already
     :local input [:tostr $1]
-    :local len ([:len $input] - 1)
+    :local len [:len $input]
 
     # String containing all hexadecimal digits (both lowercase and uppercase)
     :local hex "0123456789abcdef0123456789ABCDEF"
@@ -201,7 +201,7 @@
     :local result 0
 
     # Loop over each character in the input string from rightmost to leftmost
-    :for i from=$len to=0 do={
+    :for i from=($len - 1) to=0 do={
         # Find the position of the current hex character in the hex string
         # Use modulo 16 to map both lowercase and uppercase letters correctly
         # Multiply by the positional multiplier and add to the result

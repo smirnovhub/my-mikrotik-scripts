@@ -60,7 +60,7 @@
     :put "Starting FormatSecondsLong tests..."
 
     # Zero threshold baseline execution
-    :set res [$RunTestCase $res "0" "" "Zero seconds absolute boundary check"]
+    :set res [$RunTestCase $res "0" "0s" "Zero seconds absolute boundary check"]
 
     # Single isolated time components
     :set res [$RunTestCase $res "45" "45s" "Pure seconds component evaluation"]

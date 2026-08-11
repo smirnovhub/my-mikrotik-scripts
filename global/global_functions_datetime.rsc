@@ -444,6 +444,10 @@
     # Input parameter: total seconds
     :local totalSec [:tonum $1]
 
+    :if ($totalSec = 0) do={
+        :return "0s"
+    }
+
     # Calculate total days
     :local days ($totalSec / 86400)
     :set totalSec ($totalSec % 86400)
@@ -464,9 +468,6 @@
     :if ($hours > 0) do={ :set result ($result . $hours . "h ") }
     :if ($minutes > 0) do={ :set result ($result . $minutes . "m ") }
     :if ($seconds > 0) do={ :set result ($result . $seconds . "s") }
-
-    # Trim any trailing space
-    :set result [:pick $result 0 [:len $result]]
 
     # Return result
     :return [$TrimStrRight $result " "]

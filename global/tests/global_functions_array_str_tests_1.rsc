@@ -827,6 +827,28 @@
     :set res [$RunTestCase $res "text with spaces" " " "_" "text_with_spaces" "Replace spaces with underscores"]
     :set res [$RunTestCase $res "line1,line2,line3" "," ("\n") ("line1\nline2\nline3") "Replace comma with newline"]
 
+    # --- Boundary Matches (Start & End of String) ---
+    :set res [$RunTestCase $res "apple" "app" "7" "7le" "Match strictly at the beginning of string"]
+    :set res [$RunTestCase $res "apple" "ple" "7" "ap7" "Match strictly at the end of string"]
+    :set res [$RunTestCase $res "appapp" "app" "X" "XX" "Adjacent matches covering the entire string"]
+
+    # --- Expanding & Shrinking Replacements ---
+    :set res [$RunTestCase $res "a" "a" "abc" "abc" "Replacing single char with longer string (expansion)"]
+    :set res [$RunTestCase $res "abcde" "bcd" "x" "axe" "Replacing long sequence with shorter string (shrinking)"]
+
+    # --- Recursion & Self-Containment Risk ---
+    :set res [$RunTestCase $res "foo" "o" "oo" "foooo" "Replacement target contains search pattern (infinite loop check)"]
+    :set res [$RunTestCase $res "abc" "b" "bab" "ababc" "Replacement creates pattern sandwich"]
+
+    # --- Special Characters & Tabulation ---
+    :set res [$RunTestCase $res ("col1\tcol2\tcol3") ("\t") " " "col1 col2 col3" "Replace tabs with spaces"]
+    :set res [$RunTestCase $res ("line1\r\nline2") ("\r\n") ("\n") ("line1\nline2") "Normalize Windows CRLF to Unix LF"]
+    :set res [$RunTestCase $res "foo::bar::baz" "::" ":" "foo:bar:baz" "Double colon delimiter reduction"]
+
+    # --- Type Coercion & Numbers ---
+    :set res [$RunTestCase $res "123456" "34" "99" "129956" "Replace numbers represented as string"]
+    :set res [$RunTestCase $res "x.y.z" "." "-" "x-y-z" "Replace dots in IP or version-like strings"]
+
     :put "Testing completed."
     :return $res
 }

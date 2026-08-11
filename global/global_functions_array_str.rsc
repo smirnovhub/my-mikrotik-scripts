@@ -434,17 +434,15 @@
     }
 
     :local result ""
-    :local offset 0
-    :local strLen [:len $string]
-    :local pos [:find $string $replaceFrom $offset]
+    :local pos [:find $string $replaceFrom]
 
     :while ([:len $pos] > 0) do={
-        :set result ($result . [:pick $string $offset $pos] . $replaceWith)
-        :set offset ($pos + $fromLen)
-        :set pos [:find $string $replaceFrom $offset]
+        :set result ($result . [:pick $string 0 $pos] . $replaceWith)
+        :set string [:pick $string ($pos + $fromLen) [:len $string]]
+        :set pos [:find $string $replaceFrom]
     }
 
-    :return ($result . [:pick $string $offset $strLen])
+    :return ($result . $string)
 }
 
 # Purpose: Check if a substring exists within a string.

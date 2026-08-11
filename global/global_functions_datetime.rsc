@@ -93,11 +93,11 @@
 
     :global ToLowerCase
 
-    :local input [$ToLowerCase [:tostr $1]]
+    :local input [:tostr $1]
 
     # Regex patterns
     :local regexISO "^[0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2}\$"
-    :local regexROS "^[a-z]{3}/[0-9]{2}/[0-9]{4} [0-9]{2}:[0-9]{2}:[0-9]{2}\$"
+    :local regexROS "^[a-zA-Z]{3}/[0-9]{2}/[0-9]{4} [0-9]{2}:[0-9]{2}:[0-9]{2}\$"
 
     # Parse based on detected format
     :if ($input ~ $regexISO) do={
@@ -106,7 +106,7 @@
         :if ($input ~ $regexROS) do={
             # Declare time variables
             :local month ""
-            :local monthStr [:pick $input 0 3]
+            :local monthStr [$ToLowerCase [:pick $input 0 3]]
 
             :if ($monthStr = "jan") do={ :set month "01" } else={
             :if ($monthStr = "feb") do={ :set month "02" } else={
@@ -444,6 +444,10 @@
     # Input parameter: total seconds
     :local totalSec [:tonum $1]
 
+    :if ($totalSec <= 0) do={
+        :return "0s"
+    }
+
     # Calculate total days
     :local days ($totalSec / 86400)
     :set totalSec ($totalSec % 86400)
@@ -465,9 +469,6 @@
     :if ($minutes > 0) do={ :set result ($result . $minutes . "m ") }
     :if ($seconds > 0) do={ :set result ($result . $seconds . "s") }
 
-    # Trim any trailing space
-    :set result [:pick $result 0 [:len $result]]
-
     # Return result
     :return [$TrimStrRight $result " "]
 }
@@ -482,6 +483,10 @@
 :set FormatSecondsShort do={
     # Input parameter: total seconds
     :local sec [:tonum $1]
+
+    :if ($sec <= 0) do={
+        :return "0 sec"
+    }
 
     # Prepare an empty formattedTime variable (string)
     :local formattedTime ""

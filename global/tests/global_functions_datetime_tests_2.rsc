@@ -60,7 +60,14 @@
     :put "Starting FormatSecondsLong tests..."
 
     # Zero threshold baseline execution
-    :set res [$RunTestCase $res "0" "" "Zero seconds absolute boundary check"]
+    :set res [$RunTestCase $res "0" "0s" "Zero seconds absolute boundary check"]
+
+    # Negative values validation suite
+    :set res [$RunTestCase $res "-1" "0s" "Negative boundary check (-1s)"]
+    :set res [$RunTestCase $res "-60" "0s" "Negative minute threshold (-60s)"]
+    :set res [$RunTestCase $res "-3600" "0s" "Negative hour threshold (-3600s)"]
+    :set res [$RunTestCase $res "-86400" "0s" "Negative day threshold (-86400s)"]
+    :set res [$RunTestCase $res "-2147483648" "0s" "Extreme negative int32 boundary check"]
 
     # Single isolated time components
     :set res [$RunTestCase $res "45" "45s" "Pure seconds component evaluation"]
@@ -199,6 +206,13 @@
     :set res [$RunTestCase $res "86399" "23 hrs" "Maximum scale value prior to days boundary"]
     :set res [$RunTestCase $res "86400" "1 days" "Exactly one day layout transition verification"]
     :set res [$RunTestCase $res "172800" "2 days" "Multiple whole days execution path check"]
+
+    # Negative and zero values boundary tests
+    :set res [$RunTestCase $res "-1" "0 sec" "Negative boundary check (-1s)"]
+    :set res [$RunTestCase $res "-60" "0 sec" "Negative minute threshold (-60s)"]
+    :set res [$RunTestCase $res "-3600" "0 sec" "Negative hour threshold (-3600s)"]
+    :set res [$RunTestCase $res "-86400" "0 sec" "Negative day threshold (-86400s)"]
+    :set res [$RunTestCase $res "-2147483648" "0 sec" "Extreme negative int32 lower bound"]
 
     :put "Testing completed."
     :return $res

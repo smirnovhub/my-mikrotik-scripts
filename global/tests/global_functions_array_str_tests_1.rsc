@@ -561,13 +561,21 @@
         :local actual [$JoinArray $arr $delim]
         :local actualStr [:tostr $actual]
 
-        :if ($actualStr = $expectedStr) do={
-            :put ("\1B[32m  [PASS]\1B[0m " . $name . " -> '" . $actualStr . "'")
-            :set ($state->"passed") (($state->"passed") + 1)
-        } else={
-            :put ("\1B[31m  [FAIL]\1B[0m " . $name . " | Expected: '" . $expectedStr . "', Got: '" . $actualStr . "'")
+        :local actualType [:typeof $actual]
+
+        :if ($actualType != "str") do={
+            :put ("\1B[31m  [FAIL]\1B[0m " . $name . ": Type error! Expected 'str', Got '" . $actualType . "'")
             :set ($state->"failed") (($state->"failed") + 1)
+        } else={
+            :if ($actualStr = $expectedStr) do={
+                :put ("\1B[32m  [PASS]\1B[0m " . $name . " -> '" . $actualStr . "'")
+                :set ($state->"passed") (($state->"passed") + 1)
+            } else={
+                :put ("\1B[31m  [FAIL]\1B[0m " . $name . " | Expected: '" . $expectedStr . "', Got: '" . $actualStr . "'")
+                :set ($state->"failed") (($state->"failed") + 1)
+            }
         }
+
         :return $state
     }
 
@@ -709,12 +717,19 @@
             :if ($targetFunc = "right") do={ :set actual [$TrimStrRight $str $chars] }
             :if ($targetFunc = "both")  do={ :set actual [$TrimStr $str $chars] }
 
-            :if ($actual = $expected) do={
-                :put ("\1B[32m  [PASS]\1B[0m [" . $targetFunc . "] " . $name . ": '" . $str . "' -> '" . $actual . "'")
-                :set ($state->"passed") (($state->"passed") + 1)
-            } else={
-                :put ("\1B[31m  [FAIL]\1B[0m [" . $targetFunc . "] " . $name . ": '" . $str . "' | Expected: '" . $expected . "', Got: '" . $actual . "'")
+            :local actualType [:typeof $actual]
+
+            :if ($actualType != "str") do={
+                :put ("\1B[31m  [FAIL]\1B[0m [" . $targetFunc . "] " . $name . ": Type error! Expected 'str', Got '" . $actualType . "'")
                 :set ($state->"failed") (($state->"failed") + 1)
+            } else={
+                :if ($actual = $expected) do={
+                    :put ("\1B[32m  [PASS]\1B[0m [" . $targetFunc . "] " . $name . ": '" . $str . "' -> '" . $actual . "'")
+                    :set ($state->"passed") (($state->"passed") + 1)
+                } else={
+                    :put ("\1B[31m  [FAIL]\1B[0m [" . $targetFunc . "] " . $name . ": '" . $str . "' | Expected: '" . $expected . "', Got: '" . $actual . "'")
+                    :set ($state->"failed") (($state->"failed") + 1)
+                }
             }
         }
         :return $state
@@ -789,13 +804,21 @@
 
         :local actual [$ReplaceStr $str $from $to]
 
-        :if ($actual = $expected) do={
-            :put ("\1B[32m  [PASS]\1B[0m " . $name . ": '" . $str . "' -> '" . $actual . "'")
-            :set ($state->"passed") (($state->"passed") + 1)
-        } else={
-            :put ("\1B[31m  [FAIL]\1B[0m " . $name . ": '" . $str . "' | Expected: '" . $expected . "', Got: '" . $actual . "'")
+        :local actualType [:typeof $actual]
+
+        :if ($actualType != "str") do={
+            :put ("\1B[31m  [FAIL]\1B[0m " . $name . ": Type error! Expected 'str', Got '" . $actualType . "'")
             :set ($state->"failed") (($state->"failed") + 1)
+        } else={
+            :if ($actual = $expected) do={
+                :put ("\1B[32m  [PASS]\1B[0m " . $name . ": '" . $str . "' -> '" . $actual . "'")
+                :set ($state->"passed") (($state->"passed") + 1)
+            } else={
+                :put ("\1B[31m  [FAIL]\1B[0m " . $name . ": '" . $str . "' | Expected: '" . $expected . "', Got: '" . $actual . "'")
+                :set ($state->"failed") (($state->"failed") + 1)
+            }
         }
+
         :return $state
     }
 
@@ -826,6 +849,28 @@
     :set res [$RunTestCase $res ("path\\to\\file") ("\\") "/" "path/to/file" "Replace backslashes to slashes"]
     :set res [$RunTestCase $res "text with spaces" " " "_" "text_with_spaces" "Replace spaces with underscores"]
     :set res [$RunTestCase $res "line1,line2,line3" "," ("\n") ("line1\nline2\nline3") "Replace comma with newline"]
+
+    # --- Boundary Matches (Start & End of String) ---
+    :set res [$RunTestCase $res "apple" "app" "7" "7le" "Match strictly at the beginning of string"]
+    :set res [$RunTestCase $res "apple" "ple" "7" "ap7" "Match strictly at the end of string"]
+    :set res [$RunTestCase $res "appapp" "app" "X" "XX" "Adjacent matches covering the entire string"]
+
+    # --- Expanding & Shrinking Replacements ---
+    :set res [$RunTestCase $res "a" "a" "abc" "abc" "Replacing single char with longer string (expansion)"]
+    :set res [$RunTestCase $res "abcde" "bcd" "x" "axe" "Replacing long sequence with shorter string (shrinking)"]
+
+    # --- Recursion & Self-Containment Risk ---
+    :set res [$RunTestCase $res "foo" "o" "oo" "foooo" "Replacement target contains search pattern (infinite loop check)"]
+    :set res [$RunTestCase $res "abc" "b" "bab" "ababc" "Replacement creates pattern sandwich"]
+
+    # --- Special Characters & Tabulation ---
+    :set res [$RunTestCase $res ("col1\tcol2\tcol3") ("\t") " " "col1 col2 col3" "Replace tabs with spaces"]
+    :set res [$RunTestCase $res ("line1\r\nline2") ("\r\n") ("\n") ("line1\nline2") "Normalize Windows CRLF to Unix LF"]
+    :set res [$RunTestCase $res "foo::bar::baz" "::" ":" "foo:bar:baz" "Double colon delimiter reduction"]
+
+    # --- Type Coercion & Numbers ---
+    :set res [$RunTestCase $res "123456" "34" "99" "129956" "Replace numbers represented as string"]
+    :set res [$RunTestCase $res "x.y.z" "." "-" "x-y-z" "Replace dots in IP or version-like strings"]
 
     :put "Testing completed."
     :return $res
@@ -1078,13 +1123,21 @@
 
         :local actual [$ToUpperCase $input]
 
-        :if ($actual = $expected) do={
-            :put ("\1B[32m  [PASS]\1B[0m " . $name . ": '" . $input . "' -> '" . $actual . "'")
-            :set ($state->"passed") (($state->"passed") + 1)
-        } else={
-            :put ("\1B[31m  [FAIL]\1B[0m " . $name . ": '" . $input . "' | Expected: '" . $expected . "', Got: '" . $actual . "'")
+        :local actualType [:typeof $actual]
+
+        :if ($actualType != "str") do={
+            :put ("\1B[31m  [FAIL]\1B[0m " . $name . ": Type error! Expected 'str', Got '" . $actualType . "'")
             :set ($state->"failed") (($state->"failed") + 1)
+        } else={
+            :if ($actual = $expected) do={
+                :put ("\1B[32m  [PASS]\1B[0m " . $name . ": '" . $input . "' -> '" . $actual . "'")
+                :set ($state->"passed") (($state->"passed") + 1)
+            } else={
+                :put ("\1B[31m  [FAIL]\1B[0m " . $name . ": '" . $input . "' | Expected: '" . $expected . "', Got: '" . $actual . "'")
+                :set ($state->"failed") (($state->"failed") + 1)
+            }
         }
+
         :return $state
     }
 
@@ -1136,13 +1189,21 @@
 
         :local actual [$ToLowerCase $input]
 
-        :if ($actual = $expected) do={
-            :put ("\1B[32m  [PASS]\1B[0m " . $name . ": '" . $input . "' -> '" . $actual . "'")
-            :set ($state->"passed") (($state->"passed") + 1)
-        } else={
-            :put ("\1B[31m  [FAIL]\1B[0m " . $name . ": '" . $input . "' | Expected: '" . $expected . "', Got: '" . $actual . "'")
+        :local actualType [:typeof $actual]
+
+        :if ($actualType != "str") do={
+            :put ("\1B[31m  [FAIL]\1B[0m " . $name . ": Type error! Expected 'str', Got '" . $actualType . "'")
             :set ($state->"failed") (($state->"failed") + 1)
+        } else={
+            :if ($actual = $expected) do={
+                :put ("\1B[32m  [PASS]\1B[0m " . $name . ": '" . $input . "' -> '" . $actual . "'")
+                :set ($state->"passed") (($state->"passed") + 1)
+            } else={
+                :put ("\1B[31m  [FAIL]\1B[0m " . $name . ": '" . $input . "' | Expected: '" . $expected . "', Got: '" . $actual . "'")
+                :set ($state->"failed") (($state->"failed") + 1)
+            }
         }
+
         :return $state
     }
 

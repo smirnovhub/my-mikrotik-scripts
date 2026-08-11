@@ -335,6 +335,8 @@
                 :return false
             }
 
+            :log info "$prefix Checksum is valid"
+
             :if ([:len [/system script find name=$scriptName]] > 0) do={
                 /system script set [find name=$scriptName] source=$newSource comment=$scriptName
             } else={

@@ -268,6 +268,10 @@
 # Output:
 #   1+3+4+2+7+5
 :set JoinArray do={
+    :if ([:len $1] = 0) do={
+        :return ""
+    }
+
     # String to hold the joined result
     :local resultString
 

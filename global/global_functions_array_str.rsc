@@ -354,11 +354,20 @@
     }
 
     :local sLen [:len $s]
+    :if ($sLen = 0) do={
+        :return ""
+    }
+
     :local idx 0
 
     # Advance index while character at $idx exists in $chars
     :while ($idx < $sLen && [:len [:find $chars [:pick $s $idx ($idx + 1)]]] > 0) do={
         :set idx ($idx + 1)
+    }
+
+    # If all characters were trimmed, return explicit empty string
+    :if ($idx = $sLen) do={
+        :return ""
     }
 
     # Slice string exactly once
@@ -382,10 +391,18 @@
     }
 
     :local idx [:len $s]
+    :if ($idx = 0) do={
+        :return ""
+    }
 
     # Move index backwards while character at ($idx - 1) exists in $chars
     :while ($idx > 0 && [:len [:find $chars [:pick $s ($idx - 1) $idx]]] > 0) do={
         :set idx ($idx - 1)
+    }
+
+    # If all characters were trimmed, return explicit empty string
+    :if ($idx = 0) do={
+        :return ""
     }
 
     # Slice string exactly once from start to the last valid index

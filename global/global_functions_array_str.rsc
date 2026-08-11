@@ -347,7 +347,7 @@
 #   immedString
 :set TrimStrLeft do={
     :local s [:tostr $1]
-    :local chars "\r\n\t "
+    :local chars " \r\n\t"
 
     :if ([:len $2] > 0) do={
         :set chars [:tostr $2]
@@ -375,7 +375,7 @@
 #   TrimmedStri
 :set TrimStrRight do={
     :local s [:tostr $1]
-    :local chars "\r\n\t "
+    :local chars " \r\n\t"
 
     :if ([:len $2] > 0) do={
         :set chars [:tostr $2]
@@ -751,12 +751,17 @@
 #   CONVERT ALL LOWERCASE LETTERS
 :set ToUpperCase do={
     :local input [:tostr $1]
-    :local len ([:len $input] - 1)
+    :local len [:len $input]
+
+    :if ($len = 0) do={
+        :return ""
+    }
+
     :local upper "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
     :local lower "abcdefghijklmnopqrstuvwxyz"
     :local result ""
 
-    :for idx from=0 to=$len do={
+    :for idx from=0 to=($len - 1) do={
         :local char [:pick $input $idx]
         :local pos [:find $lower $char]
 
@@ -778,12 +783,17 @@
 #   convert all lowercase letters
 :set ToLowerCase do={
     :local input [:tostr $1]
-    :local len ([:len $input] - 1)
+    :local len [:len $input]
+
+    :if ($len = 0) do={
+        :return ""
+    }
+
     :local upper "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
     :local lower "abcdefghijklmnopqrstuvwxyz"
     :local result ""
 
-    :for idx from=0 to=$len do={
+    :for idx from=0 to=($len - 1) do={
         :local char [:pick $input $idx]
         :local pos [:find $upper $char]
 
@@ -903,6 +913,10 @@
 
     :local input [:tostr $1]
     :local len [:len $input]
+
+    :if ($len = 0) do={
+        :return true
+    }
 
     :for i from=0 to=($len - 1) do={
         :local char [:pick $input $i ($i + 1)]

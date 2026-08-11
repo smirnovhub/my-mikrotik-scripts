@@ -444,7 +444,7 @@
     # Input parameter: total seconds
     :local totalSec [:tonum $1]
 
-    :if ($totalSec = 0) do={
+    :if ($totalSec <= 0) do={
         :return "0s"
     }
 
@@ -483,6 +483,10 @@
 :set FormatSecondsShort do={
     # Input parameter: total seconds
     :local sec [:tonum $1]
+
+    :if ($sec <= 0) do={
+        :return "0 sec"
+    }
 
     # Prepare an empty formattedTime variable (string)
     :local formattedTime ""

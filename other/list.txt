@@ -12,3 +12,9 @@
 e13ab0d07eb6df99a4f213b84d90d73e https://github.com/smirnovhub/my-mikrotik-scripts/raw/refs/heads/master/other/check_dhcp_dynamic_leases.rsc
 692fa1d722de69dcd1039a7ed3fd96e7 https://github.com/smirnovhub/my-mikrotik-scripts/raw/refs/heads/master/other/on_startup.rsc
 97cd300373b68128b179fa55591025e3 https://github.com/smirnovhub/my-mikrotik-scripts/raw/refs/heads/master/other/reboot.rsc
+123 https://github.com/smirnovhub/my-mikrotik-scripts/raw/refs/heads/master/other/monitor_interface_state.rsc
+123 https://github.com/smirnovhub/my-mikrotik-scripts/raw/refs/heads/master/other/check_filter_rule_traffic/check_filter_rule_traffic.txt
+123 https://github.com/smirnovhub/my-mikrotik-scripts/raw/refs/heads/master/other/check_filter_rule_traffic/check_filter_rule_traffic_status.txt
+123 https://github.com/smirnovhub/my-mikrotik-scripts/raw/refs/heads/master/other/my_netwatch/my_netwatch.rsc
+123 https://github.com/smirnovhub/my-mikrotik-scripts/raw/refs/heads/master/other/my_netwatch/my_netwatch_changes.rsc
+123 https://github.com/smirnovhub/my-mikrotik-scripts/raw/refs/heads/master/other/my_netwatch/my_netwatch_status.rsc

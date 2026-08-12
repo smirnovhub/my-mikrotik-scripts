@@ -47,6 +47,7 @@
 :global CleanStr
 :global RecursiveMergeSort
 :global RecursiveMergeSortStr
+:global QuickSort
 :global DivideIntAndRound
 :global ToUpperCase
 :global ToLowerCase
@@ -655,6 +656,86 @@
     }
   }
   :return $out
+}
+
+# Purpose: Perform an iterative quick sort on a simple array of items using a custom call stack.
+# Parameters:
+#    $1 - Array to sort
+# Returns: A new array containing the sorted elements
+# NOTE: This only works if each array item can
+# be compared using '<' and '>' operators.
+# Example: :put [$QuickSort (7,1,3,4,2,7,7,0,1)]
+# Output:
+#    0;1;1;2;3;4;7;7;7
+:set QuickSort do={
+    :local arr [:toarray $1]
+    :local len [:len $arr]
+
+    :if ($len <= 1) do={
+        :return $arr
+    }
+
+    :local stack [:toarray ""]
+    :set ($stack->0) 0
+    :set ($stack->1) ($len - 1)
+    :local sp 2
+
+    :while ($sp > 0) do={
+        :set sp ($sp - 1)
+        :local right ($stack->$sp)
+        :set sp ($sp - 1)
+        :local left ($stack->$sp)
+
+        :local i $left
+        :local j $right
+        :local pivot ($arr->(($left + $right) >> 1))
+
+        :while ($i <= $j) do={
+            :while (($arr->$i) < $pivot) do={
+                :set i ($i + 1)
+            }
+
+            :while (($arr->$j) > $pivot) do={
+                :set j ($j - 1)
+            }
+
+            :if ($i <= $j) do={
+                :local tmp ($arr->$i)
+                :set ($arr->$i) ($arr->$j)
+                :set ($arr->$j) $tmp
+
+                :set i ($i + 1)
+                :set j ($j - 1)
+            }
+        }
+
+        # Push larger segment first to minimize stack space usage
+        :if (($j - $left) > ($right - $i)) do={
+            :if ($left < $j) do={
+                :set ($stack->$sp) $left
+                :set ($stack->($sp + 1)) $j
+                :set sp ($sp + 2)
+            }
+            :if ($i < $right) do={
+                :set ($stack->$sp) $i
+                :set ($stack->($sp + 1)) $right
+                :set sp ($sp + 2)
+            }
+        } else={
+            :if ($i < $right) do={
+                :set ($stack->$sp) $i
+                :set ($stack->($sp + 1)) $right
+                :set sp ($sp + 2)
+            }
+            :if ($left < $j) do={
+                :set ($stack->$sp) $left
+                :set ($stack->($sp + 1)) $j
+                :set sp ($sp + 2)
+            }
+        }
+    }
+
+    :return $arr
 }
 
 # Purpose: Reverse the characters in a string.

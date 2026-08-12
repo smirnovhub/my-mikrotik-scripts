@@ -683,61 +683,54 @@
     :while ($sp > 0) do={
         :set sp ($sp - 1)
         :local right ($stack->$sp)
-
         :set sp ($sp - 1)
         :local left ($stack->$sp)
 
-        :if ($left < $right) do={
-            :local i $left
-            :local j $right
-            :local pivot ($arr->(($left + $right) >> 1))
+        :local i $left
+        :local j $right
+        :local pivot ($arr->(($left + $right) >> 1))
 
-            :while ($i <= $j) do={
-                :while (($arr->$i) < $pivot) do={
-                    :set i ($i + 1)
-                }
-
-                :while (($arr->$j) > $pivot) do={
-                    :set j ($j - 1)
-                }
-
-                :if ($i <= $j) do={
-                    :local tmp ($arr->$i)
-                    :set ($arr->$i) ($arr->$j)
-                    :set ($arr->$j) $tmp
-
-                    :set i ($i + 1)
-                    :set j ($j - 1)
-                }
+        :while ($i <= $j) do={
+            :while (($arr->$i) < $pivot) do={
+                :set i ($i + 1)
             }
 
-            # Push larger segment first to minimize stack space usage
-            :if (($j - $left) > ($right - $i)) do={
-                :if ($left < $j) do={
-                    :set ($stack->$sp) $left
-                    :set sp ($sp + 1)
-                    :set ($stack->$sp) $j
-                    :set sp ($sp + 1)
-                }
-                :if ($i < $right) do={
-                    :set ($stack->$sp) $i
-                    :set sp ($sp + 1)
-                    :set ($stack->$sp) $right
-                    :set sp ($sp + 1)
-                }
-            } else={
-                :if ($i < $right) do={
-                    :set ($stack->$sp) $i
-                    :set sp ($sp + 1)
-                    :set ($stack->$sp) $right
-                    :set sp ($sp + 1)
-                }
-                :if ($left < $j) do={
-                    :set ($stack->$sp) $left
-                    :set sp ($sp + 1)
-                    :set ($stack->$sp) $j
-                    :set sp ($sp + 1)
-                }
+            :while (($arr->$j) > $pivot) do={
+                :set j ($j - 1)
+            }
+
+            :if ($i <= $j) do={
+                :local tmp ($arr->$i)
+                :set ($arr->$i) ($arr->$j)
+                :set ($arr->$j) $tmp
+
+                :set i ($i + 1)
+                :set j ($j - 1)
+            }
+        }
+
+        # Push larger segment first to minimize stack space usage
+        :if (($j - $left) > ($right - $i)) do={
+            :if ($left < $j) do={
+                :set ($stack->$sp) $left
+                :set ($stack->($sp + 1)) $j
+                :set sp ($sp + 2)
+            }
+            :if ($i < $right) do={
+                :set ($stack->$sp) $i
+                :set ($stack->($sp + 1)) $right
+                :set sp ($sp + 2)
+            }
+        } else={
+            :if ($i < $right) do={
+                :set ($stack->$sp) $i
+                :set ($stack->($sp + 1)) $right
+                :set sp ($sp + 2)
+            }
+            :if ($left < $j) do={
+                :set ($stack->$sp) $left
+                :set ($stack->($sp + 1)) $j
+                :set sp ($sp + 2)
             }
         }
     }

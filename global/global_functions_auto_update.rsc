@@ -356,10 +356,13 @@
 #          entries, and import each script into RouterOS. Optionally cleans up
 #          uppercase environment variables and executes all imported scripts.
 # Parameters:
-#   $1 - URL to the text file ending with .txt containing list of script URLs
-#   $2 - (Optional) Boolean flag. If true, removes uppercase environment variables
-#        and runs all newly imported scripts after downloading (default: false)
-# Returns: true on successful list processing, or false on error
+#   $1 - URL to the text file (must end with .txt) containing lines formatted as: "<hash> <script_url>"
+#   $2 - (Optional) Boolean flag ("true"/"false"). If true, runs all newly imported
+#        scripts sequentially after downloading (default: false)
+# Returns: Array with execution state:
+#   - "error": Boolean indicating whether a critical list fetch error occurred
+#   - "success": Number of successfully imported scripts
+#   - "failed": Number of scripts that failed to download or import
 # Example: $DownloadAndImportScriptsFromList "https://example.com/scripts/list.txt" true
 :set DownloadAndImportScriptsFromList do={
     :global SplitStr
@@ -370,9 +373,14 @@
     :global FetchWithRedirect
     :global DownloadAndImportScript
 
+    :local result [:toarray ""]
+    :set ($result->"error") false
+    :set ($result->"success") 0
+    :set ($result->"failed") 0
+
     # Workaround for the MikroTik RouterOS interpreter bug (phantom execution)
     :if ([:len $0] = 0) do={
-        :return false
+        :return $result
     }
 
     :local prefix "DownloadAndImportScriptsFromList:"
@@ -381,12 +389,14 @@
 
     :if ([:len $listUrl] = 0) do={
         :log error "$prefix List URL parameter is missing."
-        :return false
+        :set ($result->"error") true
+        :return $result
     }
 
     :if ([$EndsWithStr $listUrl ".txt"] = false) do={
         :log error "$prefix File name should end with .txt"
-        :return false
+        :set ($result->"error") true
+        :return $result
     }
 
     :local runScripts false
@@ -401,8 +411,6 @@
         :local content [$FetchWithRedirect $listUrl]
         :if ([:len $content] > 0) do={
             :local lines [$SplitStr $content ("\n")]
-            :local successCount 0
-            :local failCount 0
             :local importedScripts [:toarray ""]
 
             :foreach rawLine in=$lines do={
@@ -425,7 +433,7 @@
 
                     :if ($res = true) do={
                         :log info ("$prefix " . $cleanUrl . " downloaded successfully")
-                        :set successCount ($successCount + 1)
+                        :set ($result->"success") ($result->"success" + 1)
 
                         # Extract script name to add to the execution list
                         :local fileName ""
@@ -445,17 +453,17 @@
                         :set importedScripts ($importedScripts , $scriptName)
                     } else={
                         :log error ("$prefix " . $cleanLine . " download error")
-                        :set failCount ($failCount + 1)
+                        :set ($result->"failed") ($result->"failed" + 1)
                     }
                 }
             }
 
-            :local logStr ("$prefix Import completed. Success: " . $successCount . ", Failed: " . $failCount)
+            :local logStr ("$prefix Import completed. Success: " . ($result->"success") . ", Failed: " . ($result->"failed"))
 
-            :if ($failCount = 0) do={
+            :if ($result->"failed" = 0) do={
                 :log info $logStr
             } else={
-                :if ($successCount = 0) do={
+                :if ($result->"success" = 0) do={
                     :log error $logStr
                 } else={
                     :log warning $logStr
@@ -473,7 +481,13 @@
                             /system script run $scriptName
                         } on-error={
                             :log error ("$prefix Error running " . $scriptName)
+                            :set ($result->"success") ($result->"success" - 1)
+                            :set ($result->"failed") ($result->"failed" + 1)
                         }
+                    } else={
+                        :log error "Script not found for execution: $scriptName"
+                        :set ($result->"success") ($result->"success" - 1)
+                        :set ($result->"failed") ($result->"failed" + 1)
                     }
                 }
             }
@@ -481,13 +495,15 @@
             :local duration ([$GetUnixTimestamp] - $startTs)
             :log info ("$prefix Finished in " . [$FormatSecondsLong $duration])
 
-            :return true
+            :return $result
         } else={
-            :return false
+            :set ($result->"error") true
+            :return $result
         }
     } on-error={
         :log error ("$prefix Failed to download list from " . $listUrl)
-        :return false
+        :set ($result->"error") true
+        :return $result
     }
 }
 
@@ -544,46 +560,72 @@
     :local repo ""
     :local branch ""
     :local filePath ""
+    :local lastCommitHash ""
 
     :local domain "github.com/"
     :local domainPos [:find $listUrl $domain]
 
-    :if ([:type $domainPos] = "num") do={
-        :local pathStart ($domainPos + [:len $domain])
-        :local urlPath [:pick $listUrl $pathStart [:len $listUrl]]
-
-        # Find owner
-        :local slash1 [:find $urlPath "/"]
-        :set owner [:pick $urlPath 0 $slash1]
-
-        # Find repo
-        :local slash2 [:find $urlPath "/" ($slash1 + 1)]
-        :set repo [:pick $urlPath ($slash1 + 1) $slash2]
-
-        # Find branch after "/raw/refs/heads/"
-        :local headsMarker "/raw/refs/heads/"
-        :local headsPos [:find $urlPath $headsMarker]
-
-        :if ([:type $headsPos] = "num") do={
-            :local branchStart ($headsPos + [:len $headsMarker])
-            :local slash3 [:find $urlPath "/" $branchStart]
-            :set branch [:pick $urlPath $branchStart $slash3]
-
-            # Extract file path after branch
-            :if ([:type $slash3] = "num") do={
-                :set filePath [:pick $urlPath ($slash3 + 1) [:len $urlPath]]
-            }
-        }
-    } else={
+    :if ([:type $domainPos] != "num") do={
         :log error "$prefix Failed to parse GitHub URL $listUrl"
-        $SendPrivateTelegramMessage ("$failEmoji <b>$deviceName:</b> failed to parse GitHub URL $$listUrl")
+        $SendPrivateTelegramMessage ("$failEmoji <b>$deviceName:</b> failed to parse GitHub URL $listUrl")
         :return false
     }
 
-    :local lastCommitHash [$GetGitHubLastCommitHash $owner $repo $branch]
+    :local pathStart ($domainPos + [:len $domain])
+    :local urlPath [:pick $listUrl $pathStart [:len $listUrl]]
+
+    # Find owner
+    :local slash1 [:find $urlPath "/"]
+    :set owner [:pick $urlPath 0 $slash1]
+
+    # Find repo
+    :local slash2 [:find $urlPath "/" ($slash1 + 1)]
+    :set repo [:pick $urlPath ($slash1 + 1) $slash2]
+
+    # Check which URL format we are dealing with
+    :local headsMarker "/raw/refs/heads/"
+    :local headsPos [:find $urlPath $headsMarker]
+
+    :if ([:type $headsPos] = "num") do={
+        # Standard format: .../raw/refs/heads/<branch>/<filePath>
+        :local branchStart ($headsPos + [:len $headsMarker])
+        :local slash3 [:find $urlPath "/" $branchStart]
+
+        :if ([:type $slash3] != "num") do={
+            :log error "$prefix Failed to parse GitHub URL $listUrl"
+            $SendPrivateTelegramMessage ("$failEmoji <b>$deviceName:</b> failed to parse GitHub URL $listUrl")
+            :return false
+        }
+
+        :set branch [:pick $urlPath $branchStart $slash3]
+        :set filePath [:pick $urlPath ($slash3 + 1) [:len $urlPath]]
+
+        :set lastCommitHash [$GetGitHubLastCommitHash $owner $repo $branch]
+    } else={
+        # Direct commit hash format: owner/repo/raw/<commitHash>/<filePath>
+        # slash3 = end of "/raw/", slash4 = end of commit hash
+        :local slash3 [:find $urlPath "/" ($slash2 + 1)]
+        :local slash4 [:find $urlPath "/" ($slash3 + 1)]
+
+        :if ([:type $slash1] != "num" || [:type $slash2] != "num" || [:type $slash3] != "num" || [:type $slash4] != "num") do={
+            :log error "$prefix Failed to parse GitHub URL $listUrl"
+            $SendPrivateTelegramMessage ("$failEmoji <b>$deviceName:</b> failed to parse GitHub URL $listUrl")
+            :return false
+        }
+
+        :set lastCommitHash [:pick $urlPath ($slash3 + 1) $slash4]
+        :set filePath [:pick $urlPath ($slash4 + 1) [:len $urlPath]]
+    }
 
     :if ([:len $lastCommitHash] = 0) do={
-        $SendPrivateTelegramMessage ("$failEmoji <b>$deviceName:</b> failed to get last commit hash from GitHub for $listUrl")
+        $SendPrivateTelegramMessage ("$failEmoji <b>$deviceName:</b> empty commit hash extracted from $listUrl")
+        :return false
+    }
+
+    # Validate that lastCommitHash is non-empty and contains valid hex characters
+    :if (!($lastCommitHash ~ "^[0-9a-fA-F]+\$")) do={
+        :log error "$prefix Invalid commit hash ($lastCommitHash) extracted from $listUrl"
+        $SendPrivateTelegramMessage ("$failEmoji <b>$deviceName:</b> invalid commit hash ($lastCommitHash) extracted from $listUrl")
         :return false
     }
 
@@ -597,9 +639,18 @@
 
     :local result [$DownloadAndImportScriptsFromList $listUrl $runScripts]
 
-    :if ($result) do={
+    :if ($result->"error" = false) do={
         $SetGlobalVar $lastCommitGlobalVarName $lastCommitHash
-        $SendPrivateTelegramMessage ("$successEmoji <b>$deviceName:</b> scripts updated successfully from $filePath")
+
+        :if ($result->"failed" = 0) do={
+            $SendPrivateTelegramMessage ("<b>$deviceName:</b>%0A$successEmoji All scripts updated successfully from $filePath")
+        } else={
+            :if ($result->"success" = 0) do={
+                $SendPrivateTelegramMessage ("<b>$deviceName:</b>%0A$failEmoji All scripts failed to update from $filePath")
+            } else={
+                $SendPrivateTelegramMessage ("<b>$deviceName:</b>%0A$successEmoji " . ($result->"success") . " scripts updated successfully from $filePath%0A$failEmoji " . ($result->"failed") . " scripts failed to update from $filePath")
+            }
+        }
     } else={
         $SendPrivateTelegramMessage ("$failEmoji <b>$deviceName:</b> failed to update scripts from $filePath")
     }

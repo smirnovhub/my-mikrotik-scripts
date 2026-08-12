@@ -356,10 +356,13 @@
 #          entries, and import each script into RouterOS. Optionally cleans up
 #          uppercase environment variables and executes all imported scripts.
 # Parameters:
-#   $1 - URL to the text file ending with .txt containing list of script URLs
-#   $2 - (Optional) Boolean flag. If true, removes uppercase environment variables
-#        and runs all newly imported scripts after downloading (default: false)
-# Returns: true on successful list processing, or false on error
+#   $1 - URL to the text file (must end with .txt) containing lines formatted as: "<hash> <script_url>"
+#   $2 - (Optional) Boolean flag ("true"/"false"). If true, runs all newly imported
+#        scripts sequentially after downloading (default: false)
+# Returns: Array with execution state:
+#   - "error": Boolean indicating whether a critical list fetch error occurred
+#   - "success": Number of successfully imported scripts
+#   - "failed": Number of scripts that failed to download or import
 # Example: $DownloadAndImportScriptsFromList "https://example.com/scripts/list.txt" true
 :set DownloadAndImportScriptsFromList do={
     :global SplitStr
@@ -430,7 +433,7 @@
 
                     :if ($res = true) do={
                         :log info ("$prefix " . $cleanUrl . " downloaded successfully")
-                        :set ($result->"success") (($result->"success") + 1)
+                        :set ($result->"success") ($result->"success" + 1)
 
                         # Extract script name to add to the execution list
                         :local fileName ""
@@ -450,7 +453,7 @@
                         :set importedScripts ($importedScripts , $scriptName)
                     } else={
                         :log error ("$prefix " . $cleanLine . " download error")
-                        :set ($result->"failed") (($result->"failed") + 1)
+                        :set ($result->"failed") ($result->"failed" + 1)
                     }
                 }
             }
@@ -478,7 +481,13 @@
                             /system script run $scriptName
                         } on-error={
                             :log error ("$prefix Error running " . $scriptName)
+                            :set ($result->"success") ($result->"success" - 1)
+                            :set ($result->"failed") ($result->"failed" + 1)
                         }
+                    } else={
+                        :log error "Script not found for execution: $scriptName"
+                        :set ($result->"success") ($result->"success" - 1)
+                        :set ($result->"failed") ($result->"failed" + 1)
                     }
                 }
             }

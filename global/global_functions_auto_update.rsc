@@ -532,17 +532,23 @@
         :return false
     }
 
+    :local deviceName [/system identity get name]
     :local prefix "DownloadAndImportScriptsFromGitHubList:"
+
+    :local successEmoji $largeGreenCircleEmoji
+    :local failEmoji $largeRedCircleEmoji
 
     :local listUrl [:tostr $1]
 
     :if ([:len $listUrl] = 0) do={
         :log error "$prefix List URL parameter is missing."
+        $SendPrivateTelegramMessage ("$failEmoji <b>$deviceName:</b> List URL parameter is missing")
         :return false
     }
 
     :if ([$EndsWithStr $listUrl ".txt"] = false) do={
         :log error "$prefix File name should end with .txt"
+        $SendPrivateTelegramMessage ("$failEmoji <b>$deviceName:</b> File name should end with .txt")
         :return false
     }
 
@@ -550,11 +556,6 @@
     :if ([:tostr $2] = "true") do={
         :set runScripts true
     }
-
-    :local successEmoji $largeGreenCircleEmoji
-    :local failEmoji $largeRedCircleEmoji
-
-    :local deviceName [/system identity get name]
 
     :local owner ""
     :local repo ""
@@ -567,7 +568,7 @@
 
     :if ([:type $domainPos] != "num") do={
         :log error "$prefix Failed to parse GitHub URL $listUrl"
-        $SendPrivateTelegramMessage ("$failEmoji <b>$deviceName:</b> failed to parse GitHub URL $listUrl")
+        $SendPrivateTelegramMessage ("$failEmoji <b>$deviceName:</b> Failed to parse GitHub URL $listUrl")
         :return false
     }
 
@@ -593,7 +594,7 @@
 
         :if ([:type $slash3] != "num") do={
             :log error "$prefix Failed to parse GitHub URL $listUrl"
-            $SendPrivateTelegramMessage ("$failEmoji <b>$deviceName:</b> failed to parse GitHub URL $listUrl")
+            $SendPrivateTelegramMessage ("$failEmoji <b>$deviceName:</b> Failed to parse GitHub URL $listUrl")
             :return false
         }
 
@@ -609,7 +610,7 @@
 
         :if ([:type $slash1] != "num" || [:type $slash2] != "num" || [:type $slash3] != "num" || [:type $slash4] != "num") do={
             :log error "$prefix Failed to parse GitHub URL $listUrl"
-            $SendPrivateTelegramMessage ("$failEmoji <b>$deviceName:</b> failed to parse GitHub URL $listUrl")
+            $SendPrivateTelegramMessage ("$failEmoji <b>$deviceName:</b> Failed to parse GitHub URL $listUrl")
             :return false
         }
 
@@ -618,14 +619,14 @@
     }
 
     :if ([:len $lastCommitHash] = 0) do={
-        $SendPrivateTelegramMessage ("$failEmoji <b>$deviceName:</b> empty commit hash extracted from $listUrl")
+        $SendPrivateTelegramMessage ("$failEmoji <b>$deviceName:</b> Empty commit hash extracted from $listUrl")
         :return false
     }
 
     # Validate that lastCommitHash is non-empty and contains valid hex characters
     :if (!($lastCommitHash ~ "^[0-9a-fA-F]+\$")) do={
         :log error "$prefix Invalid commit hash ($lastCommitHash) extracted from $listUrl"
-        $SendPrivateTelegramMessage ("$failEmoji <b>$deviceName:</b> invalid commit hash ($lastCommitHash) extracted from $listUrl")
+        $SendPrivateTelegramMessage ("$failEmoji <b>$deviceName:</b> Invalid commit hash ($lastCommitHash) extracted from $listUrl")
         :return false
     }
 
@@ -652,7 +653,7 @@
             }
         }
     } else={
-        $SendPrivateTelegramMessage ("$failEmoji <b>$deviceName:</b> failed to update scripts from $filePath")
+        $SendPrivateTelegramMessage ("$failEmoji <b>$deviceName:</b> Failed to update scripts from $filePath")
     }
 
     :return result

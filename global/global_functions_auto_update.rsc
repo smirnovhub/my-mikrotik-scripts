@@ -643,10 +643,10 @@
         $SetGlobalVar $lastCommitGlobalVarName $lastCommitHash
 
         :if ($result->"failed" = 0) do={
-            $SendPrivateTelegramMessage ("<b>$deviceName:</b>%0A$successEmoji All scripts updated successfully from $filePath")
+            $SendPrivateTelegramMessage ("<b>$deviceName:</b>%0A$successEmoji All " . ($result->"success") . " scripts updated successfully from $filePath")
         } else={
             :if ($result->"success" = 0) do={
-                $SendPrivateTelegramMessage ("<b>$deviceName:</b>%0A$failEmoji All scripts failed to update from $filePath")
+                $SendPrivateTelegramMessage ("<b>$deviceName:</b>%0A$failEmoji All " . ($result->"failed") . " scripts failed to update from $filePath")
             } else={
                 $SendPrivateTelegramMessage ("<b>$deviceName:</b>%0A$successEmoji " . ($result->"success") . " scripts updated successfully from $filePath%0A$failEmoji " . ($result->"failed") . " scripts failed to update from $filePath")
             }

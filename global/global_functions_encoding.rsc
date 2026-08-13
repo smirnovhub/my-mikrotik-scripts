@@ -36,6 +36,16 @@
 
 # EXTERNAL DEPENDENCY
 :global HexToNum
+:global DecToChar
+
+# Automatically generated ASCII code table
+:global asciiCodeTable
+:if ([:len $asciiCodeTable] != 256) do={
+    :set asciiCodeTable [:toarray ""]
+    :for i from=0 to=255 do={
+        :set ($asciiCodeTable->[$DecToChar $i]) $i
+    }
+}
 
 # Purpose: Encode an input string into Base64 format according to RFC 4648 standards.
 #          Supports optional URL-safe variant and optional padding removal.
@@ -51,14 +61,6 @@
 
     :local input [:tostr "$1"]
     :local options "$2$3"
-
-    # Initialize ASCII lookup table on first use
-    :if ([:typeof $asciiCodeTable] = "nothing") do={
-        :set asciiCodeTable [:toarray ""]
-        :for i from=0 to=255 do={
-            :set ($asciiCodeTable->[$DecToChar $i]) $i
-        }
-    }
 
     # RFC 4648 base64 Standard
     :local arrb64 [:toarray "A,B,C,D,E,F,G,H,I,J,K,L,M,N,O,P,Q,R,S,T,U,V,W,X,Y,Z,\

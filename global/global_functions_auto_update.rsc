@@ -516,7 +516,7 @@
         :return $result
     }
 
-    :local msg "<b>$deviceName:</b>%0A"
+    :local msg "<b>$deviceName</b> scripts auto update:%0A"
 
     :local FormatList do={
         :global RecursiveMergeSortStr

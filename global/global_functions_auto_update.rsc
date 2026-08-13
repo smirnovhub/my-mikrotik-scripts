@@ -278,16 +278,19 @@
 }
 
 # Purpose: Download a text file containing script URLs line-by-line, parse valid
-#          entries, and import each script into RouterOS. Optionally cleans up
-#          uppercase environment variables and executes all imported scripts.
+#          entries, and import or update each script into RouterOS system scripts.
+#          Optionally executes imported and up-to-date scripts after downloading.
 # Parameters:
 #   $1 - URL to the text file (must end with .txt) containing lines formatted as: "<hash> <script_url>"
-#   $2 - (Optional) Boolean flag ("true"/"false"). If true, runs all newly imported
-#        scripts sequentially after downloading (default: false)
+#   $2 - (Optional) Boolean flag ("true"/"false"). If true, runs all imported/up-to-date
+#        scripts sequentially after processing (default: false)
 # Returns: Array with execution state:
 #   - "error": Boolean indicating whether a critical list fetch error occurred
-#   - "updated": Number of successfully imported scripts
-#   - "failedtoupdate": Number of scripts that failed to download or import
+#   - "updated": Array of script names that were successfully updated/imported
+#   - "uptodate": Array of script names that were already up-to-date
+#   - "failedtoupdate": Array of script names that failed to download or import
+#   - "runned": Array of script names that executed successfully
+#   - "failedtorun": Array of script names that failed during execution
 # Example: $DownloadAndImportScriptsFromList "https://example.com/scripts/list.txt" true
 :set DownloadAndImportScriptsFromList do={
     :global SplitStr

@@ -116,14 +116,6 @@ The following global settings are required to configure Telegram integration. Th
 - **ParseDateTime**: Parse RouterOS-style (`mmm/DD/YYYY HH:MM:SS`) or ISO-style (`YYYY-MM-DD HH:MM:SS`) date-time strings into standard format.
 - **ToUnixTimestamp**: Convert a date-time string to a Unix timestamp.
 
-### Auto-Update & Remote Fetching Utilities
-
-- **DownloadAndImportScript**: Download a `.rsc` script from a URL, verify its hash (CRC32 or MD5), and add/update it in RouterOS system scripts.
-- **DownloadAndImportScriptsFromGitHubList**: Check a GitHub repository for new commits, download updated scripts from a list if changes are detected, and send status notifications via Telegram.
-- **DownloadAndImportScriptsFromList**: Download and parse a `.txt` list file containing hashes and script URLs, then update and optionally execute them.
-- **FetchWithRedirect**: Download content from a URL with support for HTTP 3xx redirects (handling RouterOS 6 & 7 differences) and in-memory payload extraction.
-- **GetGitHubLastCommitHash**: Query GitHub API for the latest commit SHA hash of a branch.
-
 ### Base64 Encoding & Decoding
 
 - **Base64Decode**: Decode a Base64-encoded string (supports standard/URL-safe alphabets, optional padding enforcement, and ignoring invalid characters).
@@ -164,10 +156,8 @@ All hash algorithms are highly optimized for RouterOS. Exact benchmarks for RB75
 ### Auto-Update & Remote Fetching Utilities
 
 - **DownloadAndImportScript**: Fetches an individual `.rsc` script file from a URL, validates its integrity against a provided expected hash (supporting 8-character CRC32 or 32-character MD5 checksums), and creates or updates the entry in `/system script`.
-- **DownloadAndImportScriptsFromGitHubList**: Parses a GitHub raw list URL to automatically determine the repository owner, name, and branch. Compares the current commit SHA hash against the stored state in global variables to detect remote repository changes. If new commits exist, it triggers `DownloadAndImportScriptsFromList` and dispatches status alerts (success or failure) via Telegram. See list.txt files in this repo for example.
 - **DownloadAndImportScriptsFromList**: Fetches and parses a remote text file (`.txt`) containing space-separated checksums and script URLs line-by-line (ignoring comments and empty lines). Automatically downloads, validates, and imports each script, tracks performance execution time, and optionally executes all updated scripts sequentially. See list.txt files in this repo for example.
 - **FetchWithRedirect**: Downloads content from a specified URL using `/tool fetch` with full support for HTTP 3xx redirects across both RouterOS v6 and v7 environments. Captures errors via temporary output logs and returns the downloaded content directly in memory without writing the final payload to disk.
-- **GetGitHubLastCommitHash**: Queries the GitHub REST API (`/repos/{owner}/{repo}/git/ref/heads/{branch}`) to retrieve the 40-character SHA commit hash of the latest commit. Uses custom HTTP headers for API versioning and parses JSON response inline.
 
 ## Installation
 
@@ -201,13 +191,9 @@ The framework provides built-in mechanisms for automatically downloading, import
 You can perform simple updates using plain file manifests or utilize GitHub-aware functions that verify commit hashes to prevent unnecessary re-downloads when script sources remain unchanged.
 
 ```routeros
-# Standard download and import from remote list manifest
+# Download and import from remote list manifest
 :global DownloadAndImportScriptsFromList
 $DownloadAndImportScriptsFromList https://github.com/smirnovhub/my-mikrotik-scripts/raw/refs/heads/master/global/list.txt true
-
-# GitHub-aware update checking commit hash before re-downloading
-:global DownloadAndImportScriptsFromGitHubList
-$DownloadAndImportScriptsFromGitHubList https://github.com/smirnovhub/my-mikrotik-scripts/raw/refs/heads/master/global/list.txt true
 ```
 
 #### Parameters & Behavior
@@ -516,13 +502,9 @@ The framework provides built-in mechanisms for automatically downloading, import
 You can perform simple updates using plain file manifests or utilize GitHub-aware functions that verify commit hashes to prevent unnecessary re-downloads when script sources remain unchanged.
 
 ```routeros
-# Standard download and import from remote list manifest
+# Download and import from remote list manifest
 :global DownloadAndImportScriptsFromList
 $DownloadAndImportScriptsFromList https://github.com/smirnovhub/my-mikrotik-scripts/raw/refs/heads/master/global/tests/list.txt true
-
-# GitHub-aware update checking commit hash before re-downloading
-:global DownloadAndImportScriptsFromGitHubList
-$DownloadAndImportScriptsFromGitHubList https://github.com/smirnovhub/my-mikrotik-scripts/raw/refs/heads/master/global/tests/list.txt true
 ```
 
 #### Parameters & Behavior

@@ -874,6 +874,7 @@
 
     :return $result
 }
+
 # Purpose: Convert all uppercase letters in a string to lowercase.
 # Parameters:
 #   $1 - Input string

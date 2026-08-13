@@ -60,6 +60,12 @@
 
 # Automatically generated ASCII code table
 :global asciiCodeTable
+:if ([:len $asciiCodeTable] != 256) do={
+    :set asciiCodeTable [:toarray ""]
+    :for i from=0 to=255 do={
+        :set ($asciiCodeTable->[$DecToChar $i]) $i
+    }
+}
 
 # Purpose: Parse a list of key-value pairs (or standalone keys) into an associative array (map).
 # Parameters:
@@ -934,9 +940,7 @@
 :set DecToChar do={
     :local input [:tonum $1]
     :local hexchars "0123456789ABCDEF"
-
-    :local convert [:pick $hexchars (($input >> 4) & 0xF)]
-    :set convert ($convert . [:pick $hexchars ($input & 0xF)])
+    :local convert ([:pick $hexchars (($input >> 4) & 0xF)] . [:pick $hexchars ($input & 0xF)])
 
     :return [[:parse "(\"\\$convert\")"]]
 }
@@ -953,16 +957,7 @@
 # Output:
 #   -1
 :set CompareStr do={
-    :global DecToChar
     :global asciiCodeTable
-
-    # Initialize ASCII lookup table on first use
-    :if ([:typeof $asciiCodeTable] = "nothing") do={
-        :set asciiCodeTable [:toarray ""]
-        :for i from=0 to=255 do={
-            :set ($asciiCodeTable->[$DecToChar $i]) $i
-        }
-    }
 
     :local s1 [:tostr $1]
     :local s2 [:tostr $2]
@@ -996,20 +991,11 @@
 #   $1 - Input string to examine.
 # Returns: true if the string contains no characters in the ranges 0x00-0x1F or 0x7F-0xFF; otherwise false.
 :set IsPrintableStr do={
-    :global DecToChar
     :global asciiCodeTable
 
     # Workaround for the MikroTik RouterOS interpreter bug
     :if ([:len $0] = 0) do={
         :return false
-    }
-
-    # Initialize ASCII lookup table on first use
-    :if ([:typeof $asciiCodeTable] = "nothing") do={
-        :set asciiCodeTable [:toarray ""]
-        :for i from=0 to=255 do={
-            :set ($asciiCodeTable->[$DecToChar $i]) $i
-        }
     }
 
     :local input [:tostr $1]

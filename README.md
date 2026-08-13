@@ -232,23 +232,19 @@ Generate MD5 hashes or CRC32 checksums for strings or binary payloads:
 :global GetSha256Sum
 
 # Generate a CRC32 checksum
-:local crc32 [$GetCrc32Sum "123456789"]
-:put ("CRC32: " . $crc32)
+:put ("CRC32: " . [$GetCrc32Sum "123456789"])
 # Output: CRC32: cbf43926
 
 # Generate an MD5 hash
-:local md5 [$GetMd5Sum "admin"]
-:put ("MD5: " . $md5)
+:put ("MD5: " . [$GetMd5Sum "admin"])
 # Output: MD5: 21232f297a57a5a743894a0e4a801fc3
 
 # Generate a SHA1 hash
-:local sha1 [$GetSha1Sum "nimda"]
-:put ("SHA1: " . $sha1)
+:put ("SHA1: " . [$GetSha1Sum "nimda"])
 # Output: SHA1: a4cbb2f3933c5016da7e83fd135ab8a48b67bf61
 
 # Generate a SHA256 hash
-:local sha256 [$GetSha256Sum "password"]
-:put ("SHA256: " . $sha256)
+:put ("SHA256: " . [$GetSha256Sum "password"])
 # Output: SHA256: 5e884898da28047151d0e56f8dc6292773603d0d6aabbdd62a11ef721d1542d8
 ```
 

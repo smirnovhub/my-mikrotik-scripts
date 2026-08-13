@@ -134,14 +134,14 @@ The following global settings are required to configure Telegram integration. Th
 - **UrlDecode**: Decode a URL-encoded string back into original characters.
 - **UrlEncode**: Encode a string into URL-encoded format (`%HH`).
 
-### Checksum Calculation
+### Checksum and Hash Calculation
 
 - **GetCrc32Sum**: Calculate the standard IEEE 802.3 CRC32 checksum (8-character hexadecimal string) for a given input string using lookup table computation.
 - **GetMd5Sum**: Generate an MD5 hash (lowercase hexadecimal) from an input string according to RFC 1321.
 - **GetSha1Sum**: Generate an SHA1 hash (lowercase hexadecimal) from an input string according to RFC 3174.
 - **GetSha256Sum**: Generate an SHA256 hash (lowercase hexadecimal) from an input string according to RFC 6234.
 
-#### Checksum Benchmark on RB750Gr3
+#### Checksum and Hash Benchmarks on RB750Gr3
 
 All hash algorithms are highly optimized for RouterOS. Exact benchmarks for RB750Gr3 are listed below:
 

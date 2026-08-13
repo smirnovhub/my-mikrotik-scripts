@@ -139,6 +139,7 @@ The following global settings are required to configure Telegram integration. Th
 - **GetCrc32Sum**: Calculate the standard IEEE 802.3 CRC32 checksum (8-character hexadecimal string) for a given input string using lookup table computation.
 - **GetMd5Sum**: Generate an MD5 hash (lowercase hexadecimal) from an input string according to RFC 1321.
 - **GetSha1Sum**: Generate an SHA1 hash (lowercase hexadecimal) from an input string according to RFC 3174.
+- **GetSha256Sum**: Generate an SHA256 hash (lowercase hexadecimal) from an input string according to RFC 6234.
 
 #### Checksum Benchmark on RB750Gr3
 
@@ -147,6 +148,7 @@ All hash algorithms are highly optimized for RouterOS. Exact benchmarks for RB75
 - **GetCrc32Sum**: 1.0x baseline
 - **GetMd5Sum**: 1.04x slower than CRC32
 - **GetSha1Sum**: 1.35x slower than CRC32
+- **GetSha256Sum**: 2.95x slower than CRC32
 
 ### File & Script Utilities
 
@@ -224,24 +226,26 @@ Below are practical examples demonstrating how to execute common library functio
 Generate MD5 hashes or CRC32 checksums for strings or binary payloads:
 
 ```routeros
+:global GetCrc32Sum
 :global GetMd5Sum
 :global GetSha1Sum
-:global GetCrc32Sum
+:global GetSha256Sum
+
+# Generate a CRC32 checksum
+:put ("CRC32: " . [$GetCrc32Sum "123456789"])
+# Output: CRC32: cbf43926
 
 # Generate an MD5 hash
-:local md5 [$GetMd5Sum "admin"]
-:put ("MD5: " . $md5)
+:put ("MD5: " . [$GetMd5Sum "admin"])
 # Output: MD5: 21232f297a57a5a743894a0e4a801fc3
 
 # Generate a SHA1 hash
-:local sha1 [$GetSha1Sum "nimda"]
-:put ("SHA1: " . $sha1)
+:put ("SHA1: " . [$GetSha1Sum "nimda"])
 # Output: SHA1: a4cbb2f3933c5016da7e83fd135ab8a48b67bf61
 
-# Generate a CRC32 checksum
-:local crc32 [$GetCrc32Sum "123456789"]
-:put ("CRC32: " . $crc32)
-# Output: CRC32: cbf43926
+# Generate a SHA256 hash
+:put ("SHA256: " . [$GetSha256Sum "password"])
+# Output: SHA256: 5e884898da28047151d0e56f8dc6292773603d0d6aabbdd62a11ef721d1542d8
 ```
 
 ### 2. Base64 and URL Encoding / Decoding
@@ -470,7 +474,8 @@ Convert timestamps, format duration strings, or parse RouterOS/ISO date-time for
 - **RunAllHashesTests**: Executes hashing and checksum tests (`GetMd5SumTest`, `GetCrc32SumTest`).
 - **GetCrc32SumTest**: Tests CRC32 checksum calculation (`GetCrc32Sum`), verifying canonical test vectors (including `123456789`), empty inputs, single/multi-byte sequences, pangrams, numeric boundaries, case sensitivity, character ordering, null bytes, control whitespace, byte-range patterns, and length boundaries up to 257+ bytes.
 - **GetMd5SumTest**: Tests MD5 hash generation (`GetMd5Sum`), validating standard RFC 1321 test vectors, empty string boundaries, single/multi-character strings, case sensitivity, whitespace preservation, 55/56/64/128-byte multi-block message boundaries, and a complete 256-byte binary payload hash.
-- **GetSha1SumTest**: Tests SHA-1 hash generation (`GetSha1Sum`), validating standard FIPS PUB 180-4 test vectors, empty string boundaries, single/multi-character strings, case sensitivity, whitespace preservation, short message packing boundaries, 512-bit block boundary/overflow sequences (55/56/57, 63/64/65, 119/120/121, 127/128/129, 191/192/193, 255/256/257 bytes), 512/1024-byte multi-block messages, a complete 256-byte binary payload, 64 zero-byte messages, escape/control characters, embedded null-byte handling, and large 4096-byte buffer length counter overflows.
+- **GetSha1SumTest**: Tests SHA-1 hash generation (`GetSha1Sum`), validating FIPS PUB 180-4 test vectors, empty/short inputs, case and whitespace rules, control/null bytes, binary payloads, and 512-bit block boundary alignment and overflow edge cases.
+- **GetSha256SumTest**: Tests SHA-256 hash generation (`GetSha256Sum`), validating FIPS PUB 180-4/NIST test vectors, empty/short inputs, case and whitespace rules, control/null bytes, binary payloads, and block boundaries from single-block alignments up to multi-block overflows.
 
 ### Utility Functions Tests
 

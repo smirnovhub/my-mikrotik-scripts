@@ -407,104 +407,129 @@
     :local startTs [$GetUnixTimestamp]
     :log info "$prefix Start importing from $listUrl"
 
-    :do {
-        :local content [$FetchWithRedirect $listUrl]
-        :if ([:len $content] > 0) do={
-            :local lines [$SplitStr $content ("\n")]
-            :local importedScripts [:toarray ""]
+    :local maxRetries 3
+    :local retryDelay 5s
 
-            :foreach rawLine in=$lines do={
-                # Remove spaces, carriage returns, line feeds, and tabs from both ends
-                :local cleanLine [$TrimStr $rawLine]
+    :local content ""
+    :local fetchAttempt 0
 
-                # Ignore empty lines and comment lines (starting with #)
-                :if ([:len $cleanLine] > 0 and [:pick $cleanLine 0 1] != "#") do={
-                    :local parts [$SplitStr $cleanLine " "]
-                    :local cleanUrl ""
-                    :local res false
-
-                    :if ([:len $parts] >= 2) do={
-                        :local hash [$TrimStr ($parts->0)]
-                        :set cleanUrl [$TrimStr ($parts->1)]
-                        :set res [$DownloadAndImportScript $cleanUrl $hash]
-                    } else={
-                        :log error ("$prefix Hash sum or URL not found in line " . $cleanLine)
-                    }
-
-                    :if ($res = true) do={
-                        :log info ("$prefix " . $cleanUrl . " downloaded successfully")
-                        :set ($result->"success") ($result->"success" + 1)
-
-                        # Extract script name to add to the execution list
-                        :local fileName ""
-                        :local lastSlash 0
-                        :for i from=0 to=([:len $cleanUrl] - 1) do={
-                            :if ([:pick $cleanUrl $i ($i + 1)] = "/") do={
-                                :set lastSlash $i
-                            }
-                        }
-                        :set fileName [:pick $cleanUrl ($lastSlash + 1) [:len $cleanUrl]]
-
-                        :local scriptName $fileName
-                        :if ([:pick $fileName ([:len $fileName] - 4) [:len $fileName]] = ".rsc") do={
-                            :set scriptName [:pick $fileName 0 ([:len $fileName] - 4)]
-                        }
-
-                        :set importedScripts ($importedScripts , $scriptName)
-                    } else={
-                        :log error ("$prefix " . $cleanLine . " download error")
-                        :set ($result->"failed") ($result->"failed" + 1)
-                    }
-                }
-            }
-
-            :local logStr ("$prefix Import completed. Success: " . ($result->"success") . ", Failed: " . ($result->"failed"))
-
-            :if ($result->"failed" = 0) do={
-                :log info $logStr
-            } else={
-                :if ($result->"success" = 0) do={
-                    :log error $logStr
-                } else={
-                    :log warning $logStr
-                }
-            }
-
-            :if ($runScripts = true) do={
-                :delay 1s
-
-                # Execute all successfully imported scripts
-                :foreach scriptName in=$importedScripts do={
-                    :if ([:len [/system script find name=$scriptName]] > 0) do={
-                        :log info ("$prefix Running script " . $scriptName)
-                        :do {
-                            /system script run $scriptName
-                        } on-error={
-                            :log error ("$prefix Error running " . $scriptName)
-                            :set ($result->"success") ($result->"success" - 1)
-                            :set ($result->"failed") ($result->"failed" + 1)
-                        }
-                    } else={
-                        :log error "Script not found for execution: $scriptName"
-                        :set ($result->"success") ($result->"success" - 1)
-                        :set ($result->"failed") ($result->"failed" + 1)
-                    }
-                }
-            }
-
-            :local duration ([$GetUnixTimestamp] - $startTs)
-            :log info ("$prefix Finished in " . [$FormatSecondsLong $duration])
-
-            :return $result
-        } else={
-            :set ($result->"error") true
-            :return $result
+    :while ($fetchAttempt < $maxRetries and [:len $content] = 0) do={
+        :set fetchAttempt ($fetchAttempt + 1)
+        
+        :do {
+            :set content [$FetchWithRedirect $listUrl]
+        } on-error={
+            :set content ""
         }
-    } on-error={
-        :log error ("$prefix Failed to download list from " . $listUrl)
+
+        :if ([:len $content] = 0 and $fetchAttempt < $maxRetries) do={
+            :log warning ("$prefix Retry " . $fetchAttempt . "/" . $maxRetries . " downloading list from " . $listUrl)
+            :delay $retryDelay
+        }
+    }
+
+    :if ([:len $content] = 0) do={
+        :log error ("$prefix Failed to download list or content is empty " . $listUrl)
         :set ($result->"error") true
         :return $result
     }
+
+    :local lines [$SplitStr $content ("\n")]
+    :local importedScripts [:toarray ""]
+
+    :foreach rawLine in=$lines do={
+        # Remove spaces, carriage returns, line feeds, and tabs from both ends
+        :local cleanLine [$TrimStr $rawLine]
+
+        # Ignore empty lines and comment lines (starting with #)
+        :if ([:len $cleanLine] > 0 and [:pick $cleanLine 0 1] != "#") do={
+            :local parts [$SplitStr $cleanLine " "]
+
+            :if ([:len $parts] >= 2) do={
+                :local hash [$TrimStr ($parts->0)]
+                :local cleanUrl [$TrimStr ($parts->1)]
+                :local res false
+                :local attempt 0
+
+                :while ($attempt < $maxRetries and $res = false) do={
+                    :set attempt ($attempt + 1)
+                    :set res [$DownloadAndImportScript $cleanUrl $hash]
+
+                    :if ($res = false and $attempt < $maxRetries) do={
+                        :log warning ("$prefix Retry " . $attempt . "/" . $maxRetries . " for " . $cleanUrl)
+                        :delay $retryDelay
+                    }
+                }
+
+                :if ($res = true) do={
+                    :log info ("$prefix " . $cleanUrl . " downloaded successfully")
+                    :set ($result->"success") ($result->"success" + 1)
+
+                    # Extract script name to add to the execution list
+                    :local fileName ""
+                    :local lastSlash 0
+                    :for i from=0 to=([:len $cleanUrl] - 1) do={
+                        :if ([:pick $cleanUrl $i ($i + 1)] = "/") do={
+                            :set lastSlash $i
+                        }
+                    }
+
+                    :set fileName [:pick $cleanUrl ($lastSlash + 1) [:len $cleanUrl]]
+                    :local scriptName $fileName
+                    :if ([:pick $fileName ([:len $fileName] - 4) [:len $fileName]] = ".rsc") do={
+                        :set scriptName [:pick $fileName 0 ([:len $fileName] - 4)]
+                    }
+
+                    :set importedScripts ($importedScripts , $scriptName)
+                } else={
+                    :log error ("$prefix " . $cleanUrl . " download error")
+                    :set ($result->"failed") ($result->"failed" + 1)
+                }
+            } else={
+                :log error ("$prefix Hash sum or URL not found in line " . $cleanLine)
+                :set ($result->"failed") ($result->"failed" + 1)
+            }
+        }
+    }
+
+    :local logStr ("$prefix Import completed. Success: " . ($result->"success") . ", Failed: " . ($result->"failed"))
+
+    :if ($result->"failed" = 0) do={
+        :log info $logStr
+    } else={
+        :if ($result->"success" = 0) do={
+            :log error $logStr
+        } else={
+            :log warning $logStr
+        }
+    }
+
+    :if ($runScripts = true) do={
+        :delay 1s
+
+        # Execute all successfully imported scripts
+        :foreach scriptName in=$importedScripts do={
+            :if ([:len [/system script find name=$scriptName]] > 0) do={
+                :log info ("$prefix Running script " . $scriptName)
+                :do {
+                    /system script run $scriptName
+                } on-error={
+                    :log error ("$prefix Error running " . $scriptName)
+                    :set ($result->"success") ($result->"success" - 1)
+                    :set ($result->"failed") ($result->"failed" + 1)
+                }
+            } else={
+                :log error "Script not found for execution: $scriptName"
+                :set ($result->"success") ($result->"success" - 1)
+                :set ($result->"failed") ($result->"failed" + 1)
+            }
+        }
+    }
+
+    :local duration ([$GetUnixTimestamp] - $startTs)
+    :log info ("$prefix Finished in " . [$FormatSecondsLong $duration])
+
+    :return $result
 }
 
 # Purpose: Check GitHub repository for new commits via API, and if updated,
@@ -641,9 +666,8 @@
     :local result [$DownloadAndImportScriptsFromList $listUrl $runScripts]
 
     :if ($result->"error" = false) do={
-        $SetGlobalVar $lastCommitGlobalVarName $lastCommitHash
-
         :if ($result->"failed" = 0) do={
+            $SetGlobalVar $lastCommitGlobalVarName $lastCommitHash
             $SendPrivateTelegramMessage ("<b>$deviceName:</b>%0A$successEmoji All " . ($result->"success") . " scripts updated successfully from $filePath")
         } else={
             :if ($result->"success" = 0) do={

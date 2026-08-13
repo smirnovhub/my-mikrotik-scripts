@@ -23,9 +23,10 @@
 # /system script run global_functions_hashes
 #
 # global functions
+:global GetCrc32Sum
 :global GetMd5Sum
 :global GetSha1Sum
-:global GetCrc32Sum
+:global GetSha256Sum
 
 # 256-entry byte-to-hex lookup table
 :global hexByteTable
@@ -68,6 +69,61 @@
     0xAED16A4A; 0xD9D65ADC; 0x40DF0B66; 0x37D83BF0; 0xA9BCAE53; 0xDEBB9EC5; 0x47B2CF7F; 0x30B5FFE9;
     0xBDBDF21C; 0xCABAC28A; 0x53B39330; 0x24B4A3A6; 0xBAD03605; 0xCDD70693; 0x54DE5729; 0x23D967BF;
     0xB3667A2E; 0xC4614AB8; 0x5D681B02; 0x2A6F2B94; 0xB40BBE37; 0xC30C8EA1; 0x5A05DF1B; 0x2D02EF8D
+}
+
+# Purpose: Calculate the CRC32 checksum for a given string.
+# Parameters:
+#   $1 - String to calculate the checksum for
+# Returns: CRC32 checksum as a string or number
+# Example: :put [$GetCrc32Sum "Hello World"]
+# Output:
+#   4a17b156
+:set GetCrc32Sum do={
+    :global DecToChar
+    :global asciiCodeTable
+    :global crc32Table
+
+    # Initialize ASCII lookup table on first use
+    :if ([:typeof $asciiCodeTable] = "nothing") do={
+        :set asciiCodeTable [:toarray ""]
+
+        :for i from=0 to=255 do={
+            :set ($asciiCodeTable->[$DecToChar $i]) $i
+        }
+    }
+
+    # Convert input to string to ensure proper type
+    :local input [:tostr $1]
+
+    # Return initial CRC32 for empty string
+    :if ([:len $input] = 0) do={
+        :return "00000000"
+    }
+
+    :local hexChars "0123456789abcdef"
+
+    # Initial CRC value
+    :local crc 0xFFFFFFFF
+    :local len ([:len $input] - 1)
+
+    # Loop through each character in the input string
+    :for i from=0 to=$len do={
+        :set crc (($crc >> 8) ^ ($crc32Table->((($crc ^ ($asciiCodeTable->[:pick $input $i])) & 0xFF))))
+    }
+
+    # Final XOR value
+    :set crc ($crc ^ 0xFFFFFFFF)
+
+    # Format 8-character hex string output
+    :local result ""
+    :for byteIdx from=3 to=0 step=-1 do={
+        :local bVal (($crc >> ($byteIdx * 8)) & 0xFF)
+        :local h1 [:pick $hexChars (($bVal >> 4) & 0x0F) ((($bVal >> 4) & 0x0F) + 1)]
+        :local h2 [:pick $hexChars ($bVal & 0x0F) (($bVal & 0x0F) + 1)]
+        :set result ($result . $h1 . $h2)
+    }
+
+    :return $result
 }
 
 # Purpose: Calculate the MD5 hash checksum for a given string.
@@ -731,57 +787,169 @@
   )
 }
 
-# Purpose: Calculate the CRC32 checksum for a given string.
+# Purpose: Calculate the SHA256 hash checksum for a given string.
 # Parameters:
-#   $1 - String to calculate the checksum for
-# Returns: CRC32 checksum as a string or number
-# Example: :put [$GetCrc32Sum "Hello World"]
+#   $1 - String to calculate the hash for
+# Returns: SHA256 checksum as a hex string
+# Example: :put [$GetSha256Sum "Hello World"]
 # Output:
-#   4a17b156
-:set GetCrc32Sum do={
-    :global DecToChar
-    :global asciiCodeTable
-    :global crc32Table
+#   a591a6d40bf420404a011733cfb7b190d62c65bf0bcda32b57b277d9ad9f146e
+:set GetSha256Sum do={
+  :global DecToChar
 
-    # Initialize ASCII lookup table on first use
-    :if ([:typeof $asciiCodeTable] = "nothing") do={
-        :set asciiCodeTable [:toarray ""]
+  :global asciiCodeTable
+  :global hexByteTable
+  :global sha256KTable
 
-        :for i from=0 to=255 do={
-            :set ($asciiCodeTable->[$DecToChar $i]) $i
-        }
+  :local strMessage $1
+  :local lMessageLength [:len $strMessage]
+
+  # Fast return for empty string
+  :if ($lMessageLength = 0) do={
+    :return "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  }
+
+  # Initialize ASCII lookup table on first use
+  :if ([:typeof $asciiCodeTable] = "nothing") do={
+    :set asciiCodeTable [:toarray ""]
+    :for i from=0 to=255 do={
+      :set ($asciiCodeTable->[$DecToChar $i]) $i
+    }
+  }
+
+  # Initialize 256-entry byte-to-hex lookup table on first use
+  :if ([:typeof $hexByteTable] = "nothing") do={
+    :local strHex "0123456789abcdef"
+    :set hexByteTable [:toarray ""]
+    :for i from=0 to=255 do={
+      :local high [:pick $strHex ($i >> 4) (($i >> 4) + 1)]
+      :local low [:pick $strHex ($i & 0xF) (($i & 0xF) + 1)]
+      :set ($hexByteTable->$i) ($high . $low)
+    }
+  }
+
+  # Initialize SHA-256 Round Constants (K)
+  :if ([:typeof $sha256KTable] = "nothing") do={
+    :set sha256KTable {
+      0x428a2f98; 0x71374491; 0xb5c0fbcf; 0xe9b5dba5; 0x3956c25b; 0x59f111f1; 0x923f82a4; 0xab1c5ed5;
+      0xd807aa98; 0x12835b01; 0x243185be; 0x550c7dc3; 0x72be5d74; 0x80deb1fe; 0x9bdc06a7; 0xc19bf174;
+      0xe49b69c1; 0xefbe4786; 0x0fc19dc6; 0x240ca1cc; 0x2de92c6f; 0x4a7484aa; 0x5cb0a9dc; 0x76f988da;
+      0x983e5152; 0xa831c66d; 0xb00327c8; 0xbf597fc7; 0xc6e00bf3; 0xd5a79147; 0x06ca6351; 0x14292967;
+      0x27b70a85; 0x2e1b2138; 0x4d2c6dfc; 0x53380d13; 0x650a7354; 0x766a0abb; 0x81c2c92e; 0x92722c85;
+      0xa2bfe8a1; 0xa81a664b; 0xc24b8b70; 0xc76c51a3; 0xd192e819; 0xd6990624; 0xf40e3585; 0x106aa070;
+      0x19a4c116; 0x1e376c08; 0x2748774c; 0x34b0bcb5; 0x391c0cb3; 0x4ed8aa4a; 0x5b9cca4f; 0x682e6ff3;
+      0x748f82ee; 0x78a5636f; 0x84c87814; 0x8cc70208; 0x90befffa; 0xa4506ceb; 0xbef9a3f7; 0xc67178f2
+    }
+  }
+
+  :local lWordArray [:toarray ""]
+
+  # Pack message bytes into 32-bit words
+  :local i 0
+  :while (($i + 3) < $lMessageLength) do={
+    :set ($lWordArray->($i >> 2)) ( \
+      (($asciiCodeTable->[:pick $strMessage $i]) << 24) | \
+      (($asciiCodeTable->[:pick $strMessage ($i + 1)]) << 16) | \
+      (($asciiCodeTable->[:pick $strMessage ($i + 2)]) << 8) | \
+      ($asciiCodeTable->[:pick $strMessage ($i + 3)]) \
+    )
+    :set i ($i + 4)
+  }
+
+  # Pack remaining bytes
+  :local curVal 0
+  :if ($i < $lMessageLength) do={
+    :set curVal (($asciiCodeTable->[:pick $strMessage $i]) << 24)
+    :if (($i + 1) < $lMessageLength) do={
+      :set curVal ($curVal | (($asciiCodeTable->[:pick $strMessage ($i + 1)]) << 16))
+    }
+    :if (($i + 2) < $lMessageLength) do={
+      :set curVal ($curVal | (($asciiCodeTable->[:pick $strMessage ($i + 2)]) << 8))
+    }
+  }
+
+  # Add padding byte 0x80
+  :local padWIndex ($i >> 2)
+  :local padBPos ((3 - ($lMessageLength % 4)) * 8)
+  :set ($lWordArray->$padWIndex) ($curVal | (0x80 << $padBPos))
+
+  # Fill remaining words with 0 and append bit length
+  :local lNumberOfWords (((($lMessageLength + 8) / 64) + 1) * 16)
+  :for w from=($padWIndex + 1) to=($lNumberOfWords - 1) do={
+    :set ($lWordArray->$w) 0
+  }
+
+  :set ($lWordArray->($lNumberOfWords - 2)) 0
+  :set ($lWordArray->($lNumberOfWords - 1)) (($lMessageLength * 8) & 0xFFFFFFFF)
+
+  ### Initial SHA-256 State ###
+  :local h0 0x6a09e667
+  :local h1 0xbb67ae85
+  :local h2 0x3c6ef372
+  :local h3 0xa54ff53a
+  :local h4 0x510e527f
+  :local h5 0x9b05688c
+  :local h6 0x1f83d9ab
+  :local h7 0x5be0cd19
+
+  :local lWordArrLen ([:len $lWordArray] - 1)
+  :local w [:toarray ""]
+
+  :for lcv from=0 to=$lWordArrLen step=16 do={
+    :for j from=0 to=15 do={
+      :set ($w->$j) ($lWordArray->($lcv + $j))
     }
 
-    # Convert input to string to ensure proper type
-    :local input [:tostr $1]
-
-    # Return initial CRC32 for empty string
-    :if ([:len $input] = 0) do={
-        :return "00000000"
+    :for j from=16 to=63 do={
+      :set ($w->$j) ((($w->($j - 16)) + \
+        (((($w->($j - 15)) >> 7) | (($w->($j - 15)) << 25)) ^ ((($w->($j - 15)) >> 18) | (($w->($j - 15)) << 14)) ^ (($w->($j - 15)) >> 3)) + \
+        ($w->($j - 7)) + \
+        (((($w->($j - 2)) >> 17) | (($w->($j - 2)) << 15)) ^ ((($w->($j - 2)) >> 19) | (($w->($j - 2)) << 13)) ^ (($w->($j - 2)) >> 10))) & 0xFFFFFFFF)
     }
 
-    :local hexChars "0123456789abcdef"
+    :local a $h0
+    :local b $h1
+    :local c $h2
+    :local d $h3
+    :local e $h4
+    :local f $h5
+    :local g $h6
+    :local h $h7
 
-    # Initial CRC value
-    :local crc 0xFFFFFFFF
-    :local len ([:len $input] - 1)
+    # Loop-based SHA-256 Rounds with bitwise optimizations
+    :for r from=0 to=63 do={
+      :local temp1 (($h + (((($e >> 6) | ($e << 26)) ^ (($e >> 11) | ($e << 21)) ^ (($e >> 25) | ($e << 7))) & 0xFFFFFFFF) + ($g ^ ($e & ($f ^ $g))) + ($sha256KTable->$r) + ($w->$r)) & 0xFFFFFFFF)
+      :local temp2 (((((($a >> 2) | ($a << 30)) ^ (($a >> 13) | ($a << 19)) ^ (($a >> 22) | ($a << 10))) & 0xFFFFFFFF) + (($a & $b) | ($c & ($a ^ $b)))) & 0xFFFFFFFF)
 
-    # Loop through each character in the input string
-    :for i from=0 to=$len do={
-        :set crc (($crc >> 8) ^ ($crc32Table->((($crc ^ ($asciiCodeTable->[:pick $input $i])) & 0xFF))))
+      :set h $g
+      :set g $f
+      :set f $e
+      :set e (($d + $temp1) & 0xFFFFFFFF)
+      :set d $c
+      :set c $b
+      :set b $a
+      :set a (($temp1 + $temp2) & 0xFFFFFFFF)
     }
 
-    # Final XOR value
-    :set crc ($crc ^ 0xFFFFFFFF)
+    :set h0 (($h0 + $a) & 0xFFFFFFFF)
+    :set h1 (($h1 + $b) & 0xFFFFFFFF)
+    :set h2 (($h2 + $c) & 0xFFFFFFFF)
+    :set h3 (($h3 + $d) & 0xFFFFFFFF)
+    :set h4 (($h4 + $e) & 0xFFFFFFFF)
+    :set h5 (($h5 + $f) & 0xFFFFFFFF)
+    :set h6 (($h6 + $g) & 0xFFFFFFFF)
+    :set h7 (($h7 + $h) & 0xFFFFFFFF)
+  }
 
-    # Format 8-character hex string output
-    :local result ""
-    :for byteIdx from=3 to=0 step=-1 do={
-        :local bVal (($crc >> ($byteIdx * 8)) & 0xFF)
-        :local h1 [:pick $hexChars (($bVal >> 4) & 0x0F) ((($bVal >> 4) & 0x0F) + 1)]
-        :local h2 [:pick $hexChars ($bVal & 0x0F) (($bVal & 0x0F) + 1)]
-        :set result ($result . $h1 . $h2)
-    }
-
-    :return $result
+  # Build final Hex string
+  :return ( \
+    ($hexByteTable->(($h0 >> 24) & 0xFF)) . ($hexByteTable->(($h0 >> 16) & 0xFF)) . ($hexByteTable->(($h0 >> 8) & 0xFF)) . ($hexByteTable->($h0 & 0xFF)) . \
+    ($hexByteTable->(($h1 >> 24) & 0xFF)) . ($hexByteTable->(($h1 >> 16) & 0xFF)) . ($hexByteTable->(($h1 >> 8) & 0xFF)) . ($hexByteTable->($h1 & 0xFF)) . \
+    ($hexByteTable->(($h2 >> 24) & 0xFF)) . ($hexByteTable->(($h2 >> 16) & 0xFF)) . ($hexByteTable->(($h2 >> 8) & 0xFF)) . ($hexByteTable->($h2 & 0xFF)) . \
+    ($hexByteTable->(($h3 >> 24) & 0xFF)) . ($hexByteTable->(($h3 >> 16) & 0xFF)) . ($hexByteTable->(($h3 >> 8) & 0xFF)) . ($hexByteTable->($h3 & 0xFF)) . \
+    ($hexByteTable->(($h4 >> 24) & 0xFF)) . ($hexByteTable->(($h4 >> 16) & 0xFF)) . ($hexByteTable->(($h4 >> 8) & 0xFF)) . ($hexByteTable->($h4 & 0xFF)) . \
+    ($hexByteTable->(($h5 >> 24) & 0xFF)) . ($hexByteTable->(($h5 >> 16) & 0xFF)) . ($hexByteTable->(($h5 >> 8) & 0xFF)) . ($hexByteTable->($h5 & 0xFF)) . \
+    ($hexByteTable->(($h6 >> 24) & 0xFF)) . ($hexByteTable->(($h6 >> 16) & 0xFF)) . ($hexByteTable->(($h6 >> 8) & 0xFF)) . ($hexByteTable->($h6 & 0xFF)) . \
+    ($hexByteTable->(($h7 >> 24) & 0xFF)) . ($hexByteTable->(($h7 >> 16) & 0xFF)) . ($hexByteTable->(($h7 >> 8) & 0xFF)) . ($hexByteTable->($h7 & 0xFF)) \
+  )
 }

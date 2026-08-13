@@ -3,11 +3,6 @@
 #
 # :global DownloadAndImportScriptsFromList
 # $DownloadAndImportScriptsFromList https://github.com/smirnovhub/my-mikrotik-scripts/raw/refs/heads/master/global/list.txt true
-#
-# Or with automatically check last commit hash:
-#
-# :global DownloadAndImportScriptsFromGitHubList
-# $DownloadAndImportScriptsFromGitHubList https://github.com/smirnovhub/my-mikrotik-scripts/raw/refs/heads/master/global/list.txt true
 
 f16ffc6002d598945c368b506c8a8424 https://github.com/smirnovhub/my-mikrotik-scripts/raw/refs/heads/master/global/global_functions.rsc
 42df77c72ee8c8b95b30447d0d34272c https://github.com/smirnovhub/my-mikrotik-scripts/raw/refs/heads/master/global/global_functions_array_str.rsc

@@ -300,11 +300,15 @@
       :set edgeOffset 1
     }
 
-    # Pre-calculate the target array length to stop at
-    # If $3 is a number, we stop when [:len $result] reaches ($3 - 1)
-    :local targetLen -1
+    # Parse and validate the limit parameter ($3)
+    :local limit -1
     :if ([:typeof [:tonum $3]] = "num") do={
-        :set targetLen ([:tonum $3] - 1)
+        :set limit [:tonum $3]
+    }
+
+    # Edge case: if limit is 1, return the entire string as a single-element array
+    :if ($limit = 1) do={
+        :return ([:toarray ""] , $1)
     }
 
     # Loop while delimiter is found in the string
@@ -315,10 +319,9 @@
         # Move 'substringStart' to the character after the found delimiter
         :set substringStart ($i+$delimiterLength)
 
-        # If the result array has reached the maximum number of parts ($3),
-        # append the rest of the string and return
-        :if ([:len $result] = $targetLen) do={
-          :return ($result, ([:pick $1 $substringStart [:len $1]]))
+        # Stop splitting if we reached (limit - 1) elements
+        :if ($limit > 1 && [:len $result] = ($limit - 1)) do={
+            :return ($result , ([:pick $1 $substringStart [:len $1]]))
         }
     }
 

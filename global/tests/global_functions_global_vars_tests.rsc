@@ -27,7 +27,7 @@
     :global SetGlobalVar
     :global RemoveGlobalVar
     :global DecToChar
-    :global IsPrintableStr
+    :global RunGenericTestCase
 
     :local res [:toarray ""]
     :if ([:typeof $1] = "array") do={
@@ -37,244 +37,202 @@
         :set ($res->"failed") 0
     }
 
-    # Helper function to validate results and update counters
-    :local RunTestCase do={
-        :global IsPrintableStr
-
-        # Workaround for the MikroTik RouterOS interpreter bug (phantom execution)
-        :if ([:len $0] = 0) do={
-            :return $1
-        }
-
-        :local state $1
-        :local actual [:tostr $2]
-        :local expected [:tostr $3]
-        :local name [:tostr $4]
-
-        :local actualDisplay $actual
-        :if (![$IsPrintableStr $actualDisplay]) do={
-            :set actualDisplay "<binary string>"
-        } else={
-            :if ([:len $actual] > 30) do={
-                :set actualDisplay ([:pick $actual 0 30] . "<truncated>")
-            }
-        }
-
-        :local expectedDisplay $expected
-        :if (![$IsPrintableStr $expectedDisplay]) do={
-            :set expectedDisplay "<binary string>"
-        } else={
-            :if ([:len $expected] > 30) do={
-                :set expectedDisplay ([:pick $expected 0 30] . "<truncated>")
-            }
-        }
-
-        :if ($actual = $expected) do={
-            :put ("  \1B[32m[PASS]\1B[0m " . $name . ": '" . $expectedDisplay . "' -> '" . $actualDisplay . "'")
-            :set ($state->"passed") (($state->"passed") + 1)
-        } else={
-            :put ("  \1B[31m[FAIL]\1B[0m " . $name . ": '" . $expectedDisplay . "' | Expected: '" . $expectedDisplay . "', Got: '" . $actualDisplay . "'")
-            :set ($state->"failed") (($state->"failed") + 1)
-        }
-        :return $state
-    }
-
     :put "Starting GlobalVarUtils tests..."
 
-    # --- Test 2: SetGlobalVar & GetGlobalVar (String) ---
+    # SetGlobalVar & GetGlobalVar (String)
     $SetGlobalVar "testVarStr" "helloMikrotik"
-    :set res [$RunTestCase $res [$GetGlobalVar "testVarStr"] "helloMikrotik" "Set and get string value"]
+    :set res [$RunGenericTestCase $res $GetGlobalVar "testVarStr" "nothing" "nothing" "helloMikrotik" "Set and get string value"]
 
-    # --- Test 3: SetGlobalVar & GetGlobalVar (String with Double Quotes) ---
+    # SetGlobalVar & GetGlobalVar (String with Double Quotes)
     $SetGlobalVar "testVarQuotes" ("text \"with\" quotes")
-    :set res [$RunTestCase $res [$GetGlobalVar "testVarQuotes"] ("text \"with\" quotes") "Set and get string with internal double quotes"]
+    :set res [$RunGenericTestCase $res $GetGlobalVar "testVarQuotes" "nothing" "nothing" ("text \"with\" quotes") "Set and get string with internal double quotes"]
 
-    # --- Test 4: SetGlobalVar & GetGlobalVar (Integer) ---
+    # SetGlobalVar & GetGlobalVar (Integer)
     $SetGlobalVar "testVarInt" 12345
-    :set res [$RunTestCase $res [$GetGlobalVar "testVarInt"] "12345" "Set and get integer value"]
+    :set res [$RunGenericTestCase $res $GetGlobalVar "testVarInt" "nothing" "nothing" 12345 "Set and get integer value"]
 
-    # --- Test 5: SetGlobalVar & GetGlobalVar (Boolean) ---
+    # SetGlobalVar & GetGlobalVar (Boolean)
     $SetGlobalVar "testVarBool" true
-    :set res [$RunTestCase $res [$GetGlobalVar "testVarBool"] "true" "Set and get boolean value"]
+    :set res [$RunGenericTestCase $res $GetGlobalVar "testVarBool" "nothing" "nothing" true "Set and get boolean value"]
 
-    # --- Test 6: GetGlobalVarOrDefault (Variable Exists) ---
+    # GetGlobalVarOrDefault (Variable Exists)
     $SetGlobalVar "testVarExist" "activeValue"
-    :set res [$RunTestCase $res [$GetGlobalVarOrDefault "testVarExist" "defaultFallback"] "activeValue" "Get existing variable value with default fallback"]
+    :set res [$RunGenericTestCase $res $GetGlobalVarOrDefault "testVarExist" "defaultFallback" "nothing" "activeValue" "Get existing variable value with default fallback"]
 
-    # --- Test 7: GetGlobalVarOrDefault (Variable Is Nothing/Unset) ---
-    :set res [$RunTestCase $res [$GetGlobalVarOrDefault "testVarNonExistent" "fallbackStr"] "fallbackStr" "Get non-existent variable returns default string"]
-    :set res [$RunTestCase $res [$GetGlobalVarOrDefault "testVarNonExistent" 999] "999" "Get non-existent variable returns default integer"]
+    # GetGlobalVarOrDefault (Variable Is Nothing/Unset)
+    :set res [$RunGenericTestCase $res $GetGlobalVarOrDefault "testVarNonExistent" "fallbackStr" "nothing" "fallbackStr" "Get non-existent variable returns default string"]
+    :set res [$RunGenericTestCase $res $GetGlobalVarOrDefault "testVarNonExistent" 999 "nothing" 999 "Get non-existent variable returns default integer"]
 
-    # --- Test 8: RemoveGlobalVar ---
+    # RemoveGlobalVar
     $SetGlobalVar "testVarToRemove" "temporaryData"
     $RemoveGlobalVar "testVarToRemove"
-    :set res [$RunTestCase $res [$GetGlobalVarOrDefault "testVarToRemove" "removedSuccessfully"] "removedSuccessfully" "Remove global variable and verify deletion"]
+    :set res [$RunGenericTestCase $res $GetGlobalVarOrDefault "testVarToRemove" "removedSuccessfully" "nothing" "removedSuccessfully" "Remove global variable and verify deletion"]
 
-    # --- Test 9: SetGlobalVar & GetGlobalVar (Float / Num) ---
+    # SetGlobalVar & GetGlobalVar (Float / Num)
     $SetGlobalVar "testVarFloat" 15.65
-    :set res [$RunTestCase $res [$GetGlobalVar "testVarFloat"] "15.65" "Set and get float number value"]
+    :set res [$RunGenericTestCase $res $GetGlobalVar "testVarFloat" "nothing" "nothing" 15.65 "Set and get float number value"]
 
-    # --- Test 10: SetGlobalVar & GetGlobalVar (IP Address) ---
+    # SetGlobalVar & GetGlobalVar (IP Address)
     $SetGlobalVar "testVarIp" 192.168.88.1
-    :set res [$RunTestCase $res [$GetGlobalVar "testVarIp"] "192.168.88.1" "Set and get IP address value"]
+    :set res [$RunGenericTestCase $res $GetGlobalVar "testVarIp" "nothing" "nothing" 192.168.88.1 "Set and get IP address value"]
 
-    # --- Test 11: SetGlobalVar & GetGlobalVar (IP Prefix / Subnet) ---
+    # SetGlobalVar & GetGlobalVar (IP Prefix / Subnet)
     $SetGlobalVar "testVarPrefix" 10.0.0.0/24
-    :set res [$RunTestCase $res [$GetGlobalVar "testVarPrefix"] "10.0.0.0/24" "Set and get IP prefix value"]
+    :set res [$RunGenericTestCase $res $GetGlobalVar "testVarPrefix" "nothing" "nothing" 10.0.0.0/24 "Set and get IP prefix value"]
 
-    # --- Test 12: SetGlobalVar & GetGlobalVar (Time) ---
+    # SetGlobalVar & GetGlobalVar (Time)
     $SetGlobalVar "testVarTime" 01:15:30
-    :set res [$RunTestCase $res [$GetGlobalVar "testVarTime"] "01:15:30" "Set and get time value"]
+    :set res [$RunGenericTestCase $res $GetGlobalVar "testVarTime" "nothing" "nothing" 01:15:30 "Set and get time value"]
 
-    # --- Test 13: SetGlobalVar & GetGlobalVar (Array) ---
+    # SetGlobalVar & GetGlobalVar (Array)
     $SetGlobalVar "testVarArray" [:toarray "a,b,c"]
-    :set res [$RunTestCase $res [$GetGlobalVar "testVarArray"] "a;b;c" "Set and get simple array structure"]
+    :set res [$RunGenericTestCase $res $GetGlobalVar "testVarArray" "nothing" "nothing" "a;b;c" "Set and get simple array structure"]
 
-    # --- Test 14: GetGlobalVarOrDefault (With Float and IP Fallbacks) ---
-    :set res [$RunTestCase $res [$GetGlobalVarOrDefault "testVarNonExistent" 25.45] "25.45" "Get non-existent variable returns default float"]
-    :set res [$RunTestCase $res [$GetGlobalVarOrDefault "testVarNonExistent" 10.0.0.1] "10.0.0.1" "Get non-existent variable returns default IP address"]
+    # GetGlobalVarOrDefault (With Float and IP Fallbacks)
+    :set res [$RunGenericTestCase $res $GetGlobalVarOrDefault "testVarNonExistent" 25.45 "nothing" 25.45 "Get non-existent variable returns default float"]
+    :set res [$RunGenericTestCase $res $GetGlobalVarOrDefault "testVarNonExistent" 10.0.0.1 "nothing" 10.0.0.1 "Get non-existent variable returns default IP address"]
 
-    # --- Test 15: SetGlobalVar & GetGlobalVar (Associative Array) ---
+    # SetGlobalVar & GetGlobalVar (Associative Array)
     :local assocKeyVal [:toarray ""]
     :set ($assocKeyVal->"host") "192.168.88.1"
     :set ($assocKeyVal->"port") 8080
     $SetGlobalVar "testVarAssocArray" $assocKeyVal
-    :set res [$RunTestCase $res [$GetGlobalVar "testVarAssocArray"] "host=192.168.88.1;port=8080" "Set and get associative array"]
+    :set res [$RunGenericTestCase $res $GetGlobalVar "testVarAssocArray" "nothing" "nothing" "host=192.168.88.1;port=8080" "Set and get associative array"]
 
-    # --- Test 16: GetGlobalVarOrDefault (Associative Array Fallback) ---
+    # GetGlobalVarOrDefault (Associative Array Fallback)
     :local defaultAssoc [:toarray ""]
     :set ($defaultAssoc->"status") "down"
-    :set res [$RunTestCase $res [$GetGlobalVarOrDefault "testVarNonExistent" $defaultAssoc] "status=down" "Get non-existent variable returns default associative array"]
+    :set res [$RunGenericTestCase $res $GetGlobalVarOrDefault "testVarNonExistent" $defaultAssoc "nothing" "status=down" "Get non-existent variable returns default associative array"]
 
-    # --- Test 17: Empty String ---
+    # Empty String
     $SetGlobalVar "testVarEmpty" ""
-    :set res [$RunTestCase $res [$GetGlobalVar "testVarEmpty"] "" "Set and get empty string"]
+    :set res [$RunGenericTestCase $res $GetGlobalVar "testVarEmpty" "nothing" "nothing" "" "Set and get empty string"]
 
-    # --- Test 18: Overwrite Existing Value ---
+    # Overwrite Existing Value
     $SetGlobalVar "testVarOverwrite" "first"
     $SetGlobalVar "testVarOverwrite" "second"
-    :set res [$RunTestCase $res [$GetGlobalVar "testVarOverwrite"] "second" "Overwrite existing global variable"]
+    :set res [$RunGenericTestCase $res $GetGlobalVar "testVarOverwrite" "nothing" "nothing" "second" "Overwrite existing global variable"]
 
-    # --- Test 19: Change Value Type ---
+    # Change Value Type
     $SetGlobalVar "testVarType" "text"
     $SetGlobalVar "testVarType" 555
-    :set res [$RunTestCase $res [$GetGlobalVar "testVarType"] "555" "Overwrite string with integer"]
+    :set res [$RunGenericTestCase $res $GetGlobalVar "testVarType" "nothing" "nothing" 555 "Overwrite string with integer"]
 
-    # --- Test 20: Boolean False ---
+    # Boolean False
     $SetGlobalVar "testVarFalse" false
-    :set res [$RunTestCase $res [$GetGlobalVar "testVarFalse"] "false" "Set and get boolean false"]
+    :set res [$RunGenericTestCase $res $GetGlobalVar "testVarFalse" "nothing" "nothing" false "Set and get boolean false"]
 
-    # --- Test 21: Integer Zero ---
+    # Integer Zero
     $SetGlobalVar "testVarZero" 0
-    :set res [$RunTestCase $res [$GetGlobalVar "testVarZero"] "0" "Set and get zero"]
+    :set res [$RunGenericTestCase $res $GetGlobalVar "testVarZero" "nothing" "nothing" 0 "Set and get zero"]
 
-    # --- Test 22: Negative Integer ---
+    # Negative Integer
     $SetGlobalVar "testVarNegative" -123
-    :set res [$RunTestCase $res [$GetGlobalVar "testVarNegative"] "-123" "Set and get negative integer"]
+    :set res [$RunGenericTestCase $res $GetGlobalVar "testVarNegative" "nothing" "nothing" -123 "Set and get negative integer"]
 
-    # --- Test 23: Long String ---
+    # Long String
     :local longString ""
     :for i from=1 to=500 do={
         :set longString ($longString . "A")
     }
     $SetGlobalVar "testVarLong" $longString
-    :set res [$RunTestCase $res [$GetGlobalVar "testVarLong"] $longString "Set and get long string"]
+    :set res [$RunGenericTestCase $res $GetGlobalVar "testVarLong" "nothing" "nothing" $longString "Set and get long string"]
 
-    # --- Test 25: Special Characters ---
+    # Special Characters
     $SetGlobalVar "testVarSpecial" ("\\/\$[]{}();,:|")
-    :set res [$RunTestCase $res [$GetGlobalVar "testVarSpecial"] ("\\/\$[]{}();,:|") "Set and get special characters"]
+    :set res [$RunGenericTestCase $res $GetGlobalVar "testVarSpecial" "nothing" "nothing" ("\\/\$[]{}();,:|") "Set and get special characters"]
 
-    # --- Test 26: Multiple Updates ---
+    # Multiple Updates
     :for i from=1 to=100 do={
         $SetGlobalVar "testVarLoop" $i
     }
-    :set res [$RunTestCase $res [$GetGlobalVar "testVarLoop"] "100" "Multiple sequential updates"]
+    :set res [$RunGenericTestCase $res $GetGlobalVar "testVarLoop" "nothing" "nothing" 100 "Multiple sequential updates"]
 
-    # --- Test 27: Remove Twice ---
+    # Remove Twice
     $SetGlobalVar "testVarRemoveTwice" "x"
     $RemoveGlobalVar "testVarRemoveTwice"
     $RemoveGlobalVar "testVarRemoveTwice"
-    :set res [$RunTestCase $res [$GetGlobalVarOrDefault "testVarRemoveTwice" "ok"] "ok" "Remove already removed variable"]
+    :set res [$RunGenericTestCase $res $GetGlobalVarOrDefault "testVarRemoveTwice" "ok" "nothing" "ok" "Remove already removed variable"]
 
-    # --- Test 29: Default Does Not Create Variable ---
+    # Default Does Not Create Variable
     [$GetGlobalVarOrDefault "testVarDefault" "fallback"]
-    :set res [$RunTestCase $res [$GetGlobalVar "testVarDefault"] "" "GetGlobalVarOrDefault does not create variable"]
+    :set res [$RunGenericTestCase $res $GetGlobalVar "testVarDefault" "nothing" "nothing" "" "GetGlobalVarOrDefault does not create variable"]
 
-    # --- Test 30: Variable Isolation ---
+    # Variable Isolation
     $SetGlobalVar "testVarA" "AAA"
     $SetGlobalVar "testVarB" "BBB"
-    :set res [$RunTestCase $res [$GetGlobalVar "testVarA"] "AAA" "Variables are independent (A)"]
-    :set res [$RunTestCase $res [$GetGlobalVar "testVarB"] "BBB" "Variables are independent (B)"]
+    :set res [$RunGenericTestCase $res $GetGlobalVar "testVarA" "nothing" "nothing" "AAA" "Variables are independent (A)"]
+    :set res [$RunGenericTestCase $res $GetGlobalVar "testVarB" "nothing" "nothing" "BBB" "Variables are independent (B)"]
 
-    # --- Test: Space ---
+    # Space
     $SetGlobalVar "testVarSpace" "Hello World"
-    :set res [$RunTestCase $res [$GetGlobalVar "testVarSpace"] "Hello World" "String with spaces"]
+    :set res [$RunGenericTestCase $res $GetGlobalVar "testVarSpace" "nothing" "nothing" "Hello World" "String with spaces"]
 
-    # --- Test: Leading and trailing spaces ---
+    # Leading and trailing spaces
     $SetGlobalVar "testVarSpaces" "  Hello World  "
-    :set res [$RunTestCase $res [$GetGlobalVar "testVarSpaces"] "  Hello World  " "Leading and trailing spaces"]
+    :set res [$RunGenericTestCase $res $GetGlobalVar "testVarSpaces" "nothing" "nothing" "  Hello World  " "Leading and trailing spaces"]
 
-    # --- Test: Tabs ---
+    # Tabs
     $SetGlobalVar "testVarTabs" ("A\tB\tC")
-    :set res [$RunTestCase $res [$GetGlobalVar "testVarTabs"] ("A\tB\tC") "String with tabs"]
+    :set res [$RunGenericTestCase $res $GetGlobalVar "testVarTabs" "nothing" "nothing" ("A\tB\tC") "String with tabs"]
 
-    # --- Test: New lines ---
+    # New lines
     $SetGlobalVar "testVarNewLines" ("Line1\nLine2\nLine3")
-    :set res [$RunTestCase $res [$GetGlobalVar "testVarNewLines"] ("Line1\nLine2\nLine3") "String with new lines"]
+    :set res [$RunGenericTestCase $res $GetGlobalVar "testVarNewLines" "nothing" "nothing" ("Line1\nLine2\nLine3") "String with new lines"]
 
-    # --- Test: Carriage return ---
+    # Carriage return
     $SetGlobalVar "testVarCR" ("Line1\rLine2")
-    :set res [$RunTestCase $res [$GetGlobalVar "testVarCR"] ("Line1\rLine2") "String with carriage return"]
+    :set res [$RunGenericTestCase $res $GetGlobalVar "testVarCR" "nothing" "nothing" ("Line1\rLine2") "String with carriage return"]
 
-    # --- Test: Quotes ---
+    # Quotes
     $SetGlobalVar "testVarQuotes2" ("\"Hello\"")
-    :set res [$RunTestCase $res [$GetGlobalVar "testVarQuotes2"] ("\"Hello\"") "Double quotes"]
+    :set res [$RunGenericTestCase $res $GetGlobalVar "testVarQuotes2" "nothing" "nothing" ("\"Hello\"") "Double quotes"]
 
-    # --- Test: Single quotes ---
+    # Single quotes
     $SetGlobalVar "testVarSingleQuotes" "'Hello'"
-    :set res [$RunTestCase $res [$GetGlobalVar "testVarSingleQuotes"] "'Hello'" "Single quotes"]
+    :set res [$RunGenericTestCase $res $GetGlobalVar "testVarSingleQuotes" "nothing" "nothing" "'Hello'" "Single quotes"]
 
-    # --- Test: Backslashes ---
+    # Backslashes
     $SetGlobalVar "testVarBackslash" ("\\server\\share\\dir")
-    :set res [$RunTestCase $res [$GetGlobalVar "testVarBackslash"] ("\\server\\share\\dir") "Backslashes"]
+    :set res [$RunGenericTestCase $res $GetGlobalVar "testVarBackslash" "nothing" "nothing" ("\\server\\share\\dir") "Backslashes"]
 
-    # --- Test: Dollar sign ---
+    # Dollar sign
     $SetGlobalVar "testVarDollar" ("\$abc$123")
-    :set res [$RunTestCase $res [$GetGlobalVar "testVarDollar"] ("\$abc$123") "Dollar sign"]
+    :set res [$RunGenericTestCase $res $GetGlobalVar "testVarDollar" "nothing" "nothing" ("\$abc$123") "Dollar sign"]
 
-    # --- Test: Percent signs ---
+    # Percent signs
     $SetGlobalVar "testVarPercent" "100% complete"
-    :set res [$RunTestCase $res [$GetGlobalVar "testVarPercent"] "100% complete" "Percent signs"]
+    :set res [$RunGenericTestCase $res $GetGlobalVar "testVarPercent" "nothing" "nothing" "100% complete" "Percent signs"]
 
-    # --- Test: URL characters ---
+    # URL characters
     $SetGlobalVar "testVarUrl" "https://example.com/test?a=1&b=2#fragment"
-    :set res [$RunTestCase $res [$GetGlobalVar "testVarUrl"] "https://example.com/test?a=1&b=2#fragment" "URL"]
+    :set res [$RunGenericTestCase $res $GetGlobalVar "testVarUrl" "nothing" "nothing" "https://example.com/test?a=1&b=2#fragment" "URL"]
 
-    # --- Test: File path ---
+    # File path
     $SetGlobalVar "testVarPath" ("C:\\Program Files\\RouterOS\\test.txt")
-    :set res [$RunTestCase $res [$GetGlobalVar "testVarPath"] ("C:\\Program Files\\RouterOS\\test.txt") "Windows path"]
+    :set res [$RunGenericTestCase $res $GetGlobalVar "testVarPath" "nothing" "nothing" ("C:\\Program Files\\RouterOS\\test.txt") "Windows path"]
 
-    # --- Test: Shell characters ---
+    # Shell characters
     $SetGlobalVar "testVarShell" "&|;<>`(){}[]"
-    :set res [$RunTestCase $res [$GetGlobalVar "testVarShell"] "&|;<>`(){}[]" "Shell metacharacters"]
+    :set res [$RunGenericTestCase $res $GetGlobalVar "testVarShell" "nothing" "nothing" "&|;<>`(){}[]" "Shell metacharacters"]
 
-    # --- Test: Math symbols ---
+    # Math symbols
     $SetGlobalVar "testVarMath" "+-*/=%^"
-    :set res [$RunTestCase $res [$GetGlobalVar "testVarMath"] "+-*/=%^" "Math symbols"]
+    :set res [$RunGenericTestCase $res $GetGlobalVar "testVarMath" "nothing" "nothing" "+-*/=%^" "Math symbols"]
 
-    # --- Test: Punctuation ---
+    # Punctuation
     $SetGlobalVar "testVarPunctuation" ".,:!?@#~"
-    :set res [$RunTestCase $res [$GetGlobalVar "testVarPunctuation"] ".,:!?@#~" "Punctuation"]
+    :set res [$RunGenericTestCase $res $GetGlobalVar "testVarPunctuation" "nothing" "nothing" ".,:!?@#~" "Punctuation"]
 
-    # --- Test: Mixed special characters ---
+    # Mixed special characters
     $SetGlobalVar "testVarMixed" ("\"%\\\$&;=+?<>[]{}()\n\r\t")
-    :set res [$RunTestCase $res [$GetGlobalVar "testVarMixed"] ("\"%\\\$&;=+?<>[]{}()\n\r\t") "Mixed special characters"]
+    :set res [$RunGenericTestCase $res $GetGlobalVar "testVarMixed" "nothing" "nothing" ("\"%\\\$&;=+?<>[]{}()\n\r\t") "Mixed special characters"]
 
-    # --- Test: Empty string ---
+    # Empty string
     $SetGlobalVar "testVarEmpty2" ""
-    :set res [$RunTestCase $res [$GetGlobalVar "testVarEmpty2"] "" "Empty string"]
+    :set res [$RunGenericTestCase $res $GetGlobalVar "testVarEmpty2" "nothing" "nothing" "" "Empty string"]
 
-    # --- Test: All 256 Byte Values ---
+    # All 256 Byte Values
     :local allChars ""
 
     :for i from=0 to=255 do={
@@ -282,10 +240,9 @@
     }
 
     $SetGlobalVar "testVarAllChars" $allChars
-    :set res [$RunTestCase $res [$GetGlobalVar "testVarAllChars"] $allChars "String containing all byte values (0-255)"]
+    :set res [$RunGenericTestCase $res $GetGlobalVar "testVarAllChars" "nothing" "nothing" $allChars "String containing all byte values (0-255)"]
 
-    # --- Cleanup environment ---
-    # Removing environmental pollution from tests
+    # Cleanup environment
     $RemoveGlobalVar "testVarUnset"
     $RemoveGlobalVar "testVarStr"
     $RemoveGlobalVar "testVarQuotes"

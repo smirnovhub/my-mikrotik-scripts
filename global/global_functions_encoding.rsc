@@ -326,7 +326,7 @@
 #   encoded%21%20%28string%29%20%5Btest%5D
 :set UrlEncode do={
     :global urlEncodeHexTable
-    
+
     :local input [:tostr $1]
     :local inputLen [:len $input]
 

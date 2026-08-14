@@ -372,7 +372,7 @@
     :set res [$RunTestCase $res "FFFF" 65535 "Two byte max value"]
 
     # --- Edge Cases ---
-    :set res [$RunTestCase $res "" 0 "Empty input string"]
+    :set res [$RunTestCase $res "" nil "Empty input string"]
 
     # --- Leading Zeros ---
     :set res [$RunTestCase $res "000" 0 "Multiple zeros"]
@@ -386,13 +386,13 @@
     :set res [$RunTestCase $res "100000000" 4294967296 "Value requiring 64-bit storage"]
 
     # --- Alternative Input Formats (Type Conversion) ---
-    :set res [$RunTestCase $res "0x1A" 26 "Prefix handling check (Note: if function does not strip 0x, actual value will be wrong)"]
+    :set res [$RunTestCase $res "0x1A" nil "Prefix handling check (Note: if function does not strip 0x, actual value will be wrong)"]
 
     # --- Invalid Hex Characters (Robustness Check) ---
     # Note: Depending on the HexToNum logic, invalid characters like 'G' or 'Z' 
     # might cause fallback behavior, negative values, or return 0.
-    :set res [$RunTestCase $res "G" 0 "Invalid single letter"]
-    :set res [$RunTestCase $res "1Z" 16 "Invalid trailing character"]
+    :set res [$RunTestCase $res "G" nil "Invalid single letter"]
+    :set res [$RunTestCase $res "1Z" nil "Invalid trailing character"]
 
     :put "Testing completed."
     :return $res

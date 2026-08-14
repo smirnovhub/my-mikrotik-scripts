@@ -11,7 +11,7 @@
     :global GetSha1SumTest
     :global GetSha256SumTest
 
-    :local res [$InitTestCaseState ]
+    :local res [$InitTestCaseState $1]
 
     :put "\1B[35m=== STARTING ALL HASHES TESTS ===\1B[0m"
 
@@ -32,7 +32,7 @@
     :global IsPrintableStr
     :global RunGenericTestCase
 
-    :local res [$InitTestCaseState ]
+    :local res [$InitTestCaseState $1]
 
     :put "Starting GetCrc32Sum tests..."
 
@@ -215,7 +215,7 @@
     :global IsPrintableStr
     :global RunGenericTestCase
 
-    :local res [$InitTestCaseState ]
+    :local res [$InitTestCaseState $1]
 
     :put "Starting GetMd5Sum tests..."
 
@@ -381,7 +381,7 @@
     :global IsPrintableStr
     :global RunGenericTestCase
 
-    :local res [$InitTestCaseState ]
+    :local res [$InitTestCaseState $1]
 
     :put "Starting GetSha1Sum tests..."
 
@@ -731,7 +731,7 @@
     :global IsPrintableStr
     :global RunGenericTestCase
 
-    :local res [$InitTestCaseState ]
+    :local res [$InitTestCaseState $1]
 
     :put "Starting GetSha256Sum tests..."
 

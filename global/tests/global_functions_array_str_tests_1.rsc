@@ -11,7 +11,8 @@
 :global RecursiveMergeSortStrTest
 
 :set RunAllArrayStrTests1 do={
-    :global InitTestCaseState
+:set RunAllArrayStrTests1 do={
+    :global RunTestCases
     :global ParseKeyValueStoreTest
     :global RandomTest
     :global HexToNumTest
@@ -23,26 +24,20 @@
     :global RecursiveMergeSortTest
     :global RecursiveMergeSortStrTest
 
-    :put "\1B[35m=== STARTING ALL ARRAY AND STRING TESTS 1 ===\1B[0m"
+    :local suites ({
+        $TrimStrTest,
+        $SplitStrTest,
+        $HexToNumTest,
+        $MapArrayTest,
+        $JoinArrayTest,
+        $ReplaceStrTest,
+        $RecursiveMergeSortTest,
+        $RecursiveMergeSortStrTest,
+        $ParseKeyValueStoreTest,
+        $RandomTest
+    })
 
-    :local res [$InitTestCaseState ]
-
-    # Execute all test suites sequentially, passing and updating the same accumulator array
-    :set res [$TrimStrTest $res]
-    :set res [$SplitStrTest $res]
-    :set res [$HexToNumTest $res]
-    :set res [$MapArrayTest $res]
-    :set res [$JoinArrayTest $res]
-    :set res [$ReplaceStrTest $res]
-    :set res [$RecursiveMergeSortTest $res]
-    :set res [$RecursiveMergeSortStrTest $res]
-
-    :set res [$ParseKeyValueStoreTest $res]
-    :set res [$RandomTest $res]
-
-    :put "\1B[35m=== ALL ARRAY AND STRING TESTS 1 COMPLETED ===\1B[0m"
-
-    :return $res
+    :return [$RunTestCases $suites "ALL ARRAY AND STRING TESTS 1"]
 }
 
 :set ParseKeyValueStoreTest do={
@@ -50,7 +45,7 @@
     :global ParseKeyValueStore
     :global RunGenericTestCase
 
-    :local res [$InitTestCaseState ]
+    :local res [$InitTestCaseState $1]
 
     :put "Starting ParseKeyValueStore tests..."
 
@@ -120,7 +115,7 @@
     :global GetRandomNumber
     :global IsPrintableStr
 
-    :local res [$InitTestCaseState ]
+    :local res [$InitTestCaseState $1]
 
     :put "Starting Randomness & Generation tests..."
 
@@ -227,7 +222,7 @@
     :global HexToNum
     :global RunGenericTestCase
 
-    :local res [$InitTestCaseState ]
+    :local res [$InitTestCaseState $1]
 
     :put "Starting HexToNum tests..."
 
@@ -286,7 +281,7 @@
     :global MapArray
     :global RunGenericTestCase
 
-    :local res [$InitTestCaseState ]
+    :local res [$InitTestCaseState $1]
 
     :put "Starting MapArray tests..."
 
@@ -349,7 +344,7 @@
     :global JoinArray
     :global RunGenericTestCase
 
-    :local res [$InitTestCaseState ]
+    :local res [$InitTestCaseState $1]
 
     :put "Starting JoinArray tests..."
 
@@ -382,7 +377,7 @@
     :global SplitStr
     :global RunGenericTestCase
 
-    :local res [$InitTestCaseState ]
+    :local res [$InitTestCaseState $1]
 
     :put "Starting SplitStr tests..."
 
@@ -424,7 +419,7 @@
     :global TrimStr
     :global RunGenericTestCase
 
-    :local res [$InitTestCaseState ]
+    :local res [$InitTestCaseState $1]
 
     :put "Starting TrimStr tests..."
 
@@ -472,7 +467,7 @@
     :global ReplaceStr
     :global RunGenericTestCase
 
-    :local res [$InitTestCaseState ]
+    :local res [$InitTestCaseState $1]
 
     :put "Starting ReplaceStr tests..."
 
@@ -525,7 +520,7 @@
     :global RecursiveMergeSort
     :global RunGenericTestCase
 
-    :local res [$InitTestCaseState ]
+    :local res [$InitTestCaseState $1]
 
     :put "Starting RecursiveMergeSort (numeric) tests..."
 
@@ -614,7 +609,7 @@
     :global RecursiveMergeSortStr
     :global RunGenericTestCase
 
-    :local res [$InitTestCaseState ]
+    :local res [$InitTestCaseState $1]
 
     :put "Starting extended RecursiveMergeSortStr tests..."
 

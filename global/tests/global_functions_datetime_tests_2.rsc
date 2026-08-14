@@ -7,7 +7,7 @@
     :global FormatSecondsShortTest
     :global FormatSecondsLongTest
 
-    :local res [$InitTestCaseState ]
+    :local res [$InitTestCaseState $1]
 
     :put "\1B[35m=== STARTING ALL DATE AND TIME TESTS 2 ===\1B[0m"
 
@@ -24,7 +24,7 @@
     :global RunGenericTestCase
     :global FormatSecondsLong
 
-    :local res [$InitTestCaseState ]
+    :local res [$InitTestCaseState $1]
 
     :put "Starting FormatSecondsLong tests..."
 
@@ -135,7 +135,7 @@
     :global RunGenericTestCase
     :global FormatSecondsShort
 
-    :local res [$InitTestCaseState ]
+    :local res [$InitTestCaseState $1]
 
     :put "Starting FormatSecondsShort tests..."
 

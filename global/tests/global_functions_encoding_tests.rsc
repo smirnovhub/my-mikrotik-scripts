@@ -11,7 +11,7 @@
     :global UrlEncodeTest
     :global UrlDecodeTest
 
-    :local res [$InitTestCaseState ]
+    :local res [$InitTestCaseState $1]
 
     :put "\1B[35m=== STARTING ALL ENCODING TESTS ===\1B[0m"
 
@@ -31,7 +31,7 @@
     :global Base64Encode
     :global RunGenericTestCase
 
-    :local res [$InitTestCaseState ]
+    :local res [$InitTestCaseState $1]
 
     :put "Starting Base64Encode tests..."
 
@@ -132,7 +132,7 @@
     :global Base64Decode
     :global RunGenericTestCase
 
-    :local res [$InitTestCaseState ]
+    :local res [$InitTestCaseState $1]
 
     :put "Starting Base64Decode tests..."
 
@@ -316,7 +316,7 @@
     :global UrlEncode
     :global RunGenericTestCase
 
-    :local res [$InitTestCaseState ]
+    :local res [$InitTestCaseState $1]
 
     :put "Starting UrlEncode tests..."
 
@@ -411,7 +411,7 @@
     :global UrlDecode
     :global RunGenericTestCase
 
-    :local res [$InitTestCaseState ]
+    :local res [$InitTestCaseState $1]
 
     :put "Starting UrlDecode tests..."
 

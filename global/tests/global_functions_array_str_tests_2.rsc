@@ -21,7 +21,7 @@
 
     :put "\1B[35m=== STARTING ALL ARRAY AND STRING TESTS 2 ===\1B[0m"
 
-    :local res [$InitTestCaseState ]
+    :local res [$InitTestCaseState $1]
 
     # Execute all test suites sequentially, passing and updating the same accumulator array
     :set res [$CompareStrTest $res]
@@ -43,7 +43,7 @@
     :global RunGenericTestCase
     :global CompareStr
 
-    :local res [$InitTestCaseState ]
+    :local res [$InitTestCaseState $1]
 
     :put "Starting CompareStr tests..."
 
@@ -95,7 +95,7 @@
     :global RunGenericTestCase
     :global ReverseStr
 
-    :local res [$InitTestCaseState ]
+    :local res [$InitTestCaseState $1]
 
     :put "Starting ReverseStr tests..."
 
@@ -156,7 +156,7 @@
     :global IsPrintableStr
     :global DecToChar
 
-    :local res [$InitTestCaseState ]
+    :local res [$InitTestCaseState $1]
 
     :put "Starting IsPrintableStr tests..."
 
@@ -190,7 +190,7 @@
     :global RunGenericTestCase
     :global ExtractFileName
 
-    :local res [$InitTestCaseState ]
+    :local res [$InitTestCaseState $1]
 
     :put "Starting ExtractFileName tests..."
 
@@ -269,7 +269,7 @@
     :global RunGenericTestCase
     :global ContainsStr
 
-    :local res [$InitTestCaseState ]
+    :local res [$InitTestCaseState $1]
 
     :put "Starting ContainsStr tests..."
 
@@ -315,7 +315,7 @@
     :global RunGenericTestCase
     :global StartsWithStr
 
-    :local res [$InitTestCaseState ]
+    :local res [$InitTestCaseState $1]
 
     :put "Starting StartsWithStr tests..."
 
@@ -361,7 +361,7 @@
     :global RunGenericTestCase
     :global EndsWithStr
 
-    :local res [$InitTestCaseState ]
+    :local res [$InitTestCaseState $1]
 
     :put "Starting EndsWithStr tests..."
 
@@ -427,7 +427,7 @@
     :global RunGenericTestCase
     :global CleanStr
 
-    :local res [$InitTestCaseState ]
+    :local res [$InitTestCaseState $1]
 
     :put "Starting CleanStr expanded tests..."
 

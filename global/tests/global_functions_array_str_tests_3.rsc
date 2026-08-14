@@ -17,7 +17,7 @@
 
     :put "\1B[35m=== STARTING ALL ARRAY AND STRING TESTS 3 ===\1B[0m"
 
-    :local res [$InitTestCaseState ]
+    :local res [$InitTestCaseState $1]
 
     # Execute all test suites sequentially, passing and updating the same accumulator array
     :set res [$QuickSortTest $res]
@@ -37,7 +37,7 @@
     :global RunGenericTestCase
     :global QuickSort
 
-    :local res [$InitTestCaseState ]
+    :local res [$InitTestCaseState $1]
 
     :put "Starting QuickSort (numeric) tests..."
 
@@ -126,7 +126,7 @@
     :global RunGenericTestCase
     :global DivideIntAndRound
 
-    :local res [$InitTestCaseState ]
+    :local res [$InitTestCaseState $1]
 
     :put "Starting DivideIntAndRound decimal precision tests..."
 
@@ -161,7 +161,7 @@
     :global RunGenericTestCase
     :global ToUpperCase
 
-    :local res [$InitTestCaseState ]
+    :local res [$InitTestCaseState $1]
 
     :put "Starting ToUpperCase tests..."
 
@@ -190,7 +190,7 @@
     :global RunGenericTestCase
     :global ToLowerCase
 
-    :local res [$InitTestCaseState ]
+    :local res [$InitTestCaseState $1]
 
     :put "Starting ToLowerCase tests..."
 
@@ -219,7 +219,7 @@
     :global RunGenericTestCase
     :global HexToChar
 
-    :local res [$InitTestCaseState ]
+    :local res [$InitTestCaseState $1]
 
     :put "Starting HexToChar tests..."
 
@@ -282,7 +282,7 @@
     :global RunGenericTestCase
     :global DecToChar
 
-    :local res [$InitTestCaseState ]
+    :local res [$InitTestCaseState $1]
 
     :put "Starting DecToChar tests..."
 

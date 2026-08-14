@@ -5,7 +5,7 @@
     :global InitTestCaseState
     :global GlobalVarTest
 
-    :local res [$InitTestCaseState ]
+    :local res [$InitTestCaseState $1]
 
     :put "\1B[35m=== STARTING ALL GLOBAL VAR TESTS ===\1B[0m"
 
@@ -25,7 +25,7 @@
     :global DecToChar
     :global RunGenericTestCase
 
-    :local res [$InitTestCaseState ]
+    :local res [$InitTestCaseState $1]
 
     :put "Starting GlobalVarUtils tests..."
 

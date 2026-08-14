@@ -15,7 +15,7 @@
     :global FromUnixTimestampTest
     :global ToUnixTimestampTest
 
-    :local res [$InitTestCaseState ]
+    :local res [$InitTestCaseState $1]
 
     :put "\1B[35m=== STARTING ALL DATE AND TIME TESTS 1 ===\1B[0m"
 
@@ -36,7 +36,7 @@
     :global RunGenericTestCase
     :global GetWeekday
 
-    :local res [$InitTestCaseState ]
+    :local res [$InitTestCaseState $1]
 
     :put "Starting GetWeekday tests..."
 
@@ -115,7 +115,7 @@
     :global FromUnixTimestamp
     :global ToUnixTimestamp
 
-    :local res [$InitTestCaseState ]
+    :local res [$InitTestCaseState $1]
 
     :put "Starting GetCurrentDateTime runtime tests..."
 
@@ -149,7 +149,7 @@
     :global RunGenericTestCase
     :global ParseDateTime
 
-    :local res [$InitTestCaseState ]
+    :local res [$InitTestCaseState $1]
 
     :put "Starting ParseDateTime tests..."
 
@@ -193,7 +193,7 @@
     :global RunGenericTestCase
     :global FromUnixTimestamp
 
-    :local res [$InitTestCaseState ]
+    :local res [$InitTestCaseState $1]
 
     :put "Starting extended FromUnixTimestamp tests..."
 
@@ -353,7 +353,7 @@
     :global RunGenericTestCase
     :global ToUnixTimestamp
 
-    :local res [$InitTestCaseState ]
+    :local res [$InitTestCaseState $1]
 
     :put "Starting extended ToUnixTimestamp tests..."
 
@@ -647,7 +647,7 @@
     :global FromUnixTimestamp
     :global ToUnixTimestamp
 
-    :local res [$InitTestCaseState ]
+    :local res [$InitTestCaseState $1]
 
     :put "Starting GetUnixTimestamp runtime tests..."
 

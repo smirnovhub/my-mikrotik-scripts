@@ -11,6 +11,7 @@
 :global RecursiveMergeSortStrTest
 
 :set RunAllArrayStrTests1 do={
+    :global InitTestCaseState
     :global ParseKeyValueStoreTest
     :global RandomTest
     :global HexToNumTest
@@ -24,13 +25,7 @@
 
     :put "\1B[35m=== STARTING ALL ARRAY AND STRING TESTS 1 ===\1B[0m"
 
-    :local res [:toarray ""]
-    :if ([:typeof $1] = "array") do={
-        :set res $1
-    } else={
-        :set ($res->"passed") 0
-        :set ($res->"failed") 0
-    }
+    :local res [$InitTestCaseState ]
 
     # Execute all test suites sequentially, passing and updating the same accumulator array
     :set res [$TrimStrTest $res]
@@ -51,16 +46,11 @@
 }
 
 :set ParseKeyValueStoreTest do={
+    :global InitTestCaseState
     :global ParseKeyValueStore
     :global RunGenericTestCase
 
-    :local res [:toarray ""]
-    :if ([:typeof $1] = "array") do={
-        :set res $1
-    } else={
-        :set ($res->"passed") 0
-        :set ($res->"failed") 0
-    }
+    :local res [$InitTestCaseState ]
 
     :put "Starting ParseKeyValueStore tests..."
 
@@ -124,18 +114,13 @@
 }
 
 :set RandomTest do={
+    :global InitTestCaseState
     :global RunGenericTestCase
     :global GetRandom20CharHex
     :global GetRandomNumber
     :global IsPrintableStr
 
-    :local res [:toarray ""]
-    :if ([:typeof $1] = "array") do={
-        :set res $1
-    } else={
-        :set ($res->"passed") 0
-        :set ($res->"failed") 0
-    }
+    :local res [$InitTestCaseState ]
 
     :put "Starting Randomness & Generation tests..."
 
@@ -238,16 +223,11 @@
 }
 
 :set HexToNumTest do={
+    :global InitTestCaseState
     :global HexToNum
     :global RunGenericTestCase
 
-    :local res [:toarray ""]
-    :if ([:typeof $1] = "array") do={
-        :set res $1
-    } else={
-        :set ($res->"passed") 0
-        :set ($res->"failed") 0
-    }
+    :local res [$InitTestCaseState ]
 
     :put "Starting HexToNum tests..."
 
@@ -302,16 +282,11 @@
 }
 
 :set MapArrayTest do={
+    :global InitTestCaseState
     :global MapArray
     :global RunGenericTestCase
 
-    :local res [:toarray ""]
-    :if ([:typeof $1] = "array") do={
-        :set res $1
-    } else={
-        :set ($res->"passed") 0
-        :set ($res->"failed") 0
-    }
+    :local res [$InitTestCaseState ]
 
     :put "Starting MapArray tests..."
 
@@ -370,16 +345,11 @@
 }
 
 :set JoinArrayTest do={
+    :global InitTestCaseState
     :global JoinArray
     :global RunGenericTestCase
 
-    :local res [:toarray ""]
-    :if ([:typeof $1] = "array") do={
-        :set res $1
-    } else={
-        :set ($res->"passed") 0
-        :set ($res->"failed") 0
-    }
+    :local res [$InitTestCaseState ]
 
     :put "Starting JoinArray tests..."
 
@@ -408,16 +378,11 @@
 }
 
 :set SplitStrTest do={
+    :global InitTestCaseState
     :global SplitStr
     :global RunGenericTestCase
 
-    :local res [:toarray ""]
-    :if ([:typeof $1] = "array") do={
-        :set res $1
-    } else={
-        :set ($res->"passed") 0
-        :set ($res->"failed") 0
-    }
+    :local res [$InitTestCaseState ]
 
     :put "Starting SplitStr tests..."
 
@@ -453,18 +418,13 @@
 }
 
 :set TrimStrTest do={
+    :global InitTestCaseState
     :global TrimStrLeft
     :global TrimStrRight
     :global TrimStr
     :global RunGenericTestCase
 
-    :local res [:toarray ""]
-    :if ([:typeof $1] = "array") do={
-        :set res $1
-    } else={
-        :set ($res->"passed") 0
-        :set ($res->"failed") 0
-    }
+    :local res [$InitTestCaseState ]
 
     :put "Starting TrimStr tests..."
 
@@ -508,16 +468,11 @@
 }
 
 :set ReplaceStrTest do={
+    :global InitTestCaseState
     :global ReplaceStr
     :global RunGenericTestCase
 
-    :local res [:toarray ""]
-    :if ([:typeof $1] = "array") do={
-        :set res $1
-    } else={
-        :set ($res->"passed") 0
-        :set ($res->"failed") 0
-    }
+    :local res [$InitTestCaseState ]
 
     :put "Starting ReplaceStr tests..."
 
@@ -566,16 +521,11 @@
 }
 
 :set RecursiveMergeSortTest do={
+    :global InitTestCaseState
     :global RecursiveMergeSort
     :global RunGenericTestCase
 
-    :local res [:toarray ""]
-    :if ([:typeof $1] = "array") do={
-        :set res $1
-    } else={
-        :set ($res->"passed") 0
-        :set ($res->"failed") 0
-    }
+    :local res [$InitTestCaseState ]
 
     :put "Starting RecursiveMergeSort (numeric) tests..."
 
@@ -660,16 +610,11 @@
 }
 
 :set RecursiveMergeSortStrTest do={
+    :global InitTestCaseState
     :global RecursiveMergeSortStr
     :global RunGenericTestCase
 
-    :local res [:toarray ""]
-    :if ([:typeof $1] = "array") do={
-        :set res $1
-    } else={
-        :set ($res->"passed") 0
-        :set ($res->"failed") 0
-    }
+    :local res [$InitTestCaseState ]
 
     :put "Starting extended RecursiveMergeSortStr tests..."
 

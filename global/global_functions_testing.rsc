@@ -23,7 +23,19 @@
 # /system script run global_functions_testing
 #
 # global functions
+:global InitTestCaseState
 :global RunGenericTestCase
+
+:set InitTestCaseState do={
+    :local res [:toarray ""]
+    :if ([:typeof $1] = "array") do={
+        :set res $1
+    } else={
+        :set ($res->"passed") 0
+        :set ($res->"failed") 0
+    }
+    :return $res
+}
 
 :set RunGenericTestCase do={
     :global IsPrintableStr

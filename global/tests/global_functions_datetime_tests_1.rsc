@@ -7,6 +7,7 @@
 :global ToUnixTimestampTest
 
 :set RunAllDateTimeTests1 do={
+    :global InitTestCaseState
     :global GetWeekdayTest
     :global GetCurrentDateTimeTest
     :global ParseDateTimeTest
@@ -14,13 +15,7 @@
     :global FromUnixTimestampTest
     :global ToUnixTimestampTest
 
-    :local res [:toarray ""]
-    :if ([:typeof $1] = "array") do={
-        :set res $1
-    } else={
-        :set ($res->"passed") 0
-        :set ($res->"failed") 0
-    }
+    :local res [$InitTestCaseState ]
 
     :put "\1B[35m=== STARTING ALL DATE AND TIME TESTS 1 ===\1B[0m"
 
@@ -37,16 +32,11 @@
 }
 
 :set GetWeekdayTest do={
+    :global InitTestCaseState
     :global RunGenericTestCase
     :global GetWeekday
 
-    :local res [:toarray ""]
-    :if ([:typeof $1] = "array") do={
-        :set res $1
-    } else={
-        :set ($res->"passed") 0
-        :set ($res->"failed") 0
-    }
+    :local res [$InitTestCaseState ]
 
     :put "Starting GetWeekday tests..."
 
@@ -120,17 +110,12 @@
 }
 
 :set GetCurrentDateTimeTest do={
+    :global InitTestCaseState
     :global GetCurrentDateTime
     :global FromUnixTimestamp
     :global ToUnixTimestamp
 
-    :local res [:toarray ""]
-    :if ([:typeof $1] = "array") do={
-        :set res $1
-    } else={
-        :set ($res->"passed") 0
-        :set ($res->"failed") 0
-    }
+    :local res [$InitTestCaseState ]
 
     :put "Starting GetCurrentDateTime runtime tests..."
 
@@ -160,16 +145,11 @@
 }
 
 :set ParseDateTimeTest do={
+    :global InitTestCaseState
     :global RunGenericTestCase
     :global ParseDateTime
 
-    :local res [:toarray ""]
-    :if ([:typeof $1] = "array") do={
-        :set res $1
-    } else={
-        :set ($res->"passed") 0
-        :set ($res->"failed") 0
-    }
+    :local res [$InitTestCaseState ]
 
     :put "Starting ParseDateTime tests..."
 
@@ -209,16 +189,11 @@
 }
 
 :set FromUnixTimestampTest do={
+    :global InitTestCaseState
     :global RunGenericTestCase
     :global FromUnixTimestamp
 
-    :local res [:toarray ""]
-    :if ([:typeof $1] = "array") do={
-        :set res $1
-    } else={
-        :set ($res->"passed") 0
-        :set ($res->"failed") 0
-    }
+    :local res [$InitTestCaseState ]
 
     :put "Starting extended FromUnixTimestamp tests..."
 
@@ -374,16 +349,11 @@
 }
 
 :set ToUnixTimestampTest do={
+    :global InitTestCaseState
     :global RunGenericTestCase
     :global ToUnixTimestamp
 
-    :local res [:toarray ""]
-    :if ([:typeof $1] = "array") do={
-        :set res $1
-    } else={
-        :set ($res->"passed") 0
-        :set ($res->"failed") 0
-    }
+    :local res [$InitTestCaseState ]
 
     :put "Starting extended ToUnixTimestamp tests..."
 
@@ -672,17 +642,12 @@
 }
 
 :set GetUnixTimestampTest do={
+    :global InitTestCaseState
     :global GetUnixTimestamp
     :global FromUnixTimestamp
     :global ToUnixTimestamp
 
-    :local res [:toarray ""]
-    :if ([:typeof $1] = "array") do={
-        :set res $1
-    } else={
-        :set ($res->"passed") 0
-        :set ($res->"failed") 0
-    }
+    :local res [$InitTestCaseState ]
 
     :put "Starting GetUnixTimestamp runtime tests..."
 

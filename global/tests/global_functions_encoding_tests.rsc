@@ -392,6 +392,13 @@
         }
     }
 
+    # Unpadded Base64 vectors (testing remaining tail characters logic)
+    :set res [$RunTestCase $res "TWFuU3VuTQ" "" "" "" "ManSunM" "Unpadded tail with 2 characters (rem=2)"]
+    :set res [$RunTestCase $res "TQ" "" "" "" "M" "Minimal unpadded tail with 2 characters (rem=2)"]
+
+    :set res [$RunTestCase $res "TWFuU3VuTWE" "" "" "" "ManSunMa" "Unpadded tail with 3 characters (rem=3)"]
+    :set res [$RunTestCase $res "TWE" "" "" "" "Ma" "Minimal unpadded tail with 3 characters (rem=3)"]
+
     :put "Testing completed."
     :return $res
 }

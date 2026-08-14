@@ -427,6 +427,29 @@
     :set res [$RunTestCase $res "7E" "~" "Tilde (Last standard printable)"]
     :set res [$RunTestCase $res "7F" ("\7F") "Delete control char"]
 
+    # --- Special Characters & Spaces (lowercase hex) ---
+    :set res [$RunTestCase $res "2b" "+" "Plus sign (lowercase hex)"]
+    :set res [$RunTestCase $res "2c" "," "Comma (lowercase hex)"]
+    :set res [$RunTestCase $res "2f" "/" "Forward slash (lowercase hex)"]
+    :set res [$RunTestCase $res "3a" ":" "Colon (lowercase hex)"]
+    :set res [$RunTestCase $res "3b" ";" "Semicolon (lowercase hex)"]
+    :set res [$RunTestCase $res "3d" "=" "Equals sign (lowercase hex)"]
+    :set res [$RunTestCase $res "3f" "?" "Question mark (lowercase hex)"]
+    :set res [$RunTestCase $res "40" "@" "At symbol"]
+    :set res [$RunTestCase $res "5b" "[" "Left square bracket (lowercase hex)"]
+    :set res [$RunTestCase $res "5c" ("\\") "Backslash (lowercase hex)"]
+    :set res [$RunTestCase $res "5d" "]" "Right square bracket (lowercase hex)"]
+    :set res [$RunTestCase $res "5f" "_" "Underscore (lowercase hex)"]
+
+    # --- Control Characters (Whitespace/Escapes) ---
+    :set res [$RunTestCase $res "0a" ("\n") "Line feed / Newline (lowercase hex)"]
+    :set res [$RunTestCase $res "0d" ("\r") "Carriage return (lowercase hex)"]
+
+    # --- Boundaries of 8-bit ASCII / Extended ---
+    :set res [$RunTestCase $res "7e" "~" "Tilde (lowercase hex)"]
+    :set res [$RunTestCase $res "7f" ("\7F") "Delete control char (lowercase hex)"]
+    :set res [$RunTestCase $res "ff" ("\FF") "Extended ASCII upper boundary (lowercase hex)"]
+
     :put "Testing completed."
     :return $res
 }

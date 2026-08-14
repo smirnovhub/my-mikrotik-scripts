@@ -519,7 +519,9 @@
     :local msg "<b>$deviceName</b> scripts auto update:%0A"
 
     :local FormatList do={
+        :global EllipsisStrCenter
         :global RecursiveMergeSortStr
+
         :local list [$RecursiveMergeSortStr $1]
         :local str ""
         :local indent "      "
@@ -527,17 +529,17 @@
             :if ([:len $str] > 0) do={
                 :set str ($str . "%0A" . $indent)
             }
-            :set str ($str . $item)
+            :set str ($str . [$EllipsisStrCenter $item 25])
         }
         :return ($indent . $str)
     }
 
-    :if ([:len ($result->"uptodate")] > 0) do={
-        :set msg ($msg . "$successEmoji <b>Up to date:</b>%0A" . [$FormatList ($result->"uptodate")] . "%0A")
-    }
-
     :if ([:len ($result->"updated")] > 0) do={
         :set msg ($msg . "$successEmoji <b>Updated:</b>%0A" . [$FormatList ($result->"updated")] . "%0A")
+    }
+
+    :if ([:len ($result->"uptodate")] > 0) do={
+        :set msg ($msg . "$successEmoji <b>Up to date:</b>%0A" . [$FormatList ($result->"uptodate")] . "%0A")
     }
 
     :if ([:len ($result->"failedtoupdate")] > 0) do={

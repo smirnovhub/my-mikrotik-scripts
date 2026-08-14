@@ -55,6 +55,9 @@
 :global DecToChar
 :global CompareStr
 :global ReverseStr
+:global EllipsisStrLeft
+:global EllipsisStrRight
+:global EllipsisStrCenter
 :global IsPrintableStr
 :global ExtractFileName
 
@@ -194,32 +197,7 @@
 #   $1 - Hexadecimal string (e.g. "1A", "ff")
 # Returns: Numeric value corresponding to the input hex string (e.g. 26, 255)
 :set HexToNum do={
-    # Convert input to string in case it isn't already
-    :local input [:tostr $1]
-    :local len [:len $input]
-
-    # String containing all hexadecimal digits (both lowercase and uppercase)
-    :local hex "0123456789abcdef0123456789ABCDEF"
-
-    # Multiplier represents the current positional value in base-16 (1, 16, 256, ...)
-    :local multiplier 1
-
-    # Initialize result to 0; this will accumulate the numeric value
-    :local result 0
-
-    # Loop over each character in the input string from rightmost to leftmost
-    :for i from=($len - 1) to=0 do={
-        # Find the position of the current hex character in the hex string
-        # Use modulo 16 to map both lowercase and uppercase letters correctly
-        # Multiply by the positional multiplier and add to the result
-        :set result ($result + (([:find $hex [:pick $input $i]] % 16) * $multiplier))
-
-        # Update multiplier for next left character (multiply by 16)
-        :set multiplier ($multiplier << 4)
-    }
-
-    # Return the final numeric value
-    :return $result
+    :return [:tonum ("0x" . $1)]
 }
 
 # Purpose: Apply a transformation function to each element of an associative array (map)
@@ -767,6 +745,94 @@
   :return $result
 }
 
+# Purpose: Truncate a string from the left by prepending an ellipsis (...) to fit maximum length.
+# Parameters:
+#   $1 - Original string
+#   $2 - Maximum allowed string length
+# Returns: Truncated string with ellipsis on the left if original length exceeds maximum
+# Example: :put [$EllipsisStrLeft "Hello World RouterOS" 10]
+# Output:
+#   ...outerOS
+:set EllipsisStrLeft do={
+    :local str [:tostr $1]
+    :local maxLen [:tonum $2]
+    :local strLen [:len $str]
+
+    :if ($strLen <= $maxLen) do={
+        :return $str
+    }
+
+    :if ($maxLen < 3) do={
+        :return "..."
+    }
+
+    # Calculate remaining length for the right trailing part
+    :local rightLen ($maxLen - 3)
+    :local rightPart [:pick $str ($strLen - $rightLen) $strLen]
+
+    :return ("..." . $rightPart)
+}
+
+# Purpose: Truncate a string from the right by appending an ellipsis (...) to fit maximum length.
+# Parameters:
+#   $1 - Original string
+#   $2 - Maximum allowed string length
+# Returns: Truncated string with ellipsis on the right if original length exceeds maximum
+# Example: :put [$EllipsisStrRight "Hello World RouterOS" 10]
+# Output:
+#   Hello W...
+:set EllipsisStrRight do={
+    :local str [:tostr $1]
+    :local maxLen [:tonum $2]
+    :local strLen [:len $str]
+
+    :if ($strLen <= $maxLen) do={
+        :return $str
+    }
+
+    :if ($maxLen < 3) do={
+        :return "..."
+    }
+
+    # Calculate remaining length for the left leading part
+    :local leftLen ($maxLen - 3)
+    :local leftPart [:pick $str 0 $leftLen]
+
+    :return ($leftPart . "...")
+}
+
+# Purpose: Truncate a string from the center by inserting an ellipsis (...) to fit maximum length.
+# Parameters:
+#   $1 - Original string
+#   $2 - Maximum allowed string length
+# Returns: Truncated string with ellipsis in the middle if original length exceeds maximum
+# Example: :put [$EllipsisStrCenter "Hello World RouterOS" 10]
+# Output:
+#   Hel...erOS
+:set EllipsisStrCenter do={
+    :local str [:tostr $1]
+    :local maxLen [:tonum $2]
+    :local strLen [:len $str]
+
+    :if ($strLen <= $maxLen) do={
+        :return $str
+    }
+
+    :if ($maxLen < 3) do={
+        :return "..."
+    }
+
+    # Calculate remaining characters after reserving three slots for the ellipsis
+    :local remLen ($maxLen - 3)
+    :local leftLen ($remLen / 2)
+    :local rightLen ($remLen - $leftLen)
+
+    :local leftPart [:pick $str 0 $leftLen]
+    :local rightPart [:pick $str ($strLen - $rightLen) $strLen]
+
+    :return ($leftPart . "..." . $rightPart)
+}
+
 # Purpose: Perform division of two integers and round the result to a specified number of decimal places.
 # Parameters:
 #   $1 - Numerator
@@ -922,11 +988,17 @@
 # Output:
 #   A
 :set HexToChar do={
-    :global HexToNum
     :global DecToChar
 
-    :local hex [:tostr $1]
-    :local dec [$HexToNum $hex]
+    :local dec [:tonum ("0x" . $1)]
+
+    # We can't call [[:parse "(\"\\$1\")"]] directly,
+    # because parse requires uppercase hex number.
+    # As example:
+    # :put [[:parse "(\"\\3D\")"]]
+    # Output: =
+    # :put [[:parse "(\"\\3d\")"]]
+    # Output: syntax error (line 1 column 3)
     :return [$DecToChar $dec]
 }
 
@@ -940,9 +1012,9 @@
 :set DecToChar do={
     :local input [:tonum $1]
     :local hexchars "0123456789ABCDEF"
-    :local convert ([:pick $hexchars (($input >> 4) & 0xF)] . [:pick $hexchars ($input & 0xF)])
+    :local hex ([:pick $hexchars (($input >> 4) & 0xF)] . [:pick $hexchars ($input & 0xF)])
 
-    :return [[:parse "(\"\\$convert\")"]]
+    :return [[:parse "(\"\\$hex\")"]]
 }
 
 # Purpose: Compare two strings lexicographically using ASCII character codes.

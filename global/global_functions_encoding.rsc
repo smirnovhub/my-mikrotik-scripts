@@ -35,7 +35,6 @@
 :global UrlDecode
 
 # EXTERNAL DEPENDENCY
-:global HexToNum
 :global DecToChar
 
 # Automatically generated ASCII code table
@@ -47,6 +46,36 @@
     }
 }
 
+# Automatically generated ASCII char table
+:global asciiCharTable
+:if ([:len $asciiCharTable] != 256) do={
+    :set asciiCharTable [:toarray ""]
+    :for i from=0 to=255 do={
+        :set ($asciiCharTable->$i) [$DecToChar $i]
+    }
+}
+
+# Automatically generated ASCII to HEX (%HH) table
+:global urlEncodeHexTable
+:if ([:len $urlEncodeHexTable] != 256) do={
+    :set urlEncodeHexTable [:toarray ""]
+    :local hexChars "0123456789ABCDEF"
+    # Unreserved ASCII characters
+    :local unreserved "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-/_.~"
+
+    :for i from=0 to=255 do={
+        :local char [$DecToChar $i]
+
+        :if ([:typeof [:find $unreserved $char]] != "nil") do={
+            :set ($urlEncodeHexTable->$char) $char
+        } else={
+            :local h1 [:pick $hexChars ($i >> 4)]
+            :local h2 [:pick $hexChars ($i & 15)]
+            :set ($urlEncodeHexTable->$char) ("%" . $h1 . $h2)
+        }
+    }
+}
+
 # Purpose: Encode an input string into Base64 format according to RFC 4648 standards.
 #          Supports optional URL-safe variant and optional padding removal.
 # Parameters:
@@ -55,8 +84,6 @@
 #   $3 - Optional string containing "nopad" to remove padding character '='
 # Returns: Base64 encoded string
 :set Base64Encode do={
-    :global DecToChar
-
     :global asciiCodeTable
 
     :local input [:tostr "$1"]
@@ -69,9 +96,8 @@
 
     # If "url" option is present, switch to Base64 URL-safe alphabet
     :if ($options~"url") do={
-        :set arrb64 [:toarray "A,B,C,D,E,F,G,H,I,J,K,L,M,N,O,P,Q,R,S,T,U,V,W,X,Y,Z,\
-                              a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p,q,r,s,t,u,v,w,x,y,z,\
-                              0,1,2,3,4,5,6,7,8,9,-,_,="]
+        :set ($arrb64->62) "-"
+        :set ($arrb64->63) "_"
     }
 
     # If "nopad" option is present, remove the padding character '='
@@ -94,8 +120,8 @@
 
         # Convert three 8-bit bytes into four 6-bit Base64 values
         :local f6bit   ($v1 >> 2)
-        :local s6bit ((($v1 &  3) << 4) + ($v2 >> 4))
-        :local t6bit ((($v2 & 15) << 2) + ($v3 >> 6))
+        :local s6bit ((($v1 &  3) << 4) | ($v2 >> 4))
+        :local t6bit ((($v2 & 15) << 2) | ($v3 >> 6))
         :local q6bit   ($v3 & 63)
 
         # Append the Base64 characters to output string
@@ -117,11 +143,11 @@
 
         :if ($remaining = 2) do={
             :set v2 ($asciiCodeTable->[:pick $input ($position + 1) ($position + 2)])
-            :set t6bit ((($v2 & 15) << 2) + ($v3 >> 6))
+            :set t6bit ((($v2 & 15) << 2) | ($v3 >> 6))
         }
 
         :local f6bit ($v1 >> 2)
-        :local s6bit ((($v1 & 3) << 4) + ($v2 >> 4))
+        :local s6bit ((($v1 & 3) << 4) | ($v2 >> 4))
 
         :set output "$output$($arrb64->$f6bit)$($arrb64->$s6bit)$($arrb64->$t6bit)$($arrb64->$q6bit)"
     }
@@ -139,30 +165,28 @@
 #   $4 - (Optional) "ignoreotherchr" flag to skip invalid characters
 # Returns: Decoded plain string
 :set Base64Decode do={
-    :local input   [:tostr "$1"]
+    :global asciiCharTable
+
+    :local input [:tostr "$1"]
     :local options "$2$3$4"
 
-    :local charsString ""
-    :for x from=0 to=15 step=1 do={ :for y from=0 to=15 step=1 do={
-        :local tmpHex "$[:pick "0123456789ABCDEF" $x ($x+1)]$[:pick "0123456789ABCDEF" $y ($y+1)]"
-        :set charsString "$charsString$[[:parse "(\"\\$tmpHex\")"]]"
-    } }
-
     # RFC 4648 base64 Standard
-    :local arrb64 [:toarray "A,B,C,D,E,F,G,H,I,J,K,L,M,N,O,P,Q,R,S,T,U,V,W,X,Y,Z\
-                            ,a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p,q,r,s,t,u,v,w,x,y,z\
-                            ,0,1,2,3,4,5,6,7,8,9,+,/,="]
+    :local arrb64 [:toarray "A,B,C,D,E,F,G,H,I,J,K,L,M,N,O,P,Q,R,S,T,U,V,W,X,Y,Z,\
+                            a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p,q,r,s,t,u,v,w,x,y,z,\
+                            0,1,2,3,4,5,6,7,8,9,+,/,="]
+
+    # If "url" option is present, switch to Base64 URL-safe alphabet
     :if ($options~"url") do={
-        # RFC 4648 base64url URL and filename-safe standard
-        :set arrb64 [:toarray "A,B,C,D,E,F,G,H,I,J,K,L,M,N,O,P,Q,R,S,T,U,V,W,X,Y,Z\
-                              ,a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p,q,r,s,t,u,v,w,x,y,z\
-                              ,0,1,2,3,4,5,6,7,8,9,-,_,="]
+        :set ($arrb64->62) "-"
+        :set ($arrb64->63) "_"
     }
 
     :local isIgnoreOtherChr ($options~"ignoreotherchr")
 
     :if ($options~"mustpad") do={
-        :if (([:len $input] % 4) != 0) do={:error "Invalid length, must be padded with one or more ="}
+        :if (([:len $input] % 4) != 0) do={
+            :error "Invalid length, must be padded with one or more ="
+        }
     }
 
     :if ($isIgnoreOtherChr) do={
@@ -170,11 +194,15 @@
         :local tmpchar   ""
         :local tmpstring ""
         :local inputLen  [:len $input]
+
         :while ($position < $inputLen) do={
             :set tmpchar [:pick $input $position ($position + 1)]
-            :if ([:typeof [:find $arrb64 $tmpchar]] != "nil") do={:set tmpstring "$tmpstring$tmpchar"}
+            :if ([:typeof [:find $arrb64 $tmpchar]] != "nil") do={
+                :set tmpstring "$tmpstring$tmpchar"
+            }
             :set position ($position + 1)
         }
+
         :set input $tmpstring
     }
 
@@ -196,9 +224,9 @@
             :error "Unexpected character, invalid Base64 sequence"
         }
 
-        :local fchr [:pick $charsString  (($v1 << 2)       + ($v2 >> 4))]
-        :local schr [:pick $charsString ((($v2 & 15) << 4) + ($v3 >> 2))]
-        :local tchr [:pick $charsString ((($v3 &  3) << 6) +  $v4     ) ]
+        :local fchr ($asciiCharTable->(($v1 << 2) | ($v2 >> 4)))
+        :local schr ($asciiCharTable->((($v2 & 15) << 4) | ($v3 >> 2)))
+        :local tchr ($asciiCharTable->((($v3 & 3) << 6) | $v4))
 
         :if ($v4 = 64) do={
             :set tchr ""
@@ -272,11 +300,16 @@
             }
         }
 
-        :local fchr [:pick $charsString (($v1 << 2) + ($v2 >> 4))]
-        :local schr [:pick $charsString ((($v2 & 15) << 4) + ($v3 >> 2))]
+        :local fchr ""
+        :local schr ""
 
-        :if ($v3 = 64) do={ :set schr "" }
-        :if ($v2 = 64) do={ :set fchr "" }
+        # Skip calculations and array lookup if padding value is present
+        :if ($v2 != 64) do={
+            :set fchr ($asciiCharTable->(($v1 << 2) | ($v2 >> 4)))
+            :if ($v3 != 64) do={
+                :set schr ($asciiCharTable->((($v2 & 15) << 4) | ($v3 >> 2)))
+            }
+        }
 
         :set output "$output$fchr$schr"
     }
@@ -292,77 +325,21 @@
 # Output:
 #   encoded%21%20%28string%29%20%5Btest%5D
 :set UrlEncode do={
-    # Convert input to string to ensure proper type
+    :global urlEncodeHexTable
+    
     :local input [:tostr $1]
+    :local inputLen [:len $input]
 
-    # If input is empty, return an empty string immediately
-    :if ([:len $input] = 0) do={
+    :if ($inputLen = 0) do={
         :return ""
     }
 
-    # Initialize the variable that will accumulate the encoded result
     :local encodedResult ""
 
-    # Characters that need to be percent-encoded
-    :local specialChars "\00\01\02\03\04\05\06\07\08\t\n\0B\0C\r\0E\0F\10\11\12\13\14\15\16\17\18\19\1A\1B\1C\1D\1E\1F !\"#\$%&'()*+,:;<=>\?@[\\]^`{|}\7F\80\81\82\83\84\85\86\87\88\89\8A\8B\8C\8D\8E\8F\90\91\92\93\94\95\96\97\98\99\9A\9B\9C\9D\9E\9F\A0\A1\A2\A3\A4\A5\A6\A7\A8\A9\AA\AB\AC\AD\AE\AF\B0\B1\B2\B3\B4\B5\B6\B7\B8\B9\BA\BB\BC\BD\BE\BF\C0\C1\C2\C3\C4\C5\C6\C7\C8\C9\CA\CB\CC\CD\CE\CF\D0\D1\D2\D3\D4\D5\D6\D7\D8\D9\DA\DB\DC\DD\DE\DF\E0\E1\E2\E3\E4\E5\E6\E7\E8\E9\EA\EB\EC\ED\EE\EF\F0\F1\F2\F3\F4\F5\F6\F7\F8\F9\FA\FB\FC\FD\FE\FF";
-
-    # Corresponding URL-encoded replacements for each character in specialChars
-    :local encodedSubs {
-        "%00"; "%01"; "%02"; "%03"; "%04"; "%05"; "%06"; "%07";
-        "%08"; "%09"; "%0A"; "%0B"; "%0C"; "%0D"; "%0E"; "%0F";
-        "%10"; "%11"; "%12"; "%13"; "%14"; "%15"; "%16"; "%17";
-        "%18"; "%19"; "%1A"; "%1B"; "%1C"; "%1D"; "%1E"; "%1F";
-
-        "%20"; "%21"; "%22"; "%23"; "%24"; "%25"; "%26"; "%27";
-        "%28"; "%29"; "%2A"; "%2B"; "%2C"; "%3A"; "%3B"; "%3C";
-        "%3D"; "%3E"; "%3F"; "%40"; "%5B"; "%5C"; "%5D"; "%5E";
-        "%60"; "%7B"; "%7C"; "%7D"; "%7F";
-
-        "%80"; "%81"; "%82"; "%83"; "%84"; "%85"; "%86"; "%87";
-        "%88"; "%89"; "%8A"; "%8B"; "%8C"; "%8D"; "%8E"; "%8F";
-        "%90"; "%91"; "%92"; "%93"; "%94"; "%95"; "%96"; "%97";
-        "%98"; "%99"; "%9A"; "%9B"; "%9C"; "%9D"; "%9E"; "%9F";
-
-        "%A0"; "%A1"; "%A2"; "%A3"; "%A4"; "%A5"; "%A6"; "%A7";
-        "%A8"; "%A9"; "%AA"; "%AB"; "%AC"; "%AD"; "%AE"; "%AF";
-
-        "%B0"; "%B1"; "%B2"; "%B3"; "%B4"; "%B5"; "%B6"; "%B7";
-        "%B8"; "%B9"; "%BA"; "%BB"; "%BC"; "%BD"; "%BE"; "%BF";
-
-        "%C0"; "%C1"; "%C2"; "%C3"; "%C4"; "%C5"; "%C6"; "%C7";
-        "%C8"; "%C9"; "%CA"; "%CB"; "%CC"; "%CD"; "%CE"; "%CF";
-
-        "%D0"; "%D1"; "%D2"; "%D3"; "%D4"; "%D5"; "%D6"; "%D7";
-        "%D8"; "%D9"; "%DA"; "%DB"; "%DC"; "%DD"; "%DE"; "%DF";
-
-        "%E0"; "%E1"; "%E2"; "%E3"; "%E4"; "%E5"; "%E6"; "%E7";
-        "%E8"; "%E9"; "%EA"; "%EB"; "%EC"; "%ED"; "%EE"; "%EF";
-
-        "%F0"; "%F1"; "%F2"; "%F3"; "%F4"; "%F5"; "%F6"; "%F7";
-        "%F8"; "%F9"; "%FA"; "%FB"; "%FC"; "%FD"; "%FE"; "%FF"
+    :for i from=0 to=($inputLen - 1) do={
+        :set encodedResult ($encodedResult . $urlEncodeHexTable->([:pick $input $i]))
     }
 
-    :local inputLen ([:len $input] - 1)
-
-    # Loop over each character in the input string
-    :for i from=0 to=$inputLen do={
-
-        # Get the current character
-        :local currentChar [:pick $input $i]
-
-        # Find the index of the character in the specialChars string
-        :local index [:find $specialChars $currentChar]
-
-        # If the character is found in specialChars, replace it with its encoded equivalent
-        :if ([:typeof $index] = "num") do={
-            :set currentChar ($encodedSubs->$index)
-        }
-
-        # Append the (possibly replaced) character to the result string
-        :set encodedResult ($encodedResult . $currentChar)
-    }
-
-    # Return the fully URL-encoded string
     :return $encodedResult
 }
 
@@ -374,12 +351,7 @@
 # Output:
 #   decoded! (string) [test]
 :set UrlDecode do={
-
-    # Global function to convert hex strings to numbers
-    :global HexToNum
-
-    # Array of all byte values as single-character strings (0x00 to 0xFF)
-    :local symbolsHex {"\00";"\01";"\02";"\03";"\04";"\05";"\06";"\07";"\08";"\09";"\0A";"\0B";"\0C";"\0D";"\0E";"\0F";"\10";"\11";"\12";"\13";"\14";"\15";"\16";"\17";"\18";"\19";"\1A";"\1B";"\1C";"\1D";"\1E";"\1F";"\20";"\21";"\22";"\23";"\24";"\25";"\26";"\27";"\28";"\29";"\2A";"\2B";"\2C";"\2D";"\2E";"\2F";"\30";"\31";"\32";"\33";"\34";"\35";"\36";"\37";"\38";"\39";"\3A";"\3B";"\3C";"\3D";"\3E";"\3F";"\40";"\41";"\42";"\43";"\44";"\45";"\46";"\47";"\48";"\49";"\4A";"\4B";"\4C";"\4D";"\4E";"\4F";"\50";"\51";"\52";"\53";"\54";"\55";"\56";"\57";"\58";"\59";"\5A";"\5B";"\5C";"\5D";"\5E";"\5F";"\60";"\61";"\62";"\63";"\64";"\65";"\66";"\67";"\68";"\69";"\6A";"\6B";"\6C";"\6D";"\6E";"\6F";"\70";"\71";"\72";"\73";"\74";"\75";"\76";"\77";"\78";"\79";"\7A";"\7B";"\7C";"\7D";"\7E";"\7F";"\80";"\81";"\82";"\83";"\84";"\85";"\86";"\87";"\88";"\89";"\8A";"\8B";"\8C";"\8D";"\8E";"\8F";"\90";"\91";"\92";"\93";"\94";"\95";"\96";"\97";"\98";"\99";"\9A";"\9B";"\9C";"\9D";"\9E";"\9F";"\A0";"\A1";"\A2";"\A3";"\A4";"\A5";"\A6";"\A7";"\A8";"\A9";"\AA";"\AB";"\AC";"\AD";"\AE";"\AF";"\B0";"\B1";"\B2";"\B3";"\B4";"\B5";"\B6";"\B7";"\B8";"\B9";"\BA";"\BB";"\BC";"\BD";"\BE";"\BF";"\C0";"\C1";"\C2";"\C3";"\C4";"\C5";"\C6";"\C7";"\C8";"\C9";"\CA";"\CB";"\CC";"\CD";"\CE";"\CF";"\D0";"\D1";"\D2";"\D3";"\D4";"\D5";"\D6";"\D7";"\D8";"\D9";"\DA";"\DB";"\DC";"\DD";"\DE";"\DF";"\E0";"\E1";"\E2";"\E3";"\E4";"\E5";"\E6";"\E7";"\E8";"\E9";"\EA";"\EB";"\EC";"\ED";"\EE";"\EF";"\F0";"\F1";"\F2";"\F3";"\F4";"\F5";"\F6";"\F7";"\F8";"\F9";"\FA";"\FB";"\FC";"\FD";"\FE";"\FF"}
+    :global asciiCharTable
 
     # Convert input to string to ensure proper type
     :local inputString [:tostr $1]
@@ -394,33 +366,26 @@
 
     # Loop over each character in the input string
     :while ($index < $inputStringLen) do={
-
         # Get the current character
-        :local currentChar [:pick $inputString $index ($index+1)]
+        :local currentChar [:pick $inputString $index ($index + 1)]
 
         # If current character is "%", decode the following two hex digits
         :if ($currentChar = "%") do={
-
             # Extract the next two characters representing the hex value
-            :local hexCode [:pick $inputString ($index+1) ($index+3)]
+            :local hexCode [:pick $inputString ($index + 1) ($index + 3)]
 
-            # Convert hex string to numeric value using HexToNum function
-            :local charNum [$HexToNum $hexCode]
-
-            # Append the corresponding character from symbolsHex array to output
-            :set decodedOutput ($decodedOutput . ($symbolsHex->$charNum))
+            # Append the corresponding character from asciiCharTable array to output
+            :set decodedOutput ($decodedOutput . ($asciiCharTable->([:tonum ("0x" . $hexCode)])))
 
             # Move index past the two hex digits
-            :set index ($index + 2)
-
+            :set index ($index + 3)
         } else={
-
             # Otherwise, append the character as-is
             :set decodedOutput ($decodedOutput . $currentChar)
-        }
 
-        # Move to the next character
-        :set index ($index + 1)
+            # Move to the next character
+            :set index ($index + 1)
+        }
     }
 
     # Return the fully decoded string

@@ -69,11 +69,9 @@
     :local options "$2$3"
 
     # RFC 4648 base64 Standard
-    :local arrb64 { \
-        "A";"B";"C";"D";"E";"F";"G";"H";"I";"J";"K";"L";"M";"N";"O";"P";"Q";"R";"S";"T";"U";"V";"W";"X";"Y";"Z"; \
-        "a";"b";"c";"d";"e";"f";"g";"h";"i";"j";"k";"l";"m";"n";"o";"p";"q";"r";"s";"t";"u";"v";"w";"x";"y";"z"; \
-        "0";"1";"2";"3";"4";"5";"6";"7";"8";"9";"+";"/";"=" \
-    }
+    :local arrb64 [:toarray "A,B,C,D,E,F,G,H,I,J,K,L,M,N,O,P,Q,R,S,T,U,V,W,X,Y,Z,\
+                            a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p,q,r,s,t,u,v,w,x,y,z,\
+                            0,1,2,3,4,5,6,7,8,9,+,/,="]
 
     # If "url" option is present, switch to Base64 URL-safe alphabet
     :if ($options~"url") do={
@@ -152,13 +150,9 @@
     :local options "$2$3$4"
 
     # RFC 4648 base64 Standard
-    :local arrb64 { \
-        "A";"B";"C";"D";"E";"F";"G";"H";"I";"J";"K";"L";"M";"N";"O";"P";"Q";"R";"S";"T";"U";"V";"W";"X";"Y";"Z"; \
-        "a";"b";"c";"d";"e";"f";"g";"h";"i";"j";"k";"l";"m";"n";"o";"p";"q";"r";"s";"t";"u";"v";"w";"x";"y";"z"; \
-        "0";"1";"2";"3";"4";"5";"6";"7";"8";"9";"+";"/";"=" \
-    }
-
-    # If "url" option is present, switch to Base64 URL-safe alphabet
+    :local arrb64 [:toarray "A,B,C,D,E,F,G,H,I,J,K,L,M,N,O,P,Q,R,S,T,U,V,W,X,Y,Z\
+                            ,a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p,q,r,s,t,u,v,w,x,y,z\
+                            ,0,1,2,3,4,5,6,7,8,9,+,/,="]
     :if ($options~"url") do={
         :set ($arrb64->62) "-"
         :set ($arrb64->63) "_"
@@ -201,9 +195,9 @@
             :error "Unexpected character, invalid Base64 sequence"
         }
 
-        :local fchr [:pick $asciiCharTable  (($v1 << 2)       + ($v2 >> 4))]
-        :local schr [:pick $asciiCharTable ((($v2 & 15) << 4) + ($v3 >> 2))]
-        :local tchr [:pick $asciiCharTable ((($v3 &  3) << 6) +  $v4     ) ]
+        :local fchr ($asciiCharTable->(($v1 << 2) + ($v2 >> 4)))
+        :local schr ($asciiCharTable->((($v2 & 15) << 4) + ($v3 >> 2)))
+        :local tchr ($asciiCharTable->((($v3 & 3) << 6) + $v4))
 
         :if ($v4 = 64) do={
             :set tchr ""
@@ -277,8 +271,8 @@
             }
         }
 
-        :local fchr [:pick $charsString (($v1 << 2) + ($v2 >> 4))]
-        :local schr [:pick $charsString ((($v2 & 15) << 4) + ($v3 >> 2))]
+        :local fchr ($asciiCharTable->(($v1 << 2) + ($v2 >> 4)))
+        :local schr ($asciiCharTable->((($v2 & 15) << 4) + ($v3 >> 2)))
 
         :if ($v3 = 64) do={ :set schr "" }
         :if ($v2 = 64) do={ :set fchr "" }

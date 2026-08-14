@@ -24,7 +24,6 @@
 #
 # global functions
 :global RunGenericTestCase
-:global RunEncodingTestCase
 
 :set RunGenericTestCase do={
     :global IsPrintableStr
@@ -44,6 +43,15 @@
 
     :local input [:tostr $3]
     :local actual
+
+    :local inputDisplay $input
+    :if (![$IsPrintableStr $inputDisplay]) do={
+        :set inputDisplay "<binary string>"
+    } else={
+        :if ([:len $input] > 30) do={
+            :set inputDisplay ([:pick $input 0 30] . "<truncated>")
+        }
+    }
 
     # Safe execution container to handle internal script :error actions
     :do {
@@ -65,15 +73,6 @@
         # Normalize values for safe comparison in RouterOS
         :local actualStr [:tostr $actual]
         :local expectedStr [:tostr $expected]
-
-        :local inputDisplay $input
-        :if (![$IsPrintableStr $inputDisplay]) do={
-            :set inputDisplay "<binary string>"
-        } else={
-            :if ([:len $input] > 30) do={
-                :set inputDisplay ([:pick $input 0 30] . "<truncated>")
-            }
-        }
 
         :local actualDisplay $actualStr
         :if (![$IsPrintableStr $actualDisplay]) do={
@@ -111,80 +110,6 @@
         } else={
             :set ($state->"failed") (($state->"failed") + 1)
             :put ("  \1B[31m[FAIL]\1B[0m " . $testName . ": Unexpected crash on input '" . $inputDisplay . "'")
-        }
-    }
-
-    :return $state
-}
-
-:set RunEncodingTestCase do={
-    :global IsPrintableStr
-
-    # Workaround for the MikroTik RouterOS interpreter bug (phantom execution)
-    :if ([:len $0] = 0) do={
-        :return $1
-    }
-
-    :local state $1
-    :local fn $2
-    :local input [:tostr $3]
-    :local opts $4
-    :local expected [:tostr $5]
-    :local name [:tostr $6]
-
-    :if ([:typeof $opts] != "array") do={
-        :set opts [:toarray ""]
-    }
-
-    :local opt1 ($opts->0)
-    :local opt2 ($opts->1)
-    :local opt3 ($opts->2)
-
-    :do {
-        # Dynamically execute passed target function reference
-        :local actual [$fn $input $opt1 $opt2 $opt3]
-
-        :local inputDisplay $input
-        :if (![$IsPrintableStr $inputDisplay]) do={
-            :set inputDisplay "<binary string>"
-        } else={
-            :if ([:len $input] > 30) do={
-                :set inputDisplay ([:pick $input 0 30] . "<truncated>")
-            }
-        }
-
-        :local actualDisplay $actual
-        :if (![$IsPrintableStr $actualDisplay]) do={
-            :set actualDisplay "<binary string>"
-        } else={
-            :if ([:len $actual] > 30) do={
-                :set actualDisplay ([:pick $actual 0 30] . "<truncated>")
-            }
-        }
-
-        :local expectedDisplay $expected
-        :if (![$IsPrintableStr $expectedDisplay]) do={
-            :set expectedDisplay "<binary string>"
-        } else={
-            :if ([:len $expected] > 30) do={
-                :set expectedDisplay ([:pick $expected 0 30] . "<truncated>")
-            }
-        }
-
-        :if ($actual = $expected) do={
-            :set ($state->"passed") (($state->"passed") + 1)
-            :put ("  \1B[32m[PASS]\1B[0m " . $name . ": '" . $inputDisplay . "' -> '" . $actualDisplay . "'")
-        } else={
-            :set ($state->"failed") (($state->"failed") + 1)
-            :put ("  \1B[31m[FAIL]\1B[0m " . $name . ": '" . $inputDisplay . "' | Expected: '" . $expectedDisplay . "', Got: '" . $actualDisplay . "'")
-        }
-    } on-error={
-        :if ($expected = "error") do={
-            :set ($state->"passed") (($state->"passed") + 1)
-            :put ("  \1B[32m[PASS]\1B[0m " . $name . ": Checked invalid input '" . $inputDisplay . "' threw error successfully")
-        } else={
-            :set ($state->"failed") (($state->"failed") + 1)
-            :put ("  \1B[31m[FAIL]\1B[0m " . $name . ": Unexpected crash on input '" . $inputDisplay . "'")
         }
     }
 

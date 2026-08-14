@@ -177,6 +177,7 @@
 }
 
 :set Base64DecodeTest do={
+    :global IsPrintableStr
     :global Base64Encode
     :global Base64Decode
 
@@ -189,6 +190,7 @@
     }
 
     :local RunTestCase do={
+        :global IsPrintableStr
         :global Base64Decode
 
         # Workaround for the MikroTik RouterOS interpreter bug (phantom execution)
@@ -207,12 +209,40 @@
         # Safe execution container to handle internal script :error actions
         :do {
             :local actual [$Base64Decode $input $opt1 $opt2 $opt3]
+
+            :local inputDisplay $input
+            :if (![$IsPrintableStr $inputDisplay]) do={
+                :set inputDisplay "<binary string>"
+            } else={
+                :if ([:len $input] > 30) do={
+                    :set inputDisplay ([:pick $input 0 30] . "<truncated>")
+                }
+            }
+
+            :local actualDisplay $actual
+            :if (![$IsPrintableStr $actualDisplay]) do={
+                :set actualDisplay "<binary string>"
+            } else={
+                :if ([:len $actual] > 30) do={
+                    :set actualDisplay ([:pick $actual 0 30] . "<truncated>")
+                }
+            }
+
+            :local expectedDisplay $expected
+            :if (![$IsPrintableStr $expectedDisplay]) do={
+                :set expectedDisplay "<binary string>"
+            } else={
+                :if ([:len $expected] > 30) do={
+                    :set expectedDisplay ([:pick $expected 0 30] . "<truncated>")
+                }
+            }
+
             :if ($actual = $expected) do={
                 :set ($state->"passed") (($state->"passed") + 1)
-                :put ("  \1B[32m[PASS]\1B[0m " . $name . ": '" . $input . "' -> '" . $actual . "'")
+                :put ("  \1B[32m[PASS]\1B[0m " . $name . ": '" . $inputDisplay . "' -> '" . $actualDisplay . "'")
             } else={
                 :set ($state->"failed") (($state->"failed") + 1)
-                :put ("  \1B[31m[FAIL]\1B[0m " . $name . ": '" . $input . "' | Expected: '" . $expected . "', Got: '" . $actual . "'")
+                :put ("  \1B[31m[FAIL]\1B[0m " . $name . ": '" . $inputDisplay . "' | Expected: '" . $expectedDisplay . "', Got: '" . $actualDisplay . "'")
             }
         } on-error={
             :if ($expected = "error") do={
@@ -404,7 +434,9 @@
 }
 
 :set UrlEncodeTest do={
+    :global DecToChar
     :global UrlEncode
+    :global IsPrintableStr
 
     :local res [:toarray ""]
     :if ([:typeof $1] = "array") do={
@@ -416,6 +448,7 @@
 
     :local RunTestCase do={
         :global UrlEncode
+        :global IsPrintableStr
 
         # Workaround for the MikroTik RouterOS interpreter bug (phantom execution)
         :if ([:len $0] = 0) do={
@@ -428,12 +461,40 @@
         :local name [:tostr $4]
 
         :local actual [$UrlEncode $input]
+
+        :local inputDisplay $input
+        :if (![$IsPrintableStr $inputDisplay]) do={
+            :set inputDisplay "<binary string>"
+        } else={
+            :if ([:len $input] > 30) do={
+                :set inputDisplay ([:pick $input 0 30] . "<truncated>")
+            }
+        }
+
+        :local actualDisplay $actual
+        :if (![$IsPrintableStr $actualDisplay]) do={
+            :set actualDisplay "<binary string>"
+        } else={
+            :if ([:len $actual] > 30) do={
+                :set actualDisplay ([:pick $actual 0 30] . "<truncated>")
+            }
+        }
+
+        :local expectedDisplay $expected
+        :if (![$IsPrintableStr $expectedDisplay]) do={
+            :set expectedDisplay "<binary string>"
+        } else={
+            :if ([:len $expected] > 30) do={
+                :set expectedDisplay ([:pick $expected 0 30] . "<truncated>")
+            }
+        }
+
         :if ($actual = $expected) do={
             :set ($state->"passed") (($state->"passed") + 1)
-            :put ("  \1B[32m[PASS]\1B[0m " . $name . ": '" . $input . "' -> '" . $actual . "'")
+            :put ("  \1B[32m[PASS]\1B[0m " . $name . ": '" . $inputDisplay . "' -> '" . $actualDisplay . "'")
         } else={
             :set ($state->"failed") (($state->"failed") + 1)
-            :put ("  \1B[31m[FAIL]\1B[0m " . $name . ": '" . $input . "' | Expected: '" . $expected . "', Got: '" . $actual . "'")
+            :put ("  \1B[31m[FAIL]\1B[0m " . $name . ": '" . $inputDisplay . "' | Expected: '" . $expectedDisplay . "', Got: '" . $actualDisplay . "'")
         }
         :return $state
     }
@@ -485,6 +546,40 @@
 
     # Mixed string
     :set res [$RunTestCase $res "A+B=C&D" "A%2BB%3DC%26D" "Mixed reserved character encoding validation"]
+
+    # Test encoding for all unreserved ASCII characters
+    :local unreserved "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-/_.~"
+    :set res [$RunTestCase $res $unreserved $unreserved "Do not encode unreserved ASCII characters"]
+
+    # Test encoding for all reserved / special ASCII bytes (0x00 to 0xFF)
+    :local hexDigits "0123456789ABCDEF"
+    
+    :local inputToEncode ""
+    :local expectedResult ""
+    
+    :for byteVal from=0 to=255 do={
+        :local char [$DecToChar $byteVal]
+        
+        # Check if the character is in unreserved list
+        :local isUnreserved false
+        :for i from=0 to=([:len $unreserved] - 1) do={
+            :if ([:pick $unreserved $i] = $char) do={
+                :set isUnreserved true
+            }
+        }
+    
+        # If character is not unreserved, build input and expected %XX string
+        :if (!$isUnreserved) do={
+            :local highNibble ($byteVal / 16)
+            :local lowNibble ($byteVal % 16)
+            :local hexCode ("%" . [:pick $hexDigits $highNibble] . [:pick $hexDigits $lowNibble])
+    
+            :set inputToEncode ($inputToEncode . $char)
+            :set expectedResult ($expectedResult . $hexCode)
+        }
+    }
+    
+    :set res [$RunTestCase $res $inputToEncode $expectedResult "Encode all reserved and non-printable ASCII characters"]
 
     :put "Testing completed."
     :return $res

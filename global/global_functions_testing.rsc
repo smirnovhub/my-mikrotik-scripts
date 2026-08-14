@@ -45,6 +45,15 @@
     :local input [:tostr $3]
     :local actual
 
+    :local inputDisplay $input
+    :if (![$IsPrintableStr $inputDisplay]) do={
+        :set inputDisplay "<binary string>"
+    } else={
+        :if ([:len $input] > 30) do={
+            :set inputDisplay ([:pick $input 0 30] . "<truncated>")
+        }
+    }
+
     # Safe execution container to handle internal script :error actions
     :do {
         # Adaptive argument dispatching based on variable types and presence
@@ -65,15 +74,6 @@
         # Normalize values for safe comparison in RouterOS
         :local actualStr [:tostr $actual]
         :local expectedStr [:tostr $expected]
-
-        :local inputDisplay $input
-        :if (![$IsPrintableStr $inputDisplay]) do={
-            :set inputDisplay "<binary string>"
-        } else={
-            :if ([:len $input] > 30) do={
-                :set inputDisplay ([:pick $input 0 30] . "<truncated>")
-            }
-        }
 
         :local actualDisplay $actualStr
         :if (![$IsPrintableStr $actualDisplay]) do={
@@ -136,20 +136,36 @@
         :set opts [:toarray ""]
     }
 
+    :local optCount [:len $opts]
     :local opt1 ($opts->0)
     :local opt2 ($opts->1)
     :local opt3 ($opts->2)
 
-    :do {
-        # Dynamically execute passed target function reference
-        :local actual [$fn $input $opt1 $opt2 $opt3]
+    :local inputDisplay $input
 
-        :local inputDisplay $input
-        :if (![$IsPrintableStr $inputDisplay]) do={
-            :set inputDisplay "<binary string>"
+    :if (![$IsPrintableStr $inputDisplay]) do={
+        :set inputDisplay "<binary string>"
+    } else={
+        :if ([:len $input] > 30) do={
+            :set inputDisplay ([:pick $input 0 30] . "<truncated>")
+        }
+    }
+
+    :do {
+        :local actual
+
+        # Adaptive argument dispatching based on the actual number of options
+        :if ($optCount >= 3) do={
+            :set actual [$fn $input $opt1 $opt2 $opt3]
         } else={
-            :if ([:len $input] > 30) do={
-                :set inputDisplay ([:pick $input 0 30] . "<truncated>")
+            :if ($optCount >= 2) do={
+                :set actual [$fn $input $opt1 $opt2]
+            } else={
+                :if ($optCount >= 1) do={
+                    :set actual [$fn $input $opt1]
+                } else={
+                    :set actual [$fn $input]
+                }
             }
         }
 

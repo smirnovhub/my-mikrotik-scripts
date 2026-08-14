@@ -35,7 +35,6 @@
 :global UrlDecode
 
 # EXTERNAL DEPENDENCY
-:global HexToNum
 :global DecToChar
 
 # Automatically generated ASCII code table
@@ -64,23 +63,22 @@
 #   $3 - Optional string containing "nopad" to remove padding character '='
 # Returns: Base64 encoded string
 :set Base64Encode do={
-    :global DecToChar
-
     :global asciiCodeTable
 
     :local input [:tostr "$1"]
     :local options "$2$3"
 
     # RFC 4648 base64 Standard
-    :local arrb64 [:toarray "A,B,C,D,E,F,G,H,I,J,K,L,M,N,O,P,Q,R,S,T,U,V,W,X,Y,Z,\
-                            a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p,q,r,s,t,u,v,w,x,y,z,\
-                            0,1,2,3,4,5,6,7,8,9,+,/,="]
+    :local arrb64 { \
+        "A";"B";"C";"D";"E";"F";"G";"H";"I";"J";"K";"L";"M";"N";"O";"P";"Q";"R";"S";"T";"U";"V";"W";"X";"Y";"Z"; \
+        "a";"b";"c";"d";"e";"f";"g";"h";"i";"j";"k";"l";"m";"n";"o";"p";"q";"r";"s";"t";"u";"v";"w";"x";"y";"z"; \
+        "0";"1";"2";"3";"4";"5";"6";"7";"8";"9";"+";"/";"=" \
+    }
 
     # If "url" option is present, switch to Base64 URL-safe alphabet
     :if ($options~"url") do={
-        :set arrb64 [:toarray "A,B,C,D,E,F,G,H,I,J,K,L,M,N,O,P,Q,R,S,T,U,V,W,X,Y,Z,\
-                              a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p,q,r,s,t,u,v,w,x,y,z,\
-                              0,1,2,3,4,5,6,7,8,9,-,_,="]
+        :set ($arrb64->62) "-"
+        :set ($arrb64->63) "_"
     }
 
     # If "nopad" option is present, remove the padding character '='
@@ -148,24 +146,22 @@
 #   $4 - (Optional) "ignoreotherchr" flag to skip invalid characters
 # Returns: Decoded plain string
 :set Base64Decode do={
-    :local input   [:tostr "$1"]
+    :global asciiCharTable
+
+    :local input [:tostr "$1"]
     :local options "$2$3$4"
 
-    :local charsString ""
-    :for x from=0 to=15 step=1 do={ :for y from=0 to=15 step=1 do={
-        :local tmpHex "$[:pick "0123456789ABCDEF" $x ($x+1)]$[:pick "0123456789ABCDEF" $y ($y+1)]"
-        :set charsString "$charsString$[[:parse "(\"\\$tmpHex\")"]]"
-    } }
-
     # RFC 4648 base64 Standard
-    :local arrb64 [:toarray "A,B,C,D,E,F,G,H,I,J,K,L,M,N,O,P,Q,R,S,T,U,V,W,X,Y,Z\
-                            ,a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p,q,r,s,t,u,v,w,x,y,z\
-                            ,0,1,2,3,4,5,6,7,8,9,+,/,="]
+    :local arrb64 { \
+        "A";"B";"C";"D";"E";"F";"G";"H";"I";"J";"K";"L";"M";"N";"O";"P";"Q";"R";"S";"T";"U";"V";"W";"X";"Y";"Z"; \
+        "a";"b";"c";"d";"e";"f";"g";"h";"i";"j";"k";"l";"m";"n";"o";"p";"q";"r";"s";"t";"u";"v";"w";"x";"y";"z"; \
+        "0";"1";"2";"3";"4";"5";"6";"7";"8";"9";"+";"/";"=" \
+    }
+
+    # If "url" option is present, switch to Base64 URL-safe alphabet
     :if ($options~"url") do={
-        # RFC 4648 base64url URL and filename-safe standard
-        :set arrb64 [:toarray "A,B,C,D,E,F,G,H,I,J,K,L,M,N,O,P,Q,R,S,T,U,V,W,X,Y,Z\
-                              ,a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p,q,r,s,t,u,v,w,x,y,z\
-                              ,0,1,2,3,4,5,6,7,8,9,-,_,="]
+        :set ($arrb64->62) "-"
+        :set ($arrb64->63) "_"
     }
 
     :local isIgnoreOtherChr ($options~"ignoreotherchr")
@@ -205,9 +201,9 @@
             :error "Unexpected character, invalid Base64 sequence"
         }
 
-        :local fchr [:pick $charsString  (($v1 << 2)       + ($v2 >> 4))]
-        :local schr [:pick $charsString ((($v2 & 15) << 4) + ($v3 >> 2))]
-        :local tchr [:pick $charsString ((($v3 &  3) << 6) +  $v4     ) ]
+        :local fchr [:pick $asciiCharTable  (($v1 << 2)       + ($v2 >> 4))]
+        :local schr [:pick $asciiCharTable ((($v2 & 15) << 4) + ($v3 >> 2))]
+        :local tchr [:pick $asciiCharTable ((($v3 &  3) << 6) +  $v4     ) ]
 
         :if ($v4 = 64) do={
             :set tchr ""

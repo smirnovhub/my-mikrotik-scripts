@@ -177,6 +177,7 @@
 }
 
 :set Base64DecodeTest do={
+    :global IsPrintableStr
     :global Base64Encode
     :global Base64Decode
 
@@ -189,6 +190,7 @@
     }
 
     :local RunTestCase do={
+        :global IsPrintableStr
         :global Base64Decode
 
         # Workaround for the MikroTik RouterOS interpreter bug (phantom execution)
@@ -207,12 +209,40 @@
         # Safe execution container to handle internal script :error actions
         :do {
             :local actual [$Base64Decode $input $opt1 $opt2 $opt3]
+
+            :local inputDisplay $input
+            :if (![$IsPrintableStr $inputDisplay]) do={
+                :set inputDisplay "<binary string>"
+            } else={
+                :if ([:len $input] > 30) do={
+                    :set inputDisplay ([:pick $input 0 30] . "<truncated>")
+                }
+            }
+
+            :local actualDisplay $actual
+            :if (![$IsPrintableStr $actualDisplay]) do={
+                :set actualDisplay "<binary string>"
+            } else={
+                :if ([:len $actual] > 30) do={
+                    :set actualDisplay ([:pick $actual 0 30] . "<truncated>")
+                }
+            }
+
+            :local expectedDisplay $expected
+            :if (![$IsPrintableStr $expectedDisplay]) do={
+                :set expectedDisplay "<binary string>"
+            } else={
+                :if ([:len $expected] > 30) do={
+                    :set expectedDisplay ([:pick $expected 0 30] . "<truncated>")
+                }
+            }
+
             :if ($actual = $expected) do={
                 :set ($state->"passed") (($state->"passed") + 1)
-                :put ("  \1B[32m[PASS]\1B[0m " . $name . ": '" . $input . "' -> '" . $actual . "'")
+                :put ("  \1B[32m[PASS]\1B[0m " . $name . ": '" . $inputDisplay . "' -> '" . $actualDisplay . "'")
             } else={
                 :set ($state->"failed") (($state->"failed") + 1)
-                :put ("  \1B[31m[FAIL]\1B[0m " . $name . ": '" . $input . "' | Expected: '" . $expected . "', Got: '" . $actual . "'")
+                :put ("  \1B[31m[FAIL]\1B[0m " . $name . ": '" . $inputDisplay . "' | Expected: '" . $expectedDisplay . "', Got: '" . $actualDisplay . "'")
             }
         } on-error={
             :if ($expected = "error") do={

@@ -3,16 +3,11 @@
 :global FormatSecondsLongTest
 
 :set RunAllDateTimeTests2 do={
+    :global InitTestCaseState
     :global FormatSecondsShortTest
     :global FormatSecondsLongTest
 
-    :local res [:toarray ""]
-    :if ([:typeof $1] = "array") do={
-        :set res $1
-    } else={
-        :set ($res->"passed") 0
-        :set ($res->"failed") 0
-    }
+    :local res [$InitTestCaseState $1]
 
     :put "\1B[35m=== STARTING ALL DATE AND TIME TESTS 2 ===\1B[0m"
 
@@ -25,16 +20,11 @@
 }
 
 :set FormatSecondsLongTest do={
+    :global InitTestCaseState
     :global RunGenericTestCase
     :global FormatSecondsLong
 
-    :local res [:toarray ""]
-    :if ([:typeof $1] = "array") do={
-        :set res $1
-    } else={
-        :set ($res->"passed") 0
-        :set ($res->"failed") 0
-    }
+    :local res [$InitTestCaseState $1]
 
     :put "Starting FormatSecondsLong tests..."
 
@@ -141,16 +131,11 @@
 }
 
 :set FormatSecondsShortTest do={
+    :global InitTestCaseState
     :global RunGenericTestCase
     :global FormatSecondsShort
 
-    :local res [:toarray ""]
-    :if ([:typeof $1] = "array") do={
-        :set res $1
-    } else={
-        :set ($res->"passed") 0
-        :set ($res->"failed") 0
-    }
+    :local res [$InitTestCaseState $1]
 
     :put "Starting FormatSecondsShort tests..."
 

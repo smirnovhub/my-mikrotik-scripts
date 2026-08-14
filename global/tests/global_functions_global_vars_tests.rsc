@@ -2,15 +2,10 @@
 :global GlobalVarTest
 
 :set RunAllGlobalVarTests do={
+    :global InitTestCaseState
     :global GlobalVarTest
 
-    :local res [:toarray ""]
-    :if ([:typeof $1] = "array") do={
-        :set res $1
-    } else={
-        :set ($res->"passed") 0
-        :set ($res->"failed") 0
-    }
+    :local res [$InitTestCaseState $1]
 
     :put "\1B[35m=== STARTING ALL GLOBAL VAR TESTS ===\1B[0m"
 
@@ -22,6 +17,7 @@
 }
 
 :set GlobalVarTest do={
+    :global InitTestCaseState
     :global GetGlobalVar
     :global GetGlobalVarOrDefault
     :global SetGlobalVar
@@ -29,13 +25,7 @@
     :global DecToChar
     :global RunGenericTestCase
 
-    :local res [:toarray ""]
-    :if ([:typeof $1] = "array") do={
-        :set res $1
-    } else={
-        :set ($res->"passed") 0
-        :set ($res->"failed") 0
-    }
+    :local res [$InitTestCaseState $1]
 
     :put "Starting GlobalVarUtils tests..."
 

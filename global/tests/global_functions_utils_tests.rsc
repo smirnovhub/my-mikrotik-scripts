@@ -7,6 +7,7 @@
 :global GetRouterOSVersionTest
 
 :set RunAllUtilsTests do={
+    :global InitTestCaseState
     :global GetArgOrDefaultTest
     :global GetArgOrExitTest
     :global SilentPingTest
@@ -14,13 +15,7 @@
     :global ExportConfigurationTest
     :global GetRouterOSVersionTest
 
-    :local res [:toarray ""]
-    :if ([:typeof $1] = "array") do={
-        :set res $1
-    } else={
-        :set ($res->"passed") 0
-        :set ($res->"failed") 0
-    }
+    :local res [$InitTestCaseState $1]
 
     :put "\1B[35m=== STARTING ALL UTILS TESTS ===\1B[0m"
 
@@ -37,16 +32,11 @@
 }
 
 :set GetArgOrDefaultTest do={
+    :global InitTestCaseState
     :global GetArgOrDefault
     :global RunGenericTestCase
 
-    :local res [:toarray ""]
-    :if ([:typeof $1] = "array") do={
-        :set res $1
-    } else={
-        :set ($res->"passed") 0
-        :set ($res->"failed") 0
-    }
+    :local res [$InitTestCaseState $1]
 
     :put "Starting GetArgOrDefault tests..."
 
@@ -148,16 +138,11 @@
 }
 
 :set GetArgOrExitTest do={
+    :global InitTestCaseState
     :global GetArgOrExit
     :global RunGenericTestCase
 
-    :local res [:toarray ""]
-    :if ([:typeof $1] = "array") do={
-        :set res $1
-    } else={
-        :set ($res->"passed") 0
-        :set ($res->"failed") 0
-    }
+    :local res [$InitTestCaseState $1]
 
     :put "Starting GetArgOrExit tests..."
 
@@ -253,16 +238,11 @@
 }
 
 :set SilentPingTest do={
+    :global InitTestCaseState
     :global SilentPing
     :global RunGenericTestCase
 
-    :local res [:toarray ""]
-    :if ([:typeof $1] = "array") do={
-        :set res $1
-    } else={
-        :set ($res->"passed") 0
-        :set ($res->"failed") 0
-    }
+    :local res [$InitTestCaseState $1]
 
     :put "Starting SilentPing tests..."
 
@@ -340,16 +320,11 @@
 }
 
 :set RunScriptTest do={
-    :local res [:toarray ""]
-    :if ([:typeof $1] = "array") do={
-        :set res $1
-    } else={
-        :set ($res->"passed") 0
-        :set ($res->"failed") 0
-    }
-
+    :global InitTestCaseState
     :global RunScript
     :global RunGenericTestCase
+
+    :local res [$InitTestCaseState $1]
 
     :put "Starting RunScript tests..."
 
@@ -434,16 +409,11 @@
 }
 
 :set ExportConfigurationTest do={
-    :local res [:toarray ""]
-    :if ([:typeof $1] = "array") do={
-        :set res $1
-    } else={
-        :set ($res->"passed") 0
-        :set ($res->"failed") 0
-    }
-
+    :global InitTestCaseState
     :global ExportConfiguration
     :global RunGenericTestCase
+
+    :local res [$InitTestCaseState $1]
 
     :put "Starting ExportConfiguration tests..."
 
@@ -480,16 +450,11 @@
 }
 
 :set GetRouterOSVersionTest do={
-    :local res [:toarray ""]
-    :if ([:typeof $1] = "array") do={
-        :set res $1
-    } else={
-        :set ($res->"passed") 0
-        :set ($res->"failed") 0
-    }
-
+    :global InitTestCaseState
     :global GetRouterOSVersion
     :global RunGenericTestCase
+
+    :local res [$InitTestCaseState $1]
 
     :put "Starting GetRouterOSVersion tests..."
 

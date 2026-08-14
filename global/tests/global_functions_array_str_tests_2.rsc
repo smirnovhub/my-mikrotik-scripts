@@ -9,6 +9,7 @@
 :global CleanStrTest
 
 :set RunAllArrayStrTests2 do={
+    :global InitTestCaseState
     :global CompareStrTest
     :global ReverseStrTest
     :global IsPrintableStrTest
@@ -20,13 +21,7 @@
 
     :put "\1B[35m=== STARTING ALL ARRAY AND STRING TESTS 2 ===\1B[0m"
 
-    :local res [:toarray ""]
-    :if ([:typeof $1] = "array") do={
-        :set res $1
-    } else={
-        :set ($res->"passed") 0
-        :set ($res->"failed") 0
-    }
+    :local res [$InitTestCaseState $1]
 
     # Execute all test suites sequentially, passing and updating the same accumulator array
     :set res [$CompareStrTest $res]
@@ -44,16 +39,11 @@
 }
 
 :set CompareStrTest do={
+    :global InitTestCaseState
     :global RunGenericTestCase
     :global CompareStr
 
-    :local res [:toarray ""]
-    :if ([:typeof $1] = "array") do={
-        :set res $1
-    } else={
-        :set ($res->"passed") 0
-        :set ($res->"failed") 0
-    }
+    :local res [$InitTestCaseState $1]
 
     :put "Starting CompareStr tests..."
 
@@ -101,16 +91,11 @@
 }
 
 :set ReverseStrTest do={
+    :global InitTestCaseState
     :global RunGenericTestCase
     :global ReverseStr
 
-    :local res [:toarray ""]
-    :if ([:typeof $1] = "array") do={
-        :set res $1
-    } else={
-        :set ($res->"passed") 0
-        :set ($res->"failed") 0
-    }
+    :local res [$InitTestCaseState $1]
 
     :put "Starting ReverseStr tests..."
 
@@ -166,17 +151,12 @@
 }
 
 :set IsPrintableStrTest do={
+    :global InitTestCaseState
     :global RunGenericTestCase
     :global IsPrintableStr
     :global DecToChar
 
-    :local res [:toarray ""]
-    :if ([:typeof $1] = "array") do={
-        :set res $1
-    } else={
-        :set ($res->"passed") 0
-        :set ($res->"failed") 0
-    }
+    :local res [$InitTestCaseState $1]
 
     :put "Starting IsPrintableStr tests..."
 
@@ -206,16 +186,11 @@
 }
 
 :set ExtractFileNameTest do={
+    :global InitTestCaseState
     :global RunGenericTestCase
     :global ExtractFileName
 
-    :local res [:toarray ""]
-    :if ([:typeof $1] = "array") do={
-        :set res $1
-    } else={
-        :set ($res->"passed") 0
-        :set ($res->"failed") 0
-    }
+    :local res [$InitTestCaseState $1]
 
     :put "Starting ExtractFileName tests..."
 
@@ -290,16 +265,11 @@
 }
 
 :set ContainsStrTest do={
+    :global InitTestCaseState
     :global RunGenericTestCase
     :global ContainsStr
 
-    :local res [:toarray ""]
-    :if ([:typeof $1] = "array") do={
-        :set res $1
-    } else={
-        :set ($res->"passed") 0
-        :set ($res->"failed") 0
-    }
+    :local res [$InitTestCaseState $1]
 
     :put "Starting ContainsStr tests..."
 
@@ -341,16 +311,11 @@
 }
 
 :set StartsWithStrTest do={
+    :global InitTestCaseState
     :global RunGenericTestCase
     :global StartsWithStr
 
-    :local res [:toarray ""]
-    :if ([:typeof $1] = "array") do={
-        :set res $1
-    } else={
-        :set ($res->"passed") 0
-        :set ($res->"failed") 0
-    }
+    :local res [$InitTestCaseState $1]
 
     :put "Starting StartsWithStr tests..."
 
@@ -392,16 +357,11 @@
 }
 
 :set EndsWithStrTest do={
+    :global InitTestCaseState
     :global RunGenericTestCase
     :global EndsWithStr
 
-    :local res [:toarray ""]
-    :if ([:typeof $1] = "array") do={
-        :set res $1
-    } else={
-        :set ($res->"passed") 0
-        :set ($res->"failed") 0
-    }
+    :local res [$InitTestCaseState $1]
 
     :put "Starting EndsWithStr tests..."
 
@@ -463,16 +423,11 @@
 }
 
 :set CleanStrTest do={
+    :global InitTestCaseState
     :global RunGenericTestCase
     :global CleanStr
 
-    :local res [:toarray ""]
-    :if ([:typeof $1] = "array") do={
-        :set res $1
-    } else={
-        :set ($res->"passed") 0
-        :set ($res->"failed") 0
-    }
+    :local res [$InitTestCaseState $1]
 
     :put "Starting CleanStr expanded tests..."
 

@@ -5,18 +5,13 @@
 :global UrlDecodeTest
 
 :set RunAllEncodingTests do={
+    :global InitTestCaseState
     :global Base64EncodeTest
     :global Base64DecodeTest
     :global UrlEncodeTest
     :global UrlDecodeTest
 
-    :local res [:toarray ""]
-    :if ([:typeof $1] = "array") do={
-        :set res $1
-    } else={
-        :set ($res->"passed") 0
-        :set ($res->"failed") 0
-    }
+    :local res [$InitTestCaseState $1]
 
     :put "\1B[35m=== STARTING ALL ENCODING TESTS ===\1B[0m"
 
@@ -31,17 +26,12 @@
 }
 
 :set Base64EncodeTest do={
+    :global InitTestCaseState
     :global DecToChar
     :global Base64Encode
     :global RunGenericTestCase
 
-    :local res [:toarray ""]
-    :if ([:typeof $1] = "array") do={
-        :set res $1
-    } else={
-        :set ($res->"passed") 0
-        :set ($res->"failed") 0
-    }
+    :local res [$InitTestCaseState $1]
 
     :put "Starting Base64Encode tests..."
 
@@ -136,18 +126,13 @@
 }
 
 :set Base64DecodeTest do={
-    :global IsPrintableStr
+    :global InitTestCaseState
+    :global DecToChar
     :global Base64Encode
     :global Base64Decode
     :global RunGenericTestCase
 
-    :local res [:toarray ""]
-    :if ([:typeof $1] = "array") do={
-        :set res $1
-    } else={
-        :set ($res->"passed") 0
-        :set ($res->"failed") 0
-    }
+    :local res [$InitTestCaseState $1]
 
     :put "Starting Base64Decode tests..."
 
@@ -289,27 +274,26 @@
     :set res [$RunGenericTestCase $res $Base64Decode "V29ybGQ=" "nothing" "nothing" "World" "Standard word decoding"]
 
     # Binary round-trip validation for all possible byte values (0x00-0xFF)
-    :local input ""
+    :local allChars ""
 
     :for i from=0 to=255 do={
-        :local hex "$[:pick "0123456789ABCDEF" ($i >> 4) (($i >> 4) + 1)]$[:pick "0123456789ABCDEF" ($i & 15) (($i & 15) + 1)]"
-        :set input "$input$[[:parse "(\"\\$hex\")"]]"
+        :set allChars ($allChars . [$DecToChar $i])
     }
 
-    :local encoded [$Base64Encode $input]
+    :local encoded [$Base64Encode $allChars]
     :local decoded [$Base64Decode $encoded]
 
-    :if ($decoded = $input) do={
+    :if ($decoded = $allChars) do={
         :set ($res->"passed") (($res->"passed") + 1)
         :put "  \1B[32m[PASS]\1B[0m Full binary round-trip validation (0x00-0xFF)"
     } else={
         :set ($res->"failed") (($res->"failed") + 1)
         :put "  \1B[31m[FAIL]\1B[0m Full binary round-trip validation (0x00-0xFF)"
-        :put ("Expected length: " . [:len $input])
+        :put ("Expected length: " . [:len $allChars])
         :put ("Actual length: " . [:len $decoded])
 
         :for i from=0 to=255 do={
-            :if ([:pick $input $i ($i + 1)] != [:pick $decoded $i ($i + 1)]) do={
+            :if ([:pick $allChars $i ($i + 1)] != [:pick $decoded $i ($i + 1)]) do={
                 :put ("First mismatch at byte index " . $i)
             }
         }
@@ -327,17 +311,12 @@
 }
 
 :set UrlEncodeTest do={
+    :global InitTestCaseState
     :global DecToChar
     :global UrlEncode
     :global RunGenericTestCase
 
-    :local res [:toarray ""]
-    :if ([:typeof $1] = "array") do={
-        :set res $1
-    } else={
-        :set ($res->"passed") 0
-        :set ($res->"failed") 0
-    }
+    :local res [$InitTestCaseState $1]
 
     :put "Starting UrlEncode tests..."
 
@@ -426,18 +405,13 @@
 }
 
 :set UrlDecodeTest do={
+    :global InitTestCaseState
     :global DecToChar
     :global UrlEncode
     :global UrlDecode
     :global RunGenericTestCase
 
-    :local res [:toarray ""]
-    :if ([:typeof $1] = "array") do={
-        :set res $1
-    } else={
-        :set ($res->"passed") 0
-        :set ($res->"failed") 0
-    }
+    :local res [$InitTestCaseState $1]
 
     :put "Starting UrlDecode tests..."
 

@@ -7,6 +7,7 @@
 :global DecToCharTest
 
 :set RunAllArrayStrTests3 do={
+    :global InitTestCaseState
     :global QuickSortTest
     :global DivideIntAndRoundTest
     :global ToUpperCaseTest
@@ -16,13 +17,7 @@
 
     :put "\1B[35m=== STARTING ALL ARRAY AND STRING TESTS 3 ===\1B[0m"
 
-    :local res [:toarray ""]
-    :if ([:typeof $1] = "array") do={
-        :set res $1
-    } else={
-        :set ($res->"passed") 0
-        :set ($res->"failed") 0
-    }
+    :local res [$InitTestCaseState $1]
 
     # Execute all test suites sequentially, passing and updating the same accumulator array
     :set res [$QuickSortTest $res]
@@ -38,16 +33,11 @@
 }
 
 :set QuickSortTest do={
+    :global InitTestCaseState
     :global RunGenericTestCase
     :global QuickSort
 
-    :local res [:toarray ""]
-    :if ([:typeof $1] = "array") do={
-        :set res $1
-    } else={
-        :set ($res->"passed") 0
-        :set ($res->"failed") 0
-    }
+    :local res [$InitTestCaseState $1]
 
     :put "Starting QuickSort (numeric) tests..."
 
@@ -132,16 +122,11 @@
 }
 
 :set DivideIntAndRoundTest do={
+    :global InitTestCaseState
     :global RunGenericTestCase
     :global DivideIntAndRound
 
-    :local res [:toarray ""]
-    :if ([:typeof $1] = "array") do={
-        :set res $1
-    } else={
-        :set ($res->"passed") 0
-        :set ($res->"failed") 0
-    }
+    :local res [$InitTestCaseState $1]
 
     :put "Starting DivideIntAndRound decimal precision tests..."
 
@@ -172,16 +157,11 @@
 }
 
 :set ToUpperCaseTest do={
+    :global InitTestCaseState
     :global RunGenericTestCase
     :global ToUpperCase
 
-    :local res [:toarray ""]
-    :if ([:typeof $1] = "array") do={
-        :set res $1
-    } else={
-        :set ($res->"passed") 0
-        :set ($res->"failed") 0
-    }
+    :local res [$InitTestCaseState $1]
 
     :put "Starting ToUpperCase tests..."
 
@@ -206,16 +186,11 @@
 }
 
 :set ToLowerCaseTest do={
+    :global InitTestCaseState
     :global RunGenericTestCase
     :global ToLowerCase
 
-    :local res [:toarray ""]
-    :if ([:typeof $1] = "array") do={
-        :set res $1
-    } else={
-        :set ($res->"passed") 0
-        :set ($res->"failed") 0
-    }
+    :local res [$InitTestCaseState $1]
 
     :put "Starting ToLowerCase tests..."
 
@@ -240,16 +215,11 @@
 }
 
 :set HexToCharTest do={
+    :global InitTestCaseState
     :global RunGenericTestCase
     :global HexToChar
 
-    :local res [:toarray ""]
-    :if ([:typeof $1] = "array") do={
-        :set res $1
-    } else={
-        :set ($res->"passed") 0
-        :set ($res->"failed") 0
-    }
+    :local res [$InitTestCaseState $1]
 
     :put "Starting HexToChar tests..."
 
@@ -308,16 +278,11 @@
 }
 
 :set DecToCharTest do={
+    :global InitTestCaseState
     :global RunGenericTestCase
     :global DecToChar
 
-    :local res [:toarray ""]
-    :if ([:typeof $1] = "array") do={
-        :set res $1
-    } else={
-        :set ($res->"passed") 0
-        :set ($res->"failed") 0
-    }
+    :local res [$InitTestCaseState $1]
 
     :put "Starting DecToChar tests..."
 

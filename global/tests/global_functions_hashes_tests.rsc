@@ -5,18 +5,13 @@
 :global GetSha256SumTest
 
 :set RunAllHashesTests do={
+    :global InitTestCaseState
     :global GetCrc32SumTest
     :global GetMd5SumTest
     :global GetSha1SumTest
     :global GetSha256SumTest
 
-    :local res [:toarray ""]
-    :if ([:typeof $1] = "array") do={
-        :set res $1
-    } else={
-        :set ($res->"passed") 0
-        :set ($res->"failed") 0
-    }
+    :local res [$InitTestCaseState $1]
 
     :put "\1B[35m=== STARTING ALL HASHES TESTS ===\1B[0m"
 
@@ -31,18 +26,13 @@
 }
 
 :set GetCrc32SumTest do={
+    :global InitTestCaseState
     :global GetCrc32Sum
     :global DecToChar
     :global IsPrintableStr
     :global RunGenericTestCase
 
-    :local res [:toarray ""]
-    :if ([:typeof $1] = "array") do={
-        :set res $1
-    } else={
-        :set ($res->"passed") 0
-        :set ($res->"failed") 0
-    }
+    :local res [$InitTestCaseState $1]
 
     :put "Starting GetCrc32Sum tests..."
 
@@ -219,18 +209,13 @@
 }
 
 :set GetMd5SumTest do={
+    :global InitTestCaseState
     :global GetMd5Sum
     :global DecToChar
     :global IsPrintableStr
     :global RunGenericTestCase
 
-    :local res [:toarray ""]
-    :if ([:typeof $1] = "array") do={
-        :set res $1
-    } else={
-        :set ($res->"passed") 0
-        :set ($res->"failed") 0
-    }
+    :local res [$InitTestCaseState $1]
 
     :put "Starting GetMd5Sum tests..."
 
@@ -390,18 +375,13 @@
 }
 
 :set GetSha1SumTest do={
+    :global InitTestCaseState
     :global GetSha1Sum
     :global DecToChar
     :global IsPrintableStr
     :global RunGenericTestCase
 
-    :local res [:toarray ""]
-    :if ([:typeof $1] = "array") do={
-        :set res $1
-    } else={
-        :set ($res->"passed") 0
-        :set ($res->"failed") 0
-    }
+    :local res [$InitTestCaseState $1]
 
     :put "Starting GetSha1Sum tests..."
 
@@ -745,18 +725,13 @@
 }
 
 :set GetSha256SumTest do={
+    :global InitTestCaseState
     :global GetSha256Sum
     :global DecToChar
     :global IsPrintableStr
     :global RunGenericTestCase
 
-    :local res [:toarray ""]
-    :if ([:typeof $1] = "array") do={
-        :set res $1
-    } else={
-        :set ($res->"passed") 0
-        :set ($res->"failed") 0
-    }
+    :local res [$InitTestCaseState $1]
 
     :put "Starting GetSha256Sum tests..."
 

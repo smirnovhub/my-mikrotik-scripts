@@ -24,7 +24,6 @@
 
 # global functions
 :global GetGlobalVar
-:global GetGlobalVarOrDefault
 :global SetGlobalVar
 :global RemoveGlobalVar
 :global CreateGlobalVarName
@@ -38,40 +37,20 @@
 #       :global CleanStr
 #       :global TrimStr
 
-# Purpose: Get the value of a global variable.
-# Parameters:
-#   $1 - Global variable name
-# Returns: The value of the global variable
-:set GetGlobalVar do={
-  :global UrlDecode
-  :global CreateGlobalVarName
-
-  :if ([:len $0] = 0 or [:len $1] = 0) do={
-    :return ""
-  }
-
-  :local varName [$CreateGlobalVarName $1]
-
-  # Check if the variable exists in the environment
-  :if ([:len [/system script environment find name=$varName]] = 0) do={
-    :return ""
-  }
-
-  :local get [:parse ":global \"$varName\"; :return \$\"$varName\""]
-  :return [$UrlDecode [$get]]
-}
-
 # Purpose: Get the value of a global variable or return a default value
 # if the variable does not exist or is uninitialized.
 # Parameters:
 #   $1 - Global variable name
 #   $2 - Default value
 # Returns: The global variable value or the default value
-:set GetGlobalVarOrDefault do={
+:set GetGlobalVar do={
   :global UrlDecode
   :global CreateGlobalVarName
 
   :local defaultValue $2
+  :if ([:len $defaultValue] = 0) do={
+    :set defaultValue ""
+  }
 
   :if ([:len $0] = 0 or [:len $1] = 0) do={
     :return $defaultValue

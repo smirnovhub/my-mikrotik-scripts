@@ -305,10 +305,10 @@ Encode and decode strings using Standard/URL-safe Base64 alphabets or URL percen
 :put ("Dead host replies: " . ($pingResults->"deadHost"))
 
 # Output:
-Localhost replies: 3
-Gateway replies: 5
-DNS replies: 5
-Dead host replies: 0
+# Localhost replies: 3
+# Gateway replies: 5
+# DNS replies: 5
+# Dead host replies: 0
 
 # --- Argument Extraction Examples ---
 
@@ -583,10 +583,11 @@ Execute all tests in a specific module using its corresponding RunAll entry poin
 Aggregate results across multiple test suites into a single execution pass. This function runs all registered test suites sequentially and returns an associative array containing the raw execution metrics (`passed` count, `failed` count, and `error` state) for each suite:
 
 ```routeros
+:global RunAllTestSuites
 :put [$RunAllTestSuites]
 
 # Output:
-ArrayStr1=error=false;failed=0;passed=237;ArrayStr2=error=false;failed=0;passed=135;ArrayStr3=error=false;failed=0;passed=141;DateTime1=error=false;failed=0;passed=393;DateTime2=error=false;failed=0;passed=52;Encoding=error=false;failed=0;passed=189;GlobalVar=error=false;failed=0;passed=48;Hashes=error=false;failed=0;passed=243;Utils=error=false;failed=0;passed=57
+# ArrayStr1=error=false;failed=0;passed=237;ArrayStr2=error=false;failed=0;passed=135;ArrayStr3=error=false;failed=0;passed=141;DateTime1=error=false;failed=0;passed=393;DateTime2=error=false;failed=0;passed=52;Encoding=error=false;failed=0;passed=189;GlobalVar=error=false;failed=0;passed=48;Hashes=error=false;failed=0;passed=243;Utils=error=false;failed=0;passed=57
 ```
 
 ## Disclaimer

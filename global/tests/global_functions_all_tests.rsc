@@ -27,17 +27,16 @@
 
         # Execute the test suite passing the accumulator
         :do {
-            :set state [$suiteCode $state]
-            :if ([:len $state] = 0) do={
-                :set state [$InitTestCaseState]
+            :local result [$suiteCode $state]
+            :if ([:typeof $result] = "array" && [:len $result] > 0) do={
+                :set state $result
+                :set ($state->"error") false
+            } else={
                 :set ($state->"error") true
                 /log error "RunAllTestSuites: result is empty after run $suiteName"
-            } else={
-                :set ($state->"error") false
             }
         } on-error={
             /log error "RunAllTestSuites: failed to run $suiteName"
-            :set state [$InitTestCaseState]
             :set ($state->"error") true
         }
 

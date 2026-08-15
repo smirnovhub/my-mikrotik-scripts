@@ -47,15 +47,15 @@
     # Run all test suites
     :local res [:toarray ""]
 
-    [$RunTestSuite $res "ArrayStr1" $RunAllArrayStrTests1]
-    [$RunTestSuite $res "ArrayStr2" $RunAllArrayStrTests2]
-    [$RunTestSuite $res "ArrayStr3" $RunAllArrayStrTests3]
-    [$RunTestSuite $res "DateTime1" $RunAllDateTimeTests1]
-    [$RunTestSuite $res "DateTime2" $RunAllDateTimeTests2]
-    [$RunTestSuite $res "Encoding" $RunAllEncodingTests]
-    [$RunTestSuite $res "GlobalVar" $RunAllGlobalVarTests]
-    [$RunTestSuite $res "Hashes" $RunAllHashesTests]
-    [$RunTestSuite $res "Utils" $RunAllUtilsTests]
+    :set res [$RunTestSuite $res "ArrayStr1" $RunAllArrayStrTests1]
+    :set res [$RunTestSuite $res "ArrayStr2" $RunAllArrayStrTests2]
+    :set res [$RunTestSuite $res "ArrayStr3" $RunAllArrayStrTests3]
+    :set res [$RunTestSuite $res "DateTime1" $RunAllDateTimeTests1]
+    :set res [$RunTestSuite $res "DateTime2" $RunAllDateTimeTests2]
+    :set res [$RunTestSuite $res "Encoding" $RunAllEncodingTests]
+    :set res [$RunTestSuite $res "GlobalVar" $RunAllGlobalVarTests]
+    :set res [$RunTestSuite $res "Hashes" $RunAllHashesTests]
+    :set res [$RunTestSuite $res "Utils" $RunAllUtilsTests]
 
     :return $res
 }

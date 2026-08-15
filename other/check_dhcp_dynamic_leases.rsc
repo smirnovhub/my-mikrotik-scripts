@@ -1,6 +1,6 @@
 :global SendPrivateTelegramMessage
 :global GetUnixTimestamp
-:global GetGlobalVarOrDefault
+:global GetGlobalVar
 :global SetGlobalVar
 :global warningSignEmoji
 
@@ -67,7 +67,7 @@
 
 :if ($foundDynamic) do={
   :local needSendMessage false
-  :local lastTime [$GetGlobalVarOrDefault $lastDhcpDynamicLeaseWarningTimeVarName ""]
+  :local lastTime [$GetGlobalVar $lastDhcpDynamicLeaseWarningTimeVarName ""]
   :if ([:len [$lastTime]] > 0) do={
     :local curTime [$GetUnixTimestamp]
     :local diff ($curTime - [:tonum $lastTime])

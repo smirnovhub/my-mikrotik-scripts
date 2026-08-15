@@ -16,7 +16,7 @@
 :global ToUnixTimestamp
 :global ParseDateTime
 :global FormatSecondsShort
-:global GetGlobalVarOrDefault
+:global GetGlobalVar
 :global SetGlobalVar
 :global SendPrivateTelegramMessage
 
@@ -79,13 +79,13 @@
     :local lastUpdateVarName ($filterCommentSubstring . "-last-update")
 
     :local ruleName "Unknown"
-    :local ruleNameContent [$GetGlobalVarOrDefault $ruleVarName ""]
+    :local ruleNameContent [$GetGlobalVar $ruleVarName ""]
     :if ([:len $ruleNameContent] > 0) do={
         :set ruleName $ruleNameContent
     }
 
     :local state "unknown"
-    :local stateContent [$GetGlobalVarOrDefault $stateVarName ""]
+    :local stateContent [$GetGlobalVar $stateVarName ""]
     :if ([:len $stateContent] > 0) do={
         :set state $stateContent
     }
@@ -93,10 +93,10 @@
     :local bytesArr []
     :local lastUpdateTimestamp 0
 
-    :local bytesContent [$GetGlobalVarOrDefault $bytesVarName ""]
+    :local bytesContent [$GetGlobalVar $bytesVarName ""]
     :if ([:len $bytesContent] > 0) do={
         :set bytesArr [$SplitStr $bytesContent $itemDelimiter]
-        :set lastUpdateTimestamp [$GetGlobalVarOrDefault $lastUpdateVarName 0]
+        :set lastUpdateTimestamp [$GetGlobalVar $lastUpdateVarName 0]
     }
 
     :local totalBytesCount [:len $bytesArr]

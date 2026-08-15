@@ -110,7 +110,8 @@ The following global settings are required to configure Telegram integration. Th
 
 ### Date & Time Utilities
 
-- **FormatSecondsLong, FormatSecondsShort**: Format duration in seconds into human-readable strings.
+- **FormatSecondsLong**: Format duration in seconds into a detailed human-readable string (e.g., "2d 3h 15m"), omitting any zero-value time components.
+- **FormatSecondsShort**: Format duration in seconds into a concise human-readable string by displaying only the single largest applicable time unit (e.g., "3 days" or "5 hrs").
 - **FromUnixTimestamp**: Convert a Unix timestamp back into `YYYY-MM-DD HH:MM:SS` format.
 - **GetCurrentDateTime**: Retrieve current system date-time formatted as `YYYY-MM-DD HH:MM:SS`.
 - **GetUnixTimestamp**: Retrieve the current system time as a Unix timestamp.
@@ -163,7 +164,7 @@ All hash algorithms are highly optimized for RouterOS. Exact benchmarks for RB75
 
 ### Unit Testing Utilities
 - **InitTestCaseState**: Initializes or passes through a test state accumulator array to track the count of passed and failed test executions.
-- **RunGenericTestCase**: Safely executes a target function with dynamic arguments, evaluates the output against an expected result (including expected runtime errors), prints color-coded feedback to the console, and updates the test state accumulator.
+- **RunTestCase**: Safely executes a target function with dynamic arguments, evaluates the output against an expected result (including expected runtime errors), prints color-coded feedback to the console, and updates the test state accumulator.
 
 ## Installation
 

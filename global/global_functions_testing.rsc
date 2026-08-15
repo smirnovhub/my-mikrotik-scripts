@@ -24,7 +24,7 @@
 #
 # global functions
 :global InitTestCaseState
-:global RunGenericTestCase
+:global RunTestCase
 
 :set InitTestCaseState do={
     :local res [:toarray ""]
@@ -37,7 +37,7 @@
     :return $res
 }
 
-:set RunGenericTestCase do={
+:set RunTestCase do={
     :global IsPrintableStr
 
     # Workaround for the MikroTik RouterOS interpreter bug (phantom execution)

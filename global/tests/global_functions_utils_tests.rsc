@@ -34,7 +34,7 @@
 :set GetArgOrDefaultTest do={
     :global InitTestCaseState
     :global GetArgOrDefault
-    :global RunGenericTestCase
+    :global RunTestCase
 
     :local res [$InitTestCaseState $1]
 
@@ -64,57 +64,57 @@
     }
 
     # Baseline asset recovery
-    :set res [$RunGenericTestCase $res $GetArgOrDefault $sampleMap "ip" "10.0.0.1" "192.168.1.10" "Retrieve existing string argument value"]
+    :set res [$RunTestCase $res $GetArgOrDefault $sampleMap "ip" "10.0.0.1" "192.168.1.10" "Retrieve existing string argument value"]
 
     # Missing arguments and empty values falling back to defaults
-    :set res [$RunGenericTestCase $res $GetArgOrDefault $sampleMap "nonexistent" "10.0.0.1" "10.0.0.1" "Fallback to default value when key is missing"]
-    :set res [$RunGenericTestCase $res $GetArgOrDefault $sampleMap "emptyVal" "fallback_str" "fallback_str" "Fallback to default value when key exists but is empty"]
+    :set res [$RunTestCase $res $GetArgOrDefault $sampleMap "nonexistent" "10.0.0.1" "10.0.0.1" "Fallback to default value when key is missing"]
+    :set res [$RunTestCase $res $GetArgOrDefault $sampleMap "emptyVal" "fallback_str" "fallback_str" "Fallback to default value when key exists but is empty"]
 
     # Boolean transformation logic (String to Boolean)
-    :set res [$RunGenericTestCase $res $GetArgOrDefault $sampleMap "strTrue" false true "Convert string true to explicit boolean true"]
-    :set res [$RunGenericTestCase $res $GetArgOrDefault $sampleMap "strFalse" true false "Convert string false to explicit boolean false"]
+    :set res [$RunTestCase $res $GetArgOrDefault $sampleMap "strTrue" false true "Convert string true to explicit boolean true"]
+    :set res [$RunTestCase $res $GetArgOrDefault $sampleMap "strFalse" true false "Convert string false to explicit boolean false"]
 
     # Native Boolean preservation validation
-    :set res [$RunGenericTestCase $res $GetArgOrDefault $sampleMap "boolTrue" false true "Preserve native boolean true configuration type"]
-    :set res [$RunGenericTestCase $res $GetArgOrDefault $sampleMap "boolFalse" true false "Preserve native boolean false configuration type"]
+    :set res [$RunTestCase $res $GetArgOrDefault $sampleMap "boolTrue" false true "Preserve native boolean true configuration type"]
+    :set res [$RunTestCase $res $GetArgOrDefault $sampleMap "boolFalse" true false "Preserve native boolean false configuration type"]
 
     # Integer preservation
     # Need to use variable to preserve numeric type
     :local expectedNum 100
-    :set res [$RunGenericTestCase $res $GetArgOrDefault $sampleMap "numVal" 1 $expectedNum "Preserve native integer value types without mutations"]
+    :set res [$RunTestCase $res $GetArgOrDefault $sampleMap "numVal" 1 $expectedNum "Preserve native integer value types without mutations"]
 
     # Zero value preservation
     :local expectedZero 0
-    :set res [$RunGenericTestCase $res $GetArgOrDefault $sampleMap "zeroVal" 1 $expectedZero "Preserve numeric zero value"]
+    :set res [$RunTestCase $res $GetArgOrDefault $sampleMap "zeroVal" 1 $expectedZero "Preserve numeric zero value"]
 
     # Existing zero must override default value
-    :set res [$RunGenericTestCase $res $GetArgOrDefault $sampleMap "zeroVal" 999 $expectedZero "Existing numeric zero overrides default value"]
+    :set res [$RunTestCase $res $GetArgOrDefault $sampleMap "zeroVal" 999 $expectedZero "Existing numeric zero overrides default value"]
 
     # String zero must remain a string
-    :set res [$RunGenericTestCase $res $GetArgOrDefault $sampleMap "strZero" "1" "0" "Preserve string zero value"]
+    :set res [$RunTestCase $res $GetArgOrDefault $sampleMap "strZero" "1" "0" "Preserve string zero value"]
 
     # Existing false must override default value
-    :set res [$RunGenericTestCase $res $GetArgOrDefault $sampleMap "boolFalse" true false "Existing boolean false overrides default value"]
+    :set res [$RunTestCase $res $GetArgOrDefault $sampleMap "boolFalse" true false "Existing boolean false overrides default value"]
 
     # Case-sensitive boolean conversion
-    :set res [$RunGenericTestCase $res $GetArgOrDefault $sampleMap "upperTrue" false "TRUE" "Do not convert uppercase TRUE"]
-    :set res [$RunGenericTestCase $res $GetArgOrDefault $sampleMap "mixedFalse" true "False" "Do not convert mixed-case False"]
+    :set res [$RunTestCase $res $GetArgOrDefault $sampleMap "upperTrue" false "TRUE" "Do not convert uppercase TRUE"]
+    :set res [$RunTestCase $res $GetArgOrDefault $sampleMap "mixedFalse" true "False" "Do not convert mixed-case False"]
 
     # Strings containing whitespace must not be converted
-    :set res [$RunGenericTestCase $res $GetArgOrDefault $sampleMap "trueSpaces" false " true " "Do not convert boolean-like string with surrounding spaces"]
+    :set res [$RunTestCase $res $GetArgOrDefault $sampleMap "trueSpaces" false " true " "Do not convert boolean-like string with surrounding spaces"]
 
     # Partial boolean strings must not be converted
-    :set res [$RunGenericTestCase $res $GetArgOrDefault $sampleMap "trueHost" "default" "true.local" "Do not convert partial boolean string"]
+    :set res [$RunTestCase $res $GetArgOrDefault $sampleMap "trueHost" "default" "true.local" "Do not convert partial boolean string"]
 
     # Empty key lookup
-    :set res [$RunGenericTestCase $res $GetArgOrDefault $sampleMap "" "fallback" "emptyKeyValue" "Retrieve value using empty string key"]
+    :set res [$RunTestCase $res $GetArgOrDefault $sampleMap "" "fallback" "emptyKeyValue" "Retrieve value using empty string key"]
 
     # Empty map handling
     :local emptyMap [:toarray ""]
-    :set res [$RunGenericTestCase $res $GetArgOrDefault $emptyMap "ip" "fallback" "fallback" "Fallback when argument map is empty"]
+    :set res [$RunTestCase $res $GetArgOrDefault $emptyMap "ip" "fallback" "fallback" "Fallback when argument map is empty"]
 
     # Negative validation: Missing defaultValue checks (triggers LogAndExit code block)
-    :set res [$RunGenericTestCase $res $GetArgOrDefault $sampleMap "ip" "" "error" "Assert exception when defaultValue is an empty string"]
+    :set res [$RunTestCase $res $GetArgOrDefault $sampleMap "ip" "" "error" "Assert exception when defaultValue is an empty string"]
 
     :local modified false
 
@@ -140,7 +140,7 @@
 :set GetArgOrExitTest do={
     :global InitTestCaseState
     :global GetArgOrExit
-    :global RunGenericTestCase
+    :global RunTestCase
 
     :local res [$InitTestCaseState $1]
 
@@ -170,50 +170,50 @@
     }
 
     # Baseline asset recovery
-    :set res [$RunGenericTestCase $res $GetArgOrExit $sampleMap "ip" "Test context" "192.168.1.10" "Retrieve existing string argument value"]
+    :set res [$RunTestCase $res $GetArgOrExit $sampleMap "ip" "Test context" "192.168.1.10" "Retrieve existing string argument value"]
 
     # Mandatory parameter absence checks (triggers LogAndExit code block)
-    :set res [$RunGenericTestCase $res $GetArgOrExit $sampleMap "nonexistent" "Test context" "error" "Assert exception when key is missing"]
-    :set res [$RunGenericTestCase $res $GetArgOrExit $sampleMap "emptyVal" "Test context" "error" "Assert exception when key exists but is empty"]
+    :set res [$RunTestCase $res $GetArgOrExit $sampleMap "nonexistent" "Test context" "error" "Assert exception when key is missing"]
+    :set res [$RunTestCase $res $GetArgOrExit $sampleMap "emptyVal" "Test context" "error" "Assert exception when key exists but is empty"]
 
     # Optional description omitted (should handle internal default description fallback)
-    :set res [$RunGenericTestCase $res $GetArgOrExit $sampleMap "nonexistent" "" "error" "Assert exception when key is missing and context description is empty"]
+    :set res [$RunTestCase $res $GetArgOrExit $sampleMap "nonexistent" "" "error" "Assert exception when key is missing and context description is empty"]
 
     # Boolean transformation logic (String to Boolean)
-    :set res [$RunGenericTestCase $res $GetArgOrExit $sampleMap "strTrue" "Test context" true "Convert string true to explicit boolean true"]
-    :set res [$RunGenericTestCase $res $GetArgOrExit $sampleMap "strFalse" "Test context" false "Convert string false to explicit boolean false"]
+    :set res [$RunTestCase $res $GetArgOrExit $sampleMap "strTrue" "Test context" true "Convert string true to explicit boolean true"]
+    :set res [$RunTestCase $res $GetArgOrExit $sampleMap "strFalse" "Test context" false "Convert string false to explicit boolean false"]
 
     # Native Boolean preservation validation
-    :set res [$RunGenericTestCase $res $GetArgOrExit $sampleMap "boolTrue" "Test context" true "Preserve native boolean true configuration type"]
-    :set res [$RunGenericTestCase $res $GetArgOrExit $sampleMap "boolFalse" "Test context" false "Preserve native boolean false configuration type"]
+    :set res [$RunTestCase $res $GetArgOrExit $sampleMap "boolTrue" "Test context" true "Preserve native boolean true configuration type"]
+    :set res [$RunTestCase $res $GetArgOrExit $sampleMap "boolFalse" "Test context" false "Preserve native boolean false configuration type"]
 
     # Integer preservation
     :local expectedNum 100
-    :set res [$RunGenericTestCase $res $GetArgOrExit $sampleMap "numVal" "Test context" $expectedNum "Preserve native integer value types without mutations"]
+    :set res [$RunTestCase $res $GetArgOrExit $sampleMap "numVal" "Test context" $expectedNum "Preserve native integer value types without mutations"]
 
     # Zero value preservation (Should pass through since len(0) is not 0 in newer RouterOS versions)
     :local expectedZero 0
-    :set res [$RunGenericTestCase $res $GetArgOrExit $sampleMap "zeroVal" "Test context" $expectedZero "Preserve numeric zero value"]
+    :set res [$RunTestCase $res $GetArgOrExit $sampleMap "zeroVal" "Test context" $expectedZero "Preserve numeric zero value"]
 
     # String zero must remain a string
-    :set res [$RunGenericTestCase $res $GetArgOrExit $sampleMap "strZero" "Test context" "0" "Preserve string zero value"]
+    :set res [$RunTestCase $res $GetArgOrExit $sampleMap "strZero" "Test context" "0" "Preserve string zero value"]
 
     # Case-sensitive boolean conversion
-    :set res [$RunGenericTestCase $res $GetArgOrExit $sampleMap "upperTrue" "Test context" "TRUE" "Do not convert uppercase TRUE"]
-    :set res [$RunGenericTestCase $res $GetArgOrExit $sampleMap "mixedFalse" "Test context" "False" "Do not convert mixed-case False"]
+    :set res [$RunTestCase $res $GetArgOrExit $sampleMap "upperTrue" "Test context" "TRUE" "Do not convert uppercase TRUE"]
+    :set res [$RunTestCase $res $GetArgOrExit $sampleMap "mixedFalse" "Test context" "False" "Do not convert mixed-case False"]
 
     # Strings containing whitespace must not be converted
-    :set res [$RunGenericTestCase $res $GetArgOrExit $sampleMap "trueSpaces" "Test context" " true " "Do not convert boolean-like string with surrounding spaces"]
+    :set res [$RunTestCase $res $GetArgOrExit $sampleMap "trueSpaces" "Test context" " true " "Do not convert boolean-like string with surrounding spaces"]
 
     # Partial boolean strings must not be converted
-    :set res [$RunGenericTestCase $res $GetArgOrExit $sampleMap "trueHost" "Test context" "true.local" "Do not convert partial boolean string"]
+    :set res [$RunTestCase $res $GetArgOrExit $sampleMap "trueHost" "Test context" "true.local" "Do not convert partial boolean string"]
 
     # Empty key lookup
-    :set res [$RunGenericTestCase $res $GetArgOrExit $sampleMap "" "Test context" "emptyKeyValue" "Retrieve value using empty string key"]
+    :set res [$RunTestCase $res $GetArgOrExit $sampleMap "" "Test context" "emptyKeyValue" "Retrieve value using empty string key"]
 
     # Empty map handling (triggers LogAndExit code block)
     :local emptyMap [:toarray ""]
-    :set res [$RunGenericTestCase $res $GetArgOrExit $emptyMap "ip" "Test context" "error" "Assert exception when argument map is empty"]
+    :set res [$RunTestCase $res $GetArgOrExit $emptyMap "ip" "Test context" "error" "Assert exception when argument map is empty"]
 
     # Side-effect validation: ensuring structure stability
     :local modified false
@@ -240,7 +240,7 @@
 :set SilentPingTest do={
     :global InitTestCaseState
     :global SilentPing
-    :global RunGenericTestCase
+    :global RunTestCase
 
     :local res [$InitTestCaseState $1]
 
@@ -256,21 +256,21 @@
     :local three 3
 
     # Test localhost (should always answer if network stack is alive)
-    :set res [$RunGenericTestCase $res $SilentPing "127.0.0.1" 1 "nothing" $one "Ping single local host with 1 packet"]
-    :set res [$RunGenericTestCase $res $SilentPing "127.0.0.1" 3 "nothing" $three "Ping single local host with multiple packets"]
+    :set res [$RunTestCase $res $SilentPing "127.0.0.1" 1 "nothing" $one "Ping single local host with 1 packet"]
+    :set res [$RunTestCase $res $SilentPing "127.0.0.1" 3 "nothing" $three "Ping single local host with multiple packets"]
 
     # Test Google
-    :set res [$RunGenericTestCase $res $SilentPing "dns.google" 1 "nothing" $one "Ping Googlet with 1 packet"]
-    :set res [$RunGenericTestCase $res $SilentPing "dns.google" 2 "nothing" $two "Ping Google with multiple packets"]
+    :set res [$RunTestCase $res $SilentPing "dns.google" 1 "nothing" $one "Ping Googlet with 1 packet"]
+    :set res [$RunTestCase $res $SilentPing "dns.google" 2 "nothing" $two "Ping Google with multiple packets"]
 
     # Test optional packets parameter (default should be 1, checking type/value)
-    :set res [$RunGenericTestCase $res $SilentPing "127.0.0.1" "" "nothing" $one "Verify default packet count is 1 when parameter is omitted"]
+    :set res [$RunTestCase $res $SilentPing "127.0.0.1" "" "nothing" $one "Verify default packet count is 1 when parameter is omitted"]
 
     # Test completely unreachable or dummy IP address (RFC 5737 Test-Net range)
-    :set res [$RunGenericTestCase $res $SilentPing "198.51.100.254" 2 "nothing" $zero "Ping unreachable target returns 0 successful replies"]
+    :set res [$RunTestCase $res $SilentPing "198.51.100.254" 2 "nothing" $zero "Ping unreachable target returns 0 successful replies"]
 
     # Test invalid string formats (should handle gracefully inside job and return 0)
-    :set res [$RunGenericTestCase $res $SilentPing "invalid...hostname" 1 "nothing" $zero "Handle invalid hostname string syntax gracefully without crashing"]
+    :set res [$RunTestCase $res $SilentPing "invalid...hostname" 1 "nothing" $zero "Handle invalid hostname string syntax gracefully without crashing"]
 
     # -------------------------------------------------------------------------
     # PART 2: Multiple Hosts Pings (Associative array / Dictionary inputs)
@@ -291,11 +291,11 @@
     }
 
     # Parallel processing validation
-    :set res [$RunGenericTestCase $res $SilentPing $targetMap 3 "nothing" $expectedMap "Ping multiple hosts in parallel and collect mapped results"]
+    :set res [$RunTestCase $res $SilentPing $targetMap 3 "nothing" $expectedMap "Ping multiple hosts in parallel and collect mapped results"]
 
     # Empty dictionary validation (should return an empty array without runtime errors)
     :local emptyMap [:toarray ""]
-    :set res [$RunGenericTestCase $res $SilentPing $emptyMap 2 "nothing" $emptyMap "Handle empty host dictionary input gracefully"]
+    :set res [$RunTestCase $res $SilentPing $emptyMap 2 "nothing" $emptyMap "Handle empty host dictionary input gracefully"]
 
     # -------------------------------------------------------------------------
     # PART 3: Side-Effects & Environmental Leak Validation
@@ -322,7 +322,7 @@
 :set RunScriptTest do={
     :global InitTestCaseState
     :global RunScript
-    :global RunGenericTestCase
+    :global RunTestCase
 
     :local res [$InitTestCaseState $1]
 
@@ -352,7 +352,7 @@
     :if (($runScriptTestResult->"arg6") != "val6") do={ :set paramMatch false }
 
     :local dummyFunc do={ :return $1 }
-    :set res [$RunGenericTestCase $res $dummyFunc $paramMatch "nothing" "nothing" true "Verify all 6 parameters are correctly passed to target script"]
+    :set res [$RunTestCase $res $dummyFunc $paramMatch "nothing" "nothing" true "Verify all 6 parameters are correctly passed to target script"]
 
     # Partial Parameters Handling
     # Reset test variable and test with only 2 parameters
@@ -365,7 +365,7 @@
     # Unpassed arguments should resolve to empty/nil (represented as empty string in tostr)
     :if ([:len ($runScriptTestResult->"arg3")] > 0) do={ :set partialMatch false }
 
-    :set res [$RunGenericTestCase $res $dummyFunc $partialMatch "nothing" "nothing" true "Verify partial parameters are handled and rest are empty"]
+    :set res [$RunTestCase $res $dummyFunc $partialMatch "nothing" "nothing" true "Verify partial parameters are handled and rest are empty"]
 
     # Clean up the script used for positive tests
     /system script remove [find name=$tempScriptName]
@@ -382,7 +382,7 @@
         :return $res
     }
 
-    :set res [$RunGenericTestCase $res $nonExistentWrapper "nothing" "nothing" "nothing" "success" "Verify calling a non-existent script does not crash the environment"]
+    :set res [$RunTestCase $res $nonExistentWrapper "nothing" "nothing" "nothing" "success" "Verify calling a non-existent script does not crash the environment"]
 
     # Syntax Error inside Target Script
     # Create a script with broken syntax that will fail compilation during :parse
@@ -398,7 +398,7 @@
         }
         :return $res
     }
-    :set res [$RunGenericTestCase $res $syntaxErrorWrapper "nothing" "nothing" "nothing" "success" "Verify target script compilation failure is intercepted gracefully"]
+    :set res [$RunTestCase $res $syntaxErrorWrapper "nothing" "nothing" "nothing" "success" "Verify target script compilation failure is intercepted gracefully"]
 
     # Final Cleanup
     /system script remove [find name=$tempScriptName]
@@ -411,7 +411,7 @@
 :set ExportConfigurationTest do={
     :global InitTestCaseState
     :global ExportConfiguration
-    :global RunGenericTestCase
+    :global RunTestCase
 
     :local res [$InitTestCaseState $1]
 
@@ -431,13 +431,13 @@
     }
 
     :local dummyFunc do={ :return $1 }
-    :set res [$RunGenericTestCase $res $dummyFunc $fileExists "nothing" "nothing" true "Verify configuration file physically exists on the storage"]
+    :set res [$RunTestCase $res $dummyFunc $fileExists "nothing" "nothing" true "Verify configuration file physically exists on the storage"]
 
     # Error Handling (Non-existent Directory)
     # Attempt to write to an invalid path and check that it returns an empty string
     :local invalidPath "non_existent_directory_xyz"
     :local errorResult [$ExportConfiguration $invalidPath]
-    :set res [$RunGenericTestCase $res $dummyFunc $errorResult "nothing" "nothing" "" "Verify function returns empty string on invalid path error"]
+    :set res [$RunTestCase $res $dummyFunc $errorResult "nothing" "nothing" "" "Verify function returns empty string on invalid path error"]
 
     # Cleanup
     # Remove the created backup file if it exists
@@ -452,7 +452,7 @@
 :set GetRouterOSVersionTest do={
     :global InitTestCaseState
     :global GetRouterOSVersion
-    :global RunGenericTestCase
+    :global RunTestCase
 
     :local res [$InitTestCaseState $1]
 
@@ -469,12 +469,12 @@
     }
 
     :local dummyFunc do={ :return $1 }
-    :set res [$RunGenericTestCase $res $dummyFunc $isNotEmpty "nothing" "nothing" true "Verify returned version string is not empty"]
+    :set res [$RunTestCase $res $dummyFunc $isNotEmpty "nothing" "nothing" true "Verify returned version string is not empty"]
 
     # Verify no spaces in parsed version
     # The output must be stripped of any channel/build information (like "7.15 (stable)")
     :local hasSpace ([:find $parsedVersion " "] >= 0)
-    :set res [$RunGenericTestCase $res $dummyFunc $hasSpace "nothing" "nothing" false "Verify there are no spaces in the extracted version"]
+    :set res [$RunTestCase $res $dummyFunc $hasSpace "nothing" "nothing" false "Verify there are no spaces in the extracted version"]
 
     # Verify correct parsing behavior based on raw system string
     # We replicate the extraction logic directly on the raw value to verify the function's internal path
@@ -484,7 +484,7 @@
         :set expectedParsed [:pick $rawSystemVersion 0 $spacePos]
     }
 
-    :set res [$RunGenericTestCase $res $dummyFunc $parsedVersion "nothing" "nothing" $expectedParsed "Verify function output matches expected slice of raw system version"]
+    :set res [$RunTestCase $res $dummyFunc $parsedVersion "nothing" "nothing" $expectedParsed "Verify function output matches expected slice of raw system version"]
 
     :put "Testing completed."
     :return $res

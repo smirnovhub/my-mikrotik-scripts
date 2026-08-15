@@ -164,7 +164,7 @@ All hash algorithms are highly optimized for RouterOS. Exact benchmarks for RB75
 
 ### Unit Testing Utilities
 - **InitTestCaseState**: Initializes or passes through a test state accumulator array to track the count of passed and failed test executions.
-- **RunGenericTestCase**: Safely executes a target function with dynamic arguments, evaluates the output against an expected result (including expected runtime errors), prints color-coded feedback to the console, and updates the test state accumulator.
+- **RunTestCase**: Safely executes a target function with dynamic arguments, evaluates the output against an expected result (including expected runtime errors), prints color-coded feedback to the console, and updates the test state accumulator.
 
 ## Installation
 

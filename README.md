@@ -16,6 +16,7 @@ The code features comprehensive test coverage, ensuring reliable, stable operati
 * [`global_functions_encoding.rsc`](global/global_functions_encoding.rsc)
 * [`global_functions_global_vars.rsc`](global/global_functions_global_vars.rsc)
 * [`global_functions_hashes.rsc`](global/global_functions_hashes.rsc)
+* [`global_functions_testing.rsc`](global/global_functions_testing.rsc)
 * [`global_functions_utils.rsc`](global/global_functions_utils.rsc)
 
 ## Overview
@@ -159,6 +160,10 @@ All hash algorithms are highly optimized for RouterOS. Exact benchmarks for RB75
 - **DownloadAndImportScriptsFromList**: Fetches and parses a remote text file (`.txt`) containing space-separated checksums and script URLs line-by-line (ignoring comments and empty lines). Automatically downloads, validates, and imports each script, tracks performance execution time, and optionally executes all updated scripts sequentially. See list.txt files in this repo for example.
 - **FetchWithRedirect**: Downloads content from a specified URL using `/tool fetch` with full support for HTTP 3xx redirects across both RouterOS v6 and v7 environments. Captures errors via temporary output logs and returns the downloaded content directly in memory without writing the final payload to disk.
 
+### Unit Testing Utilities
+- **InitTestCaseState**: Initializes or passes through a test state accumulator array to track the count of passed and failed test executions.
+- **RunGenericTestCase**: Safely executes a target function with dynamic arguments, evaluates the output against an expected result (including expected runtime errors), prints color-coded feedback to the console, and updates the test state accumulator.
+
 ## Installation
 
 1. Save the scripts into your RouterOS environment using their respective module names (
@@ -170,6 +175,7 @@ All hash algorithms are highly optimized for RouterOS. Exact benchmarks for RB75
 `global_functions_encoding`,
 `global_functions_global_vars`,
 `global_functions_hashes`,
+`global_functions_testing`,
 `global_functions_utils`).
 2. Add the following execution commands to your startup script to load all global functions at system boot:
 ```routeros
@@ -181,6 +187,7 @@ All hash algorithms are highly optimized for RouterOS. Exact benchmarks for RB75
 /system script run global_functions_encoding
 /system script run global_functions_global_vars
 /system script run global_functions_hashes
+/system script run global_functions_testing
 /system script run global_functions_utils
 ```
 
@@ -392,14 +399,20 @@ Convert timestamps, format duration strings, or parse RouterOS/ISO date-time for
 
 ## Files list
 
+* [`global_functions_all_tests.rsc`](global/tests/global_functions_all_tests.rsc)
 * [`global_functions_array_str_tests_1.rsc`](global/tests/global_functions_array_str_tests_1.rsc)
 * [`global_functions_array_str_tests_2.rsc`](global/tests/global_functions_array_str_tests_2.rsc)
+* [`global_functions_array_str_tests_3.rsc`](global/tests/global_functions_array_str_tests_3.rsc)
 * [`global_functions_datetime_tests_1.rsc`](global/tests/global_functions_datetime_tests_1.rsc)
 * [`global_functions_datetime_tests_2.rsc`](global/tests/global_functions_datetime_tests_2.rsc)
 * [`global_functions_encoding_tests.rsc`](global/tests/global_functions_encoding_tests.rsc)
 * [`global_functions_global_vars_tests.rsc`](global/tests/global_functions_global_vars_tests.rsc)
 * [`global_functions_hashes_tests.rsc`](global/tests/global_functions_hashes_tests.rsc)
 * [`global_functions_utils_tests.rsc`](global/tests/global_functions_utils_tests.rsc)
+
+### Run All Test Suites
+
+- **RunAllTestSuites**: Executes all registered test suites sequentially within a safe wrapper, validates their return data, handles unexpected runtime crashes, and returns a consolidated associative array containing the execution metrics (passed count, failed count, and error flags) for each individual suite.
 
 ### Array and String Functions Tests
 
@@ -478,6 +491,7 @@ Convert timestamps, format duration strings, or parse RouterOS/ISO date-time for
 1. Save the scripts into your RouterOS environment using their respective module names (
 `global_functions_array_str_tests_1`,
 `global_functions_array_str_tests_2`,
+`global_functions_array_str_tests_3`,
 `global_functions_datetime_tests_1`,
 `global_functions_datetime_tests_2`,
 `global_functions_encoding_tests`,
@@ -486,8 +500,10 @@ Convert timestamps, format duration strings, or parse RouterOS/ISO date-time for
 `global_functions_utils_tests`).
 2. Add the following execution commands to your startup script to load all test suites at system boot:
 ```routeros
+/system script run global_functions_all_tests
 /system script run global_functions_array_str_tests_1
 /system script run global_functions_array_str_tests_2
+/system script run global_functions_array_str_tests_3
 /system script run global_functions_datetime_tests_1
 /system script run global_functions_datetime_tests_2
 /system script run global_functions_encoding_tests
@@ -557,40 +573,15 @@ Execute all tests in a specific module using its corresponding RunAll entry poin
 :put [$RunAllUtilsTests]
 ```
 
-### 3. Chaining Multiple Packages (Continuous Integration Pipeline)
+### 3. Runnig All Test Suites
 
-Aggregate results across multiple test suites into a single execution pass to inspect cumulative passed and failed counters:
+Aggregate results across multiple test suites into a single execution pass. This function runs all registered test suites sequentially and returns an associative array containing the raw execution metrics (`passed` count, `failed` count, and `error` state) for each suite:
 
 ```routeros
-:global RunAllArrayStrTests1
-:global RunAllArrayStrTests2
-:global RunAllDateTimeTests1
-:global RunAllDateTimeTests2
-:global RunAllEncodingTests
-:global RunAllGlobalVarTests
-:global RunAllHashesTests
-:global RunAllUtilsTests
+:put [$RunAllTestSuites]
 
-# Initialize result collector
-:local stats [:toarray ""]
-
-:set ($stats->"passed") 0
-:set ($stats->"failed") 0
-
-# Execute suites sequentially while passing the results map
-:set stats [$RunAllArrayStrTests1 $stats]
-:set stats [$RunAllArrayStrTests2 $stats]
-:set stats [$RunAllDateTimeTests1 $stats]
-:set stats [$RunAllDateTimeTests2 $stats]
-:set stats [$RunAllEncodingTests $stats]
-:set stats [$RunAllGlobalVarTests $stats]
-:set stats [$RunAllHashesTests $stats]
-:set stats [$RunAllUtilsTests $stats]
-
-# Output global execution summary
-:put ("\1B[35m=== FINAL TEST RESULTS ===\1B[0m")
-:put ("  Passed: " . ($stats->"passed"))
-:put ("  Failed: " . ($stats->"failed"))
+# Output:
+ArrayStr1=error=false;failed=0;passed=237;ArrayStr2=error=false;failed=0;passed=135;ArrayStr3=error=false;failed=0;passed=141;DateTime1=error=false;failed=0;passed=393;DateTime2=error=false;failed=0;passed=52;Encoding=error=false;failed=0;passed=189;GlobalVar=error=false;failed=0;passed=48;Hashes=error=false;failed=0;passed=243;Utils=error=false;failed=0;passed=57
 ```
 
 ## Disclaimer

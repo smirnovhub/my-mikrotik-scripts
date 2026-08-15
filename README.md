@@ -6,7 +6,7 @@ The code features comprehensive test coverage, ensuring reliable, stable operati
 
 # Global Functions List
 
-## Files list
+## Files List
 
 * [`global_config.rsc`](global/global_config.rsc)
 * [`global_functions.rsc`](global/global_functions.rsc)
@@ -216,7 +216,7 @@ Both update functions accept a boolean parameter (`true` or `false`) following t
 
 Below are practical examples demonstrating how to execute common library functions directly within RouterOS.
 
-### 1. Hashing and Checksums
+### Hashing and Checksums
 
 Generate MD5 hashes or CRC32 checksums for strings or binary payloads:
 
@@ -243,7 +243,7 @@ Generate MD5 hashes or CRC32 checksums for strings or binary payloads:
 # Output: SHA256: 5e884898da28047151d0e56f8dc6292773603d0d6aabbdd62a11ef721d1542d8
 ```
 
-### 2. Base64 and URL Encoding / Decoding
+### Base64 and URL Encoding / Decoding
 
 Encode and decode strings using Standard/URL-safe Base64 alphabets or URL percent-encoding:
 
@@ -279,7 +279,7 @@ Encode and decode strings using Standard/URL-safe Base64 alphabets or URL percen
 # Output: URL Decoded: search?q=test&a=1
 ```
 
-### 3. Network and Utility Functions (SilentPing, GetArgOrDefault, GetArgOrExit)
+### Network and Utility Functions
 
 ```routeros
 :global SilentPing
@@ -334,7 +334,7 @@ Encode and decode strings using Standard/URL-safe Base64 alphabets or URL percen
 # Output: Host: 10.0.0.1
 ```
 
-### 4. Named Global Variable Utility Management
+### Named Global Variables
 
 Set, get, fallback, and remove global variables without polluting runtime scope:
 
@@ -361,7 +361,7 @@ $SetGlobalVar "myServerIp" 192.168.88.1
 $RemoveGlobalVar "myServerIp"
 ```
 
-### 5. Date and Time Functions
+### Date and Time Functions
 
 Convert timestamps, format duration strings, or parse RouterOS/ISO date-time formats:
 
@@ -399,7 +399,7 @@ Convert timestamps, format duration strings, or parse RouterOS/ISO date-time for
 
 # Tests
 
-## Files list
+## Files List
 
 * [`global_functions_all_tests.rsc`](global/tests/global_functions_all_tests.rsc)
 * [`global_functions_array_str_tests_1.rsc`](global/tests/global_functions_array_str_tests_1.rsc)

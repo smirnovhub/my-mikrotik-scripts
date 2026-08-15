@@ -50,15 +50,15 @@ The following global settings are required to configure Telegram integration. Th
 
 ### Network Utilities & Status Checks
 
-- **DNSIsResolving / WaitDNSResolving**: Check or wait for DNS resolution.
-- **DefaultRouteIsReachable / WaitDefaultRouteReachable**: Check or wait for default route availability.
+- **DNSIsResolving, WaitDNSResolving**: Check or wait for DNS resolution.
+- **DefaultRouteIsReachable, WaitDefaultRouteReachable**: Check or wait for default route availability.
 - **GetDhcpClientAddress**: Retrieves the assigned IPv4 address (without CIDR prefix) from a bound DHCP client on a specified interface.
 - **GetDhcpClientGateway**: Retrieves the default gateway IPv4 address provided by a bound DHCP client on a specified interface.
 - **GetHttpFileContent**: Downloads file content from an HTTP URL into memory, enforcing a 64 KB size limit.
 - **GetHttpFileContentWithRetry**: Fetches HTTP file content with automatic retries and incremental backoff delays between attempts.
 - **GetRouterOSVersion**: Retrieves the system RouterOS version string, automatically stripping release channels or build suffixes (e.g., returning `"7.21.5"`).
 - **SilentPing**: Perform silent pings to a single host or multiple hosts in parallel.  
-- **TimeIsSync / WaitTimeSync**: Check or wait for NTP time synchronization.
+- **TimeIsSync, WaitTimeSync**: Check or wait for NTP time synchronization.
 - **WaitFullyConnected**: Wait until network is fully ready (default route reachable, DNS resolving, and NTP synced).
 
 ### Logging & Error Handling
@@ -75,6 +75,7 @@ The following global settings are required to configure Telegram integration. Th
 - **CleanStr**: Filter a string to keep only allowed characters.
 - **CompareStr**: Compare two strings lexicographically using ASCII character codes.
 - **ContainsStr**: Check if a substring exists within a string.
+- **EllipsisStrCenter, EllipsisStrLeft, EllipsisStrRight**: Truncate strings to fit a maximum length by inserting an ellipsis in the center, prepending it to the left, or appending it to the right.
 - **ExtractFileName**: Extract and return the file name from a path (with optional extension retention).
 - **IsPrintableStr**: Check whether a string contains only printable characters.
 - **JoinArray**: Join array elements into a single string with a separator.
@@ -83,8 +84,8 @@ The following global settings are required to configure Telegram integration. Th
 - **ReplaceStr**: Replace substrings in a string.
 - **ReverseStr**: Reverse characters in a string.
 - **SplitStr**: Split strings into arrays by delimiter.
-- **StartsWithStr / EndsWithStr**: Verify string prefixes or suffixes.
-- **ToUpperCase / ToLowerCase**: Convert strings to uppercase or lowercase.
+- **StartsWithStr, EndsWithStr**: Verify string prefixes or suffixes.
+- **ToUpperCase, ToLowerCase**: Convert strings to uppercase or lowercase.
 - **TrimStr, TrimStrLeft, TrimStrRight**: Trim characters from strings.
 
 ### Named Global Variables Utilities
@@ -99,7 +100,7 @@ The following global settings are required to configure Telegram integration. Th
 - **DivideIntAndRound**: Divide integers and round to a specified number of decimal places.
 - **GetRandom20CharHex**: Generate a random 20-character hexadecimal string.
 - **GetRandomNumber**: Generate a pseudo-random number within a range.
-- **HexToChar / DecToChar**: Convert hexadecimal or decimal ASCII values to characters.
+- **HexToChar, DecToChar**: Convert hexadecimal or decimal ASCII values to characters.
 - **HexToNum**: Convert hexadecimal strings to numeric values.
 
 ### Sorting
@@ -109,7 +110,7 @@ The following global settings are required to configure Telegram integration. Th
 
 ### Date & Time Utilities
 
-- **FormatSecondsLong / FormatSecondsShort**: Format duration in seconds into human-readable strings.
+- **FormatSecondsLong, FormatSecondsShort**: Format duration in seconds into human-readable strings.
 - **FromUnixTimestamp**: Convert a Unix timestamp back into `YYYY-MM-DD HH:MM:SS` format.
 - **GetCurrentDateTime**: Retrieve current system date-time formatted as `YYYY-MM-DD HH:MM:SS`.
 - **GetUnixTimestamp**: Retrieve the current system time as a Unix timestamp.
@@ -416,13 +417,14 @@ Convert timestamps, format duration strings, or parse RouterOS/ISO date-time for
 
 ### Array and String Functions Tests
 
-- **RunAllArrayStrTests1**: Executes the first suite of array and string utility tests, covering string operations, case transformations, trim logic, array manipulation, and formatting functions.
-- **RunAllArrayStrTests2**: Executes the second suite of array and string utility tests, covering search, splitting, joining, and array filtering operations.
 - **CleanStrTest**: Tests string sanitization (`CleanStr`) against allowed character sets, verifying alphanumeric filtering, whitespace/control character stripping, quotes, path cleaning, and non-string parameter handling.
 - **CompareStrTest**: Tests lexicographical comparison of two strings (`CompareStr`), validating ASCII ordering (uppercase vs lowercase), length variations, prefix matching, and special characters.
 - **ContainsStrTest**: Tests substring existence checks (`ContainsStr`), covering middle/start/end matches, case sensitivity, empty search targets, and special character handling.
 - **DecToCharTest**: Tests conversion of decimal ASCII codes to characters, covering standard printable ranges, digits, whitespace control characters, and boundary byte values.
 - **DivideIntAndRoundTest**: Tests integer division with precise decimal rounding and zero-padding, verifying round down/up/half-up cases, trailing zeros, division by zero guards, and small fraction handling.
+- **EllipsisStrCenterTest**: Tests string truncation from the center, ensuring an ellipsis is inserted evenly between preserved outer parts when length exceeds the maximum limit.
+- **EllipsisStrLeftTest**: Tests string truncation from the left, ensuring an ellipsis is prepended while preserving the trailing part of the string.
+- **EllipsisStrRightTest**: Tests string truncation from the right, ensuring an ellipsis is appended while preserving the leading part of the string.
 - **EndsWithStrTest**: Tests suffix matching (`EndsWithStr`), validating file extension checks, trailing slashes/spaces, case sensitivity, and numeric/IP object parameters.
 - **ExtractFileNameTest**: Tests file name extraction from path strings (`ExtractFileName`), validating extension stripping/retention, hidden files (`.env`), multiple dots, directory slashes, and trailing spaces.
 - **HexToCharTest**: Tests conversion of 2-digit hex codes to ASCII characters, validating printable characters, spaces, control characters (`\t`, `\n`, `\r`), and boundary bytes.
@@ -436,6 +438,8 @@ Convert timestamps, format duration strings, or parse RouterOS/ISO date-time for
 - **RecursiveMergeSortTest**: Tests recursive merge sort logic for numeric arrays, validating unsorted sequences, duplicates, reverse order, zeros, and boundary numbers.
 - **ReplaceStrTest**: Tests substring replacement, checking single and global matches, empty string edge cases, overlapping patterns, and special character replacements.
 - **ReverseStrTest**: Tests string reversal (`ReverseStr`), covering standard words, multi-word strings, palindromes, file paths, control characters, and non-string type inputs.
+- **RunAllArrayStrTests1**: Executes the first suite of array and string utility tests, covering string operations, case transformations, trim logic, array manipulation, and formatting functions.
+- **RunAllArrayStrTests2**: Executes the second suite of array and string utility tests, covering search, splitting, joining, and array filtering operations.
 - **SplitStrTest**: Tests string splitting into arrays by single or multi-character delimiters, verifying maximum split limit constraints, empty tokens, and special character handling.
 - **StartsWithStrTest**: Tests prefix matching (`StartsWithStr`), verifying exact prefixes, case sensitivity, empty inputs, path separators, and non-string type handling.
 - **ToLowerCaseTest**: Tests string conversion to lowercase, ensuring uppercase letters are transformed while preserving non-alphabetic characters.

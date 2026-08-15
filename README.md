@@ -16,6 +16,7 @@ The code features comprehensive test coverage, ensuring reliable, stable operati
 * [`global_functions_encoding.rsc`](global/global_functions_encoding.rsc)
 * [`global_functions_global_vars.rsc`](global/global_functions_global_vars.rsc)
 * [`global_functions_hashes.rsc`](global/global_functions_hashes.rsc)
+* [`global_functions_testing.rsc`](global/global_functions_testing.rsc)
 * [`global_functions_utils.rsc`](global/global_functions_utils.rsc)
 
 ## Overview
@@ -49,15 +50,15 @@ The following global settings are required to configure Telegram integration. Th
 
 ### Network Utilities & Status Checks
 
-- **DNSIsResolving / WaitDNSResolving**: Check or wait for DNS resolution.
-- **DefaultRouteIsReachable / WaitDefaultRouteReachable**: Check or wait for default route availability.
+- **DNSIsResolving, WaitDNSResolving**: Check or wait for DNS resolution.
+- **DefaultRouteIsReachable, WaitDefaultRouteReachable**: Check or wait for default route availability.
 - **GetDhcpClientAddress**: Retrieves the assigned IPv4 address (without CIDR prefix) from a bound DHCP client on a specified interface.
 - **GetDhcpClientGateway**: Retrieves the default gateway IPv4 address provided by a bound DHCP client on a specified interface.
 - **GetHttpFileContent**: Downloads file content from an HTTP URL into memory, enforcing a 64 KB size limit.
 - **GetHttpFileContentWithRetry**: Fetches HTTP file content with automatic retries and incremental backoff delays between attempts.
 - **GetRouterOSVersion**: Retrieves the system RouterOS version string, automatically stripping release channels or build suffixes (e.g., returning `"7.21.5"`).
 - **SilentPing**: Perform silent pings to a single host or multiple hosts in parallel.  
-- **TimeIsSync / WaitTimeSync**: Check or wait for NTP time synchronization.
+- **TimeIsSync, WaitTimeSync**: Check or wait for NTP time synchronization.
 - **WaitFullyConnected**: Wait until network is fully ready (default route reachable, DNS resolving, and NTP synced).
 
 ### Logging & Error Handling
@@ -74,6 +75,7 @@ The following global settings are required to configure Telegram integration. Th
 - **CleanStr**: Filter a string to keep only allowed characters.
 - **CompareStr**: Compare two strings lexicographically using ASCII character codes.
 - **ContainsStr**: Check if a substring exists within a string.
+- **EllipsisStrCenter, EllipsisStrLeft, EllipsisStrRight**: Truncate strings to fit a maximum length by inserting an ellipsis in the center, prepending it to the left, or appending it to the right.
 - **ExtractFileName**: Extract and return the file name from a path (with optional extension retention).
 - **IsPrintableStr**: Check whether a string contains only printable characters.
 - **JoinArray**: Join array elements into a single string with a separator.
@@ -82,8 +84,8 @@ The following global settings are required to configure Telegram integration. Th
 - **ReplaceStr**: Replace substrings in a string.
 - **ReverseStr**: Reverse characters in a string.
 - **SplitStr**: Split strings into arrays by delimiter.
-- **StartsWithStr / EndsWithStr**: Verify string prefixes or suffixes.
-- **ToUpperCase / ToLowerCase**: Convert strings to uppercase or lowercase.
+- **StartsWithStr, EndsWithStr**: Verify string prefixes or suffixes.
+- **ToUpperCase, ToLowerCase**: Convert strings to uppercase or lowercase.
 - **TrimStr, TrimStrLeft, TrimStrRight**: Trim characters from strings.
 
 ### Named Global Variables Utilities
@@ -98,7 +100,7 @@ The following global settings are required to configure Telegram integration. Th
 - **DivideIntAndRound**: Divide integers and round to a specified number of decimal places.
 - **GetRandom20CharHex**: Generate a random 20-character hexadecimal string.
 - **GetRandomNumber**: Generate a pseudo-random number within a range.
-- **HexToChar / DecToChar**: Convert hexadecimal or decimal ASCII values to characters.
+- **HexToChar, DecToChar**: Convert hexadecimal or decimal ASCII values to characters.
 - **HexToNum**: Convert hexadecimal strings to numeric values.
 
 ### Sorting
@@ -108,7 +110,7 @@ The following global settings are required to configure Telegram integration. Th
 
 ### Date & Time Utilities
 
-- **FormatSecondsLong / FormatSecondsShort**: Format duration in seconds into human-readable strings.
+- **FormatSecondsLong, FormatSecondsShort**: Format duration in seconds into human-readable strings.
 - **FromUnixTimestamp**: Convert a Unix timestamp back into `YYYY-MM-DD HH:MM:SS` format.
 - **GetCurrentDateTime**: Retrieve current system date-time formatted as `YYYY-MM-DD HH:MM:SS`.
 - **GetUnixTimestamp**: Retrieve the current system time as a Unix timestamp.
@@ -159,6 +161,10 @@ All hash algorithms are highly optimized for RouterOS. Exact benchmarks for RB75
 - **DownloadAndImportScriptsFromList**: Fetches and parses a remote text file (`.txt`) containing space-separated checksums and script URLs line-by-line (ignoring comments and empty lines). Automatically downloads, validates, and imports each script, tracks performance execution time, and optionally executes all updated scripts sequentially. See list.txt files in this repo for example.
 - **FetchWithRedirect**: Downloads content from a specified URL using `/tool fetch` with full support for HTTP 3xx redirects across both RouterOS v6 and v7 environments. Captures errors via temporary output logs and returns the downloaded content directly in memory without writing the final payload to disk.
 
+### Unit Testing Utilities
+- **InitTestCaseState**: Initializes or passes through a test state accumulator array to track the count of passed and failed test executions.
+- **RunGenericTestCase**: Safely executes a target function with dynamic arguments, evaluates the output against an expected result (including expected runtime errors), prints color-coded feedback to the console, and updates the test state accumulator.
+
 ## Installation
 
 1. Save the scripts into your RouterOS environment using their respective module names (
@@ -170,6 +176,7 @@ All hash algorithms are highly optimized for RouterOS. Exact benchmarks for RB75
 `global_functions_encoding`,
 `global_functions_global_vars`,
 `global_functions_hashes`,
+`global_functions_testing`,
 `global_functions_utils`).
 2. Add the following execution commands to your startup script to load all global functions at system boot:
 ```routeros
@@ -181,6 +188,7 @@ All hash algorithms are highly optimized for RouterOS. Exact benchmarks for RB75
 /system script run global_functions_encoding
 /system script run global_functions_global_vars
 /system script run global_functions_hashes
+/system script run global_functions_testing
 /system script run global_functions_utils
 ```
 
@@ -392,8 +400,10 @@ Convert timestamps, format duration strings, or parse RouterOS/ISO date-time for
 
 ## Files list
 
+* [`global_functions_all_tests.rsc`](global/tests/global_functions_all_tests.rsc)
 * [`global_functions_array_str_tests_1.rsc`](global/tests/global_functions_array_str_tests_1.rsc)
 * [`global_functions_array_str_tests_2.rsc`](global/tests/global_functions_array_str_tests_2.rsc)
+* [`global_functions_array_str_tests_3.rsc`](global/tests/global_functions_array_str_tests_3.rsc)
 * [`global_functions_datetime_tests_1.rsc`](global/tests/global_functions_datetime_tests_1.rsc)
 * [`global_functions_datetime_tests_2.rsc`](global/tests/global_functions_datetime_tests_2.rsc)
 * [`global_functions_encoding_tests.rsc`](global/tests/global_functions_encoding_tests.rsc)
@@ -401,15 +411,20 @@ Convert timestamps, format duration strings, or parse RouterOS/ISO date-time for
 * [`global_functions_hashes_tests.rsc`](global/tests/global_functions_hashes_tests.rsc)
 * [`global_functions_utils_tests.rsc`](global/tests/global_functions_utils_tests.rsc)
 
+### Run All Test Suites
+
+- **RunAllTestSuites**: Executes all registered test suites sequentially within a safe wrapper, validates their return data, handles unexpected runtime crashes, and returns a consolidated associative array containing the execution metrics (passed count, failed count, and error flags) for each individual suite.
+
 ### Array and String Functions Tests
 
-- **RunAllArrayStrTests1**: Executes the first suite of array and string utility tests, covering string operations, case transformations, trim logic, array manipulation, and formatting functions.
-- **RunAllArrayStrTests2**: Executes the second suite of array and string utility tests, covering search, splitting, joining, and array filtering operations.
 - **CleanStrTest**: Tests string sanitization (`CleanStr`) against allowed character sets, verifying alphanumeric filtering, whitespace/control character stripping, quotes, path cleaning, and non-string parameter handling.
 - **CompareStrTest**: Tests lexicographical comparison of two strings (`CompareStr`), validating ASCII ordering (uppercase vs lowercase), length variations, prefix matching, and special characters.
 - **ContainsStrTest**: Tests substring existence checks (`ContainsStr`), covering middle/start/end matches, case sensitivity, empty search targets, and special character handling.
 - **DecToCharTest**: Tests conversion of decimal ASCII codes to characters, covering standard printable ranges, digits, whitespace control characters, and boundary byte values.
 - **DivideIntAndRoundTest**: Tests integer division with precise decimal rounding and zero-padding, verifying round down/up/half-up cases, trailing zeros, division by zero guards, and small fraction handling.
+- **EllipsisStrCenterTest**: Tests string truncation from the center, ensuring an ellipsis is inserted evenly between preserved outer parts when length exceeds the maximum limit.
+- **EllipsisStrLeftTest**: Tests string truncation from the left, ensuring an ellipsis is prepended while preserving the trailing part of the string.
+- **EllipsisStrRightTest**: Tests string truncation from the right, ensuring an ellipsis is appended while preserving the leading part of the string.
 - **EndsWithStrTest**: Tests suffix matching (`EndsWithStr`), validating file extension checks, trailing slashes/spaces, case sensitivity, and numeric/IP object parameters.
 - **ExtractFileNameTest**: Tests file name extraction from path strings (`ExtractFileName`), validating extension stripping/retention, hidden files (`.env`), multiple dots, directory slashes, and trailing spaces.
 - **HexToCharTest**: Tests conversion of 2-digit hex codes to ASCII characters, validating printable characters, spaces, control characters (`\t`, `\n`, `\r`), and boundary bytes.
@@ -423,6 +438,8 @@ Convert timestamps, format duration strings, or parse RouterOS/ISO date-time for
 - **RecursiveMergeSortTest**: Tests recursive merge sort logic for numeric arrays, validating unsorted sequences, duplicates, reverse order, zeros, and boundary numbers.
 - **ReplaceStrTest**: Tests substring replacement, checking single and global matches, empty string edge cases, overlapping patterns, and special character replacements.
 - **ReverseStrTest**: Tests string reversal (`ReverseStr`), covering standard words, multi-word strings, palindromes, file paths, control characters, and non-string type inputs.
+- **RunAllArrayStrTests1**: Executes the first suite of array and string utility tests, covering string operations, case transformations, trim logic, array manipulation, and formatting functions.
+- **RunAllArrayStrTests2**: Executes the second suite of array and string utility tests, covering search, splitting, joining, and array filtering operations.
 - **SplitStrTest**: Tests string splitting into arrays by single or multi-character delimiters, verifying maximum split limit constraints, empty tokens, and special character handling.
 - **StartsWithStrTest**: Tests prefix matching (`StartsWithStr`), verifying exact prefixes, case sensitivity, empty inputs, path separators, and non-string type handling.
 - **ToLowerCaseTest**: Tests string conversion to lowercase, ensuring uppercase letters are transformed while preserving non-alphabetic characters.
@@ -478,6 +495,7 @@ Convert timestamps, format duration strings, or parse RouterOS/ISO date-time for
 1. Save the scripts into your RouterOS environment using their respective module names (
 `global_functions_array_str_tests_1`,
 `global_functions_array_str_tests_2`,
+`global_functions_array_str_tests_3`,
 `global_functions_datetime_tests_1`,
 `global_functions_datetime_tests_2`,
 `global_functions_encoding_tests`,
@@ -486,8 +504,10 @@ Convert timestamps, format duration strings, or parse RouterOS/ISO date-time for
 `global_functions_utils_tests`).
 2. Add the following execution commands to your startup script to load all test suites at system boot:
 ```routeros
+/system script run global_functions_all_tests
 /system script run global_functions_array_str_tests_1
 /system script run global_functions_array_str_tests_2
+/system script run global_functions_array_str_tests_3
 /system script run global_functions_datetime_tests_1
 /system script run global_functions_datetime_tests_2
 /system script run global_functions_encoding_tests
@@ -557,40 +577,15 @@ Execute all tests in a specific module using its corresponding RunAll entry poin
 :put [$RunAllUtilsTests]
 ```
 
-### 3. Chaining Multiple Packages (Continuous Integration Pipeline)
+### 3. Runnig All Test Suites
 
-Aggregate results across multiple test suites into a single execution pass to inspect cumulative passed and failed counters:
+Aggregate results across multiple test suites into a single execution pass. This function runs all registered test suites sequentially and returns an associative array containing the raw execution metrics (`passed` count, `failed` count, and `error` state) for each suite:
 
 ```routeros
-:global RunAllArrayStrTests1
-:global RunAllArrayStrTests2
-:global RunAllDateTimeTests1
-:global RunAllDateTimeTests2
-:global RunAllEncodingTests
-:global RunAllGlobalVarTests
-:global RunAllHashesTests
-:global RunAllUtilsTests
+:put [$RunAllTestSuites]
 
-# Initialize result collector
-:local stats [:toarray ""]
-
-:set ($stats->"passed") 0
-:set ($stats->"failed") 0
-
-# Execute suites sequentially while passing the results map
-:set stats [$RunAllArrayStrTests1 $stats]
-:set stats [$RunAllArrayStrTests2 $stats]
-:set stats [$RunAllDateTimeTests1 $stats]
-:set stats [$RunAllDateTimeTests2 $stats]
-:set stats [$RunAllEncodingTests $stats]
-:set stats [$RunAllGlobalVarTests $stats]
-:set stats [$RunAllHashesTests $stats]
-:set stats [$RunAllUtilsTests $stats]
-
-# Output global execution summary
-:put ("\1B[35m=== FINAL TEST RESULTS ===\1B[0m")
-:put ("  Passed: " . ($stats->"passed"))
-:put ("  Failed: " . ($stats->"failed"))
+# Output:
+ArrayStr1=error=false;failed=0;passed=237;ArrayStr2=error=false;failed=0;passed=135;ArrayStr3=error=false;failed=0;passed=141;DateTime1=error=false;failed=0;passed=393;DateTime2=error=false;failed=0;passed=52;Encoding=error=false;failed=0;passed=189;GlobalVar=error=false;failed=0;passed=48;Hashes=error=false;failed=0;passed=243;Utils=error=false;failed=0;passed=57
 ```
 
 ## Disclaimer

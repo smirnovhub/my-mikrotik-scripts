@@ -7,6 +7,9 @@
 :global StartsWithStrTest
 :global EndsWithStrTest
 :global CleanStrTest
+:global EllipsisStrLeftTest
+:global EllipsisStrRightTest
+:global EllipsisStrCenterTest
 
 :set RunAllArrayStrTests2 do={
     :global InitTestCaseState
@@ -18,6 +21,9 @@
     :global StartsWithStrTest
     :global EndsWithStrTest
     :global CleanStrTest
+    :global EllipsisStrLeftTest
+    :global EllipsisStrRightTest
+    :global EllipsisStrCenterTest
 
     :put "\1B[35m=== STARTING ALL ARRAY AND STRING TESTS 2 ===\1B[0m"
 
@@ -32,6 +38,9 @@
     :set res [$StartsWithStrTest $res]
     :set res [$EndsWithStrTest $res]
     :set res [$CleanStrTest $res]
+    :set res [$EllipsisStrLeftTest $res]
+    :set res [$EllipsisStrRightTest $res]
+    :set res [$EllipsisStrCenterTest $res]
 
     :put "\1B[35m=== ALL ARRAY AND STRING TESTS 2 COMPLETED ===\1B[0m"
 
@@ -509,6 +518,110 @@
 
     # IP address object type passed as input
     :set res [$RunGenericTestCase $res $CleanStr 192.168.88.1 "0123456789" "nothing" "192168881" "IP address type input parameter"]
+
+    :put "Testing completed."
+    :return $res
+}
+
+:set EllipsisStrLeftTest do={
+    :global InitTestCaseState
+    :global EllipsisStrLeft
+    :global RunGenericTestCase
+
+    :local res [$InitTestCaseState $1]
+
+    :put "Starting extended EllipsisStrLeft tests..."
+
+    # Basic truncations and description examples
+    :set res [$RunGenericTestCase $res $EllipsisStrLeft "Hello World RouterOS" 10 "nothing" "...outerOS" "Example case from description"]
+    :set res [$RunGenericTestCase $res $EllipsisStrLeft "1234567890" 6 "nothing" "...890" "Numeric string truncation"]
+
+    # String length boundary checks
+    :set res [$RunGenericTestCase $res $EllipsisStrLeft "" 5 "nothing" "" "Empty string input"]
+    :set res [$RunGenericTestCase $res $EllipsisStrLeft "Short" 10 "nothing" "Short" "String shorter than max length"]
+    :set res [$RunGenericTestCase $res $EllipsisStrLeft "Exact" 5 "nothing" "Exact" "String length equals max length"]
+    :set res [$RunGenericTestCase $res $EllipsisStrLeft "OneExtra" 7 "nothing" "...xtra" "String length one character over max length"]
+
+    # Small max length boundaries
+    :set res [$RunGenericTestCase $res $EllipsisStrLeft "TruncateMe" 0 "nothing" "..." "Zero max length limit"]
+    :set res [$RunGenericTestCase $res $EllipsisStrLeft "TruncateMe" 1 "nothing" "..." "Max length is one"]
+    :set res [$RunGenericTestCase $res $EllipsisStrLeft "TruncateMe" 2 "nothing" "..." "Max length is two"]
+    :set res [$RunGenericTestCase $res $EllipsisStrLeft "TruncateMe" 3 "nothing" "..." "Max length is exactly three"]
+    :set res [$RunGenericTestCase $res $EllipsisStrLeft "TruncateMe" 4 "nothing" "...e" "Max length is four"]
+
+    # Strings with whitespace and special symbols
+    :set res [$RunGenericTestCase $res $EllipsisStrLeft "   padded   " 7 "nothing" "...d   " "String with leading and trailing spaces"]
+    :set res [$RunGenericTestCase $res $EllipsisStrLeft "alpha-beta-gamma" 9 "nothing" "...-gamma" "String with hyphenated words"]
+
+    :put "Testing completed."
+    :return $res
+}
+
+:set EllipsisStrRightTest do={
+    :global InitTestCaseState
+    :global EllipsisStrRight
+    :global RunGenericTestCase
+
+    :local res [$InitTestCaseState $1]
+
+    :put "Starting extended EllipsisStrRight tests..."
+
+    # Basic truncations and description examples
+    :set res [$RunGenericTestCase $res $EllipsisStrRight "Hello World RouterOS" 10 "nothing" "Hello W..." "Example case from description"]
+    :set res [$RunGenericTestCase $res $EllipsisStrRight "1234567890" 6 "nothing" "123..." "Numeric string truncation"]
+
+    # String length boundary checks
+    :set res [$RunGenericTestCase $res $EllipsisStrRight "" 5 "nothing" "" "Empty string input"]
+    :set res [$RunGenericTestCase $res $EllipsisStrRight "Short" 10 "nothing" "Short" "String shorter than max length"]
+    :set res [$RunGenericTestCase $res $EllipsisStrRight "Exact" 5 "nothing" "Exact" "String length equals max length"]
+    :set res [$RunGenericTestCase $res $EllipsisStrRight "OneExtra" 7 "nothing" "OneE..." "String length one character over max length"]
+
+    # Small max length boundaries
+    :set res [$RunGenericTestCase $res $EllipsisStrRight "TruncateMe" 0 "nothing" "..." "Zero max length limit"]
+    :set res [$RunGenericTestCase $res $EllipsisStrRight "TruncateMe" 1 "nothing" "..." "Max length is one"]
+    :set res [$RunGenericTestCase $res $EllipsisStrRight "TruncateMe" 2 "nothing" "..." "Max length is two"]
+    :set res [$RunGenericTestCase $res $EllipsisStrRight "TruncateMe" 3 "nothing" "..." "Max length is exactly three"]
+    :set res [$RunGenericTestCase $res $EllipsisStrRight "TruncateMe" 4 "nothing" "T..." "Max length is four"]
+
+    # Strings with whitespace and special symbols
+    :set res [$RunGenericTestCase $res $EllipsisStrRight "   padded   " 7 "nothing" "   p..." "String with leading and trailing spaces"]
+    :set res [$RunGenericTestCase $res $EllipsisStrRight "alpha-beta-gamma" 9 "nothing" "alpha-..." "String with hyphenated words"]
+
+    :put "Testing completed."
+    :return $res
+}
+
+:set EllipsisStrCenterTest do={
+    :global InitTestCaseState
+    :global EllipsisStrCenter
+    :global RunGenericTestCase
+
+    :local res [$InitTestCaseState $1]
+
+    :put "Starting extended EllipsisStrCenter tests..."
+
+    # Basic truncations and description examples
+    :set res [$RunGenericTestCase $res $EllipsisStrCenter "Hello World RouterOS" 10 "nothing" "Hel...erOS" "Example case from description with odd remLen"]
+    :set res [$RunGenericTestCase $res $EllipsisStrCenter "Hello World RouterOS" 11 "nothing" "Hell...erOS" "Even remLen split"]
+    :set res [$RunGenericTestCase $res $EllipsisStrCenter "1234567890" 7 "nothing" "12...90" "Numeric string with even remLen"]
+
+    # String length boundary checks
+    :set res [$RunGenericTestCase $res $EllipsisStrCenter "" 5 "nothing" "" "Empty string input"]
+    :set res [$RunGenericTestCase $res $EllipsisStrCenter "Short" 10 "nothing" "Short" "String shorter than max length"]
+    :set res [$RunGenericTestCase $res $EllipsisStrCenter "Exact" 5 "nothing" "Exact" "String length equals max length"]
+    :set res [$RunGenericTestCase $res $EllipsisStrCenter "OneExtra" 7 "nothing" "On...ra" "String length one character over max length"]
+
+    # Small max length boundaries
+    :set res [$RunGenericTestCase $res $EllipsisStrCenter "TruncateMe" 0 "nothing" "..." "Zero max length limit"]
+    :set res [$RunGenericTestCase $res $EllipsisStrCenter "TruncateMe" 1 "nothing" "..." "Max length is one"]
+    :set res [$RunGenericTestCase $res $EllipsisStrCenter "TruncateMe" 2 "nothing" "..." "Max length is two"]
+    :set res [$RunGenericTestCase $res $EllipsisStrCenter "TruncateMe" 3 "nothing" "..." "Max length is exactly three"]
+    :set res [$RunGenericTestCase $res $EllipsisStrCenter "TruncateMe" 4 "nothing" "...e" "Max length is four where left length is zero"]
+    :set res [$RunGenericTestCase $res $EllipsisStrCenter "TruncateMe" 5 "nothing" "T...e" "Max length is five"]
+
+    # Strings with whitespace and special symbols
+    :set res [$RunGenericTestCase $res $EllipsisStrCenter "   padded   " 8 "nothing" "  ...   " "String with leading and trailing spaces"]
+    :set res [$RunGenericTestCase $res $EllipsisStrCenter "alpha-beta-gamma" 10 "nothing" "alp...amma" "String with hyphenated words"]
 
     :put "Testing completed."
     :return $res

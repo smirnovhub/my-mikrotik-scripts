@@ -4,13 +4,13 @@
 # :global DownloadAndImportScriptsFromList
 # $DownloadAndImportScriptsFromList https://github.com/smirnovhub/my-mikrotik-scripts/raw/refs/heads/master/other/list.txt
 
-e13ab0d07eb6df99a4f213b84d90d73e https://github.com/smirnovhub/my-mikrotik-scripts/raw/refs/heads/master/other/check_dhcp_dynamic_leases.rsc
-f87504e90ae0d80598cabfeddbe63520 https://github.com/smirnovhub/my-mikrotik-scripts/raw/refs/heads/master/other/check_filter_rule_traffic/check_filter_rule_traffic.rsc
-7cd5c26d8bfa1bbcbcbb231a4b9818e4 https://github.com/smirnovhub/my-mikrotik-scripts/raw/refs/heads/master/other/check_filter_rule_traffic/check_filter_rule_traffic_status.rsc
+5f3c630799bd0d12db07ffed1618a430 https://github.com/smirnovhub/my-mikrotik-scripts/raw/refs/heads/master/other/check_dhcp_dynamic_leases.rsc
+a67fdbb79d8c6ae85bdcbb5c00ee53a7 https://github.com/smirnovhub/my-mikrotik-scripts/raw/refs/heads/master/other/check_filter_rule_traffic/check_filter_rule_traffic.rsc
+ae4c2ac7ca293657cee88e4e03346594 https://github.com/smirnovhub/my-mikrotik-scripts/raw/refs/heads/master/other/check_filter_rule_traffic/check_filter_rule_traffic_status.rsc
 b96d7fc72f5ec800f030dd7e3d06343a https://github.com/smirnovhub/my-mikrotik-scripts/raw/refs/heads/master/other/check_interface_speed.rsc
-11c71a9ab972f2a61c1f43248b7fc609 https://github.com/smirnovhub/my-mikrotik-scripts/raw/refs/heads/master/other/monitor_interface_state.rsc
-da8fd3c799ffc1fb7b56f543a304701d https://github.com/smirnovhub/my-mikrotik-scripts/raw/refs/heads/master/other/my_netwatch/my_netwatch.rsc
-91d51b610a0a4f77d68a5d9ae01f966d https://github.com/smirnovhub/my-mikrotik-scripts/raw/refs/heads/master/other/my_netwatch/my_netwatch_changes.rsc
-4defe3c1c1a3fea361e67a083142ffb6 https://github.com/smirnovhub/my-mikrotik-scripts/raw/refs/heads/master/other/my_netwatch/my_netwatch_status.rsc
+ba4655e0fb0d4801f119f4168b4b5c16 https://github.com/smirnovhub/my-mikrotik-scripts/raw/refs/heads/master/other/monitor_interface_state.rsc
+1df432b13d80b0b3ce0a2ad64616441d https://github.com/smirnovhub/my-mikrotik-scripts/raw/refs/heads/master/other/my_netwatch/my_netwatch.rsc
+512c34f444423dedde0daa81c1904068 https://github.com/smirnovhub/my-mikrotik-scripts/raw/refs/heads/master/other/my_netwatch/my_netwatch_changes.rsc
+dea1886c465f51a85a3801f0de81a845 https://github.com/smirnovhub/my-mikrotik-scripts/raw/refs/heads/master/other/my_netwatch/my_netwatch_status.rsc
 692fa1d722de69dcd1039a7ed3fd96e7 https://github.com/smirnovhub/my-mikrotik-scripts/raw/refs/heads/master/other/on_startup.rsc
 97cd300373b68128b179fa55591025e3 https://github.com/smirnovhub/my-mikrotik-scripts/raw/refs/heads/master/other/reboot.rsc

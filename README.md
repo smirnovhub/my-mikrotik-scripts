@@ -90,8 +90,7 @@ The following global settings are required to configure Telegram integration. Th
 
 ### Named Global Variables Utilities
 
-- **GetGlobalVar**: Retrieves a value of a dynamically evaluated global variable by its base name.
-- **GetGlobalVarOrDefault**: Retrieves a global variable's value, returning a specified default value if the variable does not exist, is uninitialized, or evaluates to `nothing`/`nil`.
+- **GetGlobalVar**: Retrieves a global variable's value, returning a specified default value if the variable does not exist, is uninitialized, or evaluates to `nothing`/`nil`.
 - **RemoveGlobalVar**: Completely deletes a dynamic global variable from `/system script environment` by its name.
 - **SetGlobalVar**: Assigns a value to a dynamically created global variable in the system environment.
 
@@ -341,7 +340,6 @@ Set, get, fallback, and remove global variables without polluting runtime scope:
 ```routeros
 :global SetGlobalVar
 :global GetGlobalVar
-:global GetGlobalVarOrDefault
 :global RemoveGlobalVar
 
 # Set global variables (supports primitives, IP addresses, subnets, and arrays)
@@ -353,7 +351,7 @@ $SetGlobalVar "myServerIp" 192.168.88.1
 # Output: Server IP: 192.168.88.1
 
 # Retrieve variable with fallback default if non-existent
-:local port [$GetGlobalVarOrDefault "myServerPort" 8080]
+:local port [$GetGlobalVar "myServerPort" 8080]
 :put ("Server Port: " . $port)
 # Output: Server Port: 8080
 
@@ -471,7 +469,7 @@ Convert timestamps, format duration strings, or parse RouterOS/ISO date-time for
 ### Named Global Variable Utility Functions Tests
 
 - **RunAllGlobalVarTests**: Executes global variable management and state persistence tests (`GlobalVarTest`).
-- **GlobalVarTest**: Validates global variable lifecycle management (`SetGlobalVar`, `GetGlobalVar`, `GetGlobalVarOrDefault`, `RemoveGlobalVar`), covering primitive type persistence (strings, integers, floats, booleans, IP addresses, subnets, time values), structured arrays (indexed and associative), fallback default resolution for non-existent variables without side-effect creation, variable isolation, repeat updates, type overwriting, idempotent removal, complex string escape sequences, and complete 256-byte binary payload persistence.
+- **GlobalVarTest**: Validates global variable lifecycle management (`SetGlobalVar`, `GetGlobalVar`, `RemoveGlobalVar`), covering primitive type persistence (strings, integers, floats, booleans, IP addresses, subnets, time values), structured arrays (indexed and associative), fallback default resolution for non-existent variables without side-effect creation, variable isolation, repeat updates, type overwriting, idempotent removal, complex string escape sequences, and complete 256-byte binary payload persistence.
 
 ### Hashing Functions Tests
 

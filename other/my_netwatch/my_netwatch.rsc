@@ -31,7 +31,7 @@
 :global ParseKeyValueStore
 :global GetUnixTimestamp
 :global SendPrivateTelegramMessage
-:global GetGlobalVarOrDefault
+:global GetGlobalVar
 :global SetGlobalVar
 
 :global largeGreenCircleEmoji
@@ -111,21 +111,21 @@ $SetGlobalVar $lastPingTimeVarName [$GetUnixTimestamp]
 :if ($line = "1") do={
     # --- SUCCESS CASE ---
     # Read current success counter value
-    :local successCount [$GetGlobalVarOrDefault $pingSuccessVarName ""]
+    :local successCount [$GetGlobalVar $pingSuccessVarName ""]
     :if ([:len $successCount] = 0) do={ :set successCount "0" }
     :set successCount ($successCount + 1)
     $SetGlobalVar $pingSuccessVarName $successCount
 } else={
     # --- FAIL CASE ---
     # Read current fail counter value
-    :local failCount [$GetGlobalVarOrDefault $pingFailVarName ""]
+    :local failCount [$GetGlobalVar $pingFailVarName ""]
     :if ([:len $failCount] = 0) do={ :set failCount "0" }
     :set failCount ($failCount + 1)
     $SetGlobalVar $pingFailVarName $failCount
 }
 
 # ===== LOAD, APPEND AND TRIM =====
-:local current [$GetGlobalVarOrDefault $pingsVarName ""]
+:local current [$GetGlobalVar $pingsVarName ""]
 
 # Append new ping result (1 or 0) followed by newline
 :set current ($current . $itemDelimiter . $line)
@@ -154,7 +154,7 @@ $SetGlobalVar $lastPingTimeVarName [$GetUnixTimestamp]
 $SetGlobalVar $pingsVarName $current
 
 # Load state
-:local state [$GetGlobalVarOrDefault $stateVarname ""]
+:local state [$GetGlobalVar $stateVarname ""]
 
 # ===== DECISION =====
 :if ($percent >= $hostUpThresholdPercent) do={

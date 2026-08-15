@@ -1,4 +1,4 @@
-:global GetGlobalVarOrDefault
+:global GetGlobalVar
 :global SetGlobalVar
 :global ReplaceStr
 :global SendPrivateTelegramMessage
@@ -66,7 +66,7 @@
         # If it does not exist -> also fallback to -state
         :local hostStr [$ReplaceStr $host "." "-"]
         :local updStateVarName ($hostStr . "-upd-state")
-        :local updContent [$GetGlobalVarOrDefault $updStateVarName ""]
+        :local updContent [$GetGlobalVar $updStateVarName ""]
 
         :if ([:len $updContent] > 0) do={
             # Use updated state
@@ -80,7 +80,7 @@
         } else={
             # If -upd-state exists but is empty, fallback to normal -state
             :local stateVarName ($hostStr . "-state")
-            :set state [$GetGlobalVarOrDefault $stateVarName ""]
+            :set state [$GetGlobalVar $stateVarName ""]
         }
 
         # --- Build Telegram message for this host ---

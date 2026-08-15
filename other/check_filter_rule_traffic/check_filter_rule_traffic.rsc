@@ -37,7 +37,7 @@
 :global DivideIntAndRound
 :global GetUnixTimestamp
 :global FormatSecondsShort
-:global GetGlobalVarOrDefault
+:global GetGlobalVar
 :global SetGlobalVar
 :global SendPrivateTelegramMessage
 
@@ -174,14 +174,14 @@ $SetGlobalVar $nameVarName $ruleName
 :local tryToSendNotification do={
     :global GetUnixTimestamp
     :global SendPrivateTelegramMessage
-    :global GetGlobalVarOrDefault
+    :global GetGlobalVar
     :global SetGlobalVar
 
     :local message $1
     :local varName $2
     :local notificationInterval $3
 
-    :local lastNotificationTimestamp [$GetGlobalVarOrDefault $varName 0]
+    :local lastNotificationTimestamp [$GetGlobalVar $varName 0]
     :local currentTs [$GetUnixTimestamp]
 
     if ($currentTs > ($lastNotificationTimestamp + $notificationInterval)) do={
@@ -202,9 +202,9 @@ $SetGlobalVar $nameVarName $ruleName
 
 # ===== LOAD, APPEND AND TRIM =====
 # Read current content
-:local currentChecks [$GetGlobalVarOrDefault $checksVarName ""]
-:local currentBytes [$GetGlobalVarOrDefault $bytesVarName ""]
-:local lastUpdateTime [$GetGlobalVarOrDefault $lastUpdateVarName 0]
+:local currentChecks [$GetGlobalVar $checksVarName ""]
+:local currentBytes [$GetGlobalVar $bytesVarName ""]
+:local lastUpdateTime [$GetGlobalVar $lastUpdateVarName 0]
 
 :local currentTimestamp [$GetUnixTimestamp]
 :local lastUpdateTimestamp [:tonum $lastUpdateTime]
@@ -259,7 +259,7 @@ $SetGlobalVar $bytesVarName $currentBytes
 $SetGlobalVar $lastUpdateVarName [$GetUnixTimestamp]
 
 # Load state
-:local state [$GetGlobalVarOrDefault $stateVarName ""]
+:local state [$GetGlobalVar $stateVarName ""]
 
 :local upMessageText "$upEmoji $deviceName: seems registrator for <b>$ruleName</b> works properly."
 :local downMessageText "$downEmoji $deviceName: seems registrator for <b>$ruleName</b> doesn't work."

@@ -1,4 +1,4 @@
-:global GetGlobalVarOrDefault
+:global GetGlobalVar
 :global SetGlobalVar
 :global ReplaceStr
 :global DivideIntAndRound
@@ -43,7 +43,7 @@
 :local unstableEmoji $largeYellowCircleEmoji
 :local unknownEmoji $whiteCircleEmoji
 
-:local pingDateText [$GetGlobalVarOrDefault $pingDateVarName ""]
+:local pingDateText [$GetGlobalVar $pingDateVarName ""]
 
 :if ([:len $pingDateText] = 0 || $resetStatistics = true) do={
     $SetGlobalVar $pingDateVarName [$GetUnixTimestamp]
@@ -80,7 +80,7 @@
         :local pingAge -1
 
         :local lastPingTimeVarName ($hostStr . "-last-ping-time")
-        :local lastPingTimeContent [$GetGlobalVarOrDefault $lastPingTimeVarName ""]
+        :local lastPingTimeContent [$GetGlobalVar $lastPingTimeVarName ""]
         :if ([:len $lastPingTimeContent] > 0) do={
             :local lastupdateUnixTimestamp [:tonum $lastPingTimeContent]
             :local currentUnixTimestamp [$GetUnixTimestamp]
@@ -90,7 +90,7 @@
         # --- Read state ---
         :local stateVarName ($hostStr . "-state")
         :local state "unknown"
-        :local stateContent [$GetGlobalVarOrDefault $stateVarName ""]
+        :local stateContent [$GetGlobalVar $stateVarName ""]
         :if ([:len $stateContent] > 0) do={
             :set state $stateContent
         }
@@ -107,8 +107,8 @@
         :local pingSuccessVarName ($hostStr . "-ping-success-count")
         :local pingFailVarName ($hostStr . "-ping-fail-count")
 
-        :local pingSuccessContent [$GetGlobalVarOrDefault $pingSuccessVarName ""]
-        :local pingFailContent [$GetGlobalVarOrDefault $pingFailVarName ""]
+        :local pingSuccessContent [$GetGlobalVar $pingSuccessVarName ""]
+        :local pingFailContent [$GetGlobalVar $pingFailVarName ""]
 
         :local successCount 0
         :local failCount 0

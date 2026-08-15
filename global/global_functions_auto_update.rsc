@@ -301,7 +301,7 @@
     :global FormatSecondsLong
     :global FetchWithRedirect
     :global SetGlobalVar
-    :global GetGlobalVarOrDefault
+    :global GetGlobalVar
     :global DownloadAndImportScript
     :global RecursiveMergeSortStr
     :global SendPrivateTelegramMessage
@@ -417,7 +417,7 @@
                 }
 
                 :local hashVarName [$GetHashGlobalVarName $scriptName]
-                :local storedHash [$GetGlobalVarOrDefault $hashVarName ""]
+                :local storedHash [$GetGlobalVar $hashVarName ""]
 
                 :if ($storedHash = $hash) do={
                     :log info ("$prefix " . $scriptName . " is already up to date")

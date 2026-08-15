@@ -48,7 +48,7 @@
 :global GetArgOrDefault
 :global ParseKeyValueStore
 :global SendPrivateTelegramMessage
-:global GetGlobalVarOrDefault
+:global GetGlobalVar
 :global SetGlobalVar
 
 :global largeRedCircleEmoji
@@ -73,7 +73,7 @@
 :local ignoredTimeEndVarName ($interface . "-ignored-time-end")
 
 # Read the existing job ID from the dynamic global variable
-:local currentJobID [$GetGlobalVarOrDefault $jobVarName ""]
+:local currentJobID [$GetGlobalVar $jobVarName ""]
 
 # Check if the monitoring job is currently active
 :local isJobActive [/system script job find where .id=$currentJobID]
@@ -98,7 +98,7 @@ $SetGlobalVar $ignoredTimeEndVarName $ignoredTimeEnd
 
 :global InterfaceStateEventHandler do={
   :global SendPrivateTelegramMessage
-  :global GetGlobalVarOrDefault
+  :global GetGlobalVar
   :global SetGlobalVar
   :global largeRedCircleEmoji
 
@@ -115,9 +115,9 @@ $SetGlobalVar $ignoredTimeEndVarName $ignoredTimeEnd
   :local deviceName [/system identity get name]
   :local currentDate [/system clock get date]
 
-  :local threshold [$GetGlobalVarOrDefault $thresholdVar 0]
-  :local ignoredTimeStart [$GetGlobalVarOrDefault $ignoredTimeStartVar "00:00:00"]
-  :local ignoredTimeEnd [$GetGlobalVarOrDefault $ignoredTimeEndVar "00:00:00"]
+  :local threshold [$GetGlobalVar $thresholdVar 0]
+  :local ignoredTimeStart [$GetGlobalVar $ignoredTimeStartVar "00:00:00"]
+  :local ignoredTimeEnd [$GetGlobalVar $ignoredTimeEndVar "00:00:00"]
 
   # Check ignoring time
   :local currentTime [/system clock get time]
@@ -139,9 +139,9 @@ $SetGlobalVar $ignoredTimeEndVarName $ignoredTimeEnd
 
   # Get the current actual 'running' status of the interface
   :local currentState [:tostr [/interface ethernet get [find name=$ifaceName] running]]
-  :local lastKnownState [$GetGlobalVarOrDefault $dynamicStateVar ""]
-  :local lastSavedDate [$GetGlobalVarOrDefault $dynamicDateVar ""]
-  :local currentCount [$GetGlobalVarOrDefault $dynamicCountVar 0]
+  :local lastKnownState [$GetGlobalVar $dynamicStateVar ""]
+  :local lastSavedDate [$GetGlobalVar $dynamicDateVar ""]
+  :local currentCount [$GetGlobalVar $dynamicCountVar 0]
 
   :local downEmoji $largeRedCircleEmoji
 

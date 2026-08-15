@@ -19,7 +19,6 @@
 :set GlobalVarTest do={
     :global InitTestCaseState
     :global GetGlobalVar
-    :global GetGlobalVarOrDefault
     :global SetGlobalVar
     :global RemoveGlobalVar
     :global DecToChar
@@ -45,18 +44,18 @@
     $SetGlobalVar "testVarBool" true
     :set res [$RunTestCase $res $GetGlobalVar "testVarBool" "nothing" "nothing" true "Set and get boolean value"]
 
-    # GetGlobalVarOrDefault (Variable Exists)
+    # GetGlobalVar (Variable Exists)
     $SetGlobalVar "testVarExist" "activeValue"
-    :set res [$RunTestCase $res $GetGlobalVarOrDefault "testVarExist" "defaultFallback" "nothing" "activeValue" "Get existing variable value with default fallback"]
+    :set res [$RunTestCase $res $GetGlobalVar "testVarExist" "defaultFallback" "nothing" "activeValue" "Get existing variable value with default fallback"]
 
-    # GetGlobalVarOrDefault (Variable Is Nothing/Unset)
-    :set res [$RunTestCase $res $GetGlobalVarOrDefault "testVarNonExistent" "fallbackStr" "nothing" "fallbackStr" "Get non-existent variable returns default string"]
-    :set res [$RunTestCase $res $GetGlobalVarOrDefault "testVarNonExistent" 999 "nothing" 999 "Get non-existent variable returns default integer"]
+    # GetGlobalVar (Variable Is Nothing/Unset)
+    :set res [$RunTestCase $res $GetGlobalVar "testVarNonExistent" "fallbackStr" "nothing" "fallbackStr" "Get non-existent variable returns default string"]
+    :set res [$RunTestCase $res $GetGlobalVar "testVarNonExistent" 999 "nothing" 999 "Get non-existent variable returns default integer"]
 
     # RemoveGlobalVar
     $SetGlobalVar "testVarToRemove" "temporaryData"
     $RemoveGlobalVar "testVarToRemove"
-    :set res [$RunTestCase $res $GetGlobalVarOrDefault "testVarToRemove" "removedSuccessfully" "nothing" "removedSuccessfully" "Remove global variable and verify deletion"]
+    :set res [$RunTestCase $res $GetGlobalVar "testVarToRemove" "removedSuccessfully" "nothing" "removedSuccessfully" "Remove global variable and verify deletion"]
 
     # SetGlobalVar & GetGlobalVar (Float / Num)
     $SetGlobalVar "testVarFloat" 15.65
@@ -78,9 +77,9 @@
     $SetGlobalVar "testVarArray" [:toarray "a,b,c"]
     :set res [$RunTestCase $res $GetGlobalVar "testVarArray" "nothing" "nothing" "a;b;c" "Set and get simple array structure"]
 
-    # GetGlobalVarOrDefault (With Float and IP Fallbacks)
-    :set res [$RunTestCase $res $GetGlobalVarOrDefault "testVarNonExistent" 25.45 "nothing" 25.45 "Get non-existent variable returns default float"]
-    :set res [$RunTestCase $res $GetGlobalVarOrDefault "testVarNonExistent" 10.0.0.1 "nothing" 10.0.0.1 "Get non-existent variable returns default IP address"]
+    # GetGlobalVar (With Float and IP Fallbacks)
+    :set res [$RunTestCase $res $GetGlobalVar "testVarNonExistent" 25.45 "nothing" 25.45 "Get non-existent variable returns default float"]
+    :set res [$RunTestCase $res $GetGlobalVar "testVarNonExistent" 10.0.0.1 "nothing" 10.0.0.1 "Get non-existent variable returns default IP address"]
 
     # SetGlobalVar & GetGlobalVar (Associative Array)
     :local assocKeyVal [:toarray ""]
@@ -89,10 +88,10 @@
     $SetGlobalVar "testVarAssocArray" $assocKeyVal
     :set res [$RunTestCase $res $GetGlobalVar "testVarAssocArray" "nothing" "nothing" "host=192.168.88.1;port=8080" "Set and get associative array"]
 
-    # GetGlobalVarOrDefault (Associative Array Fallback)
+    # GetGlobalVar (Associative Array Fallback)
     :local defaultAssoc [:toarray ""]
     :set ($defaultAssoc->"status") "down"
-    :set res [$RunTestCase $res $GetGlobalVarOrDefault "testVarNonExistent" $defaultAssoc "nothing" "status=down" "Get non-existent variable returns default associative array"]
+    :set res [$RunTestCase $res $GetGlobalVar "testVarNonExistent" $defaultAssoc "nothing" "status=down" "Get non-existent variable returns default associative array"]
 
     # Empty String
     $SetGlobalVar "testVarEmpty" ""
@@ -142,11 +141,11 @@
     $SetGlobalVar "testVarRemoveTwice" "x"
     $RemoveGlobalVar "testVarRemoveTwice"
     $RemoveGlobalVar "testVarRemoveTwice"
-    :set res [$RunTestCase $res $GetGlobalVarOrDefault "testVarRemoveTwice" "ok" "nothing" "ok" "Remove already removed variable"]
+    :set res [$RunTestCase $res $GetGlobalVar "testVarRemoveTwice" "ok" "nothing" "ok" "Remove already removed variable"]
 
     # Default Does Not Create Variable
-    [$GetGlobalVarOrDefault "testVarDefault" "fallback"]
-    :set res [$RunTestCase $res $GetGlobalVar "testVarDefault" "nothing" "nothing" "" "GetGlobalVarOrDefault does not create variable"]
+    [$GetGlobalVar "testVarDefault" "fallback"]
+    :set res [$RunTestCase $res $GetGlobalVar "testVarDefault" "nothing" "nothing" "" "GetGlobalVar does not create variable"]
 
     # Variable Isolation
     $SetGlobalVar "testVarA" "AAA"

@@ -169,6 +169,27 @@
         "error"=false; \
         "failedtorun"=""; \
         "failedtoupdate"=""; \
+        "runned"=""; \
+        "updated"="auto_update_test_script"; \
+        "uptodate"="" \
+    }
+
+    :set res [$RunTestCase $res $DownloadAndImportScriptsFromList \
+        "https://github.com/smirnovhub/my-mikrotik-scripts/raw/refs/heads/master/global/tests/test_data/auto_update_test_list.txt" \
+        "false" "false" \
+        $result1 \
+        "Download without run"]
+
+    :set res [$RunTestCase $res $GetGlobalVar $testGlobalVarName "empty" "nothing" "empty" "Check if test var exists"]
+    :set res [$RunTestCase $res $GetGlobalVar $hashGlobalVarName "empty" "nothing" "3d2b160a6205b0adc5422f35b6258734" "Check hash var value"]
+
+    $RemoveGlobalVar $testGlobalVarName
+    $RemoveGlobalVar $hashGlobalVarName
+
+    :local result2 { \
+        "error"=false; \
+        "failedtorun"=""; \
+        "failedtoupdate"=""; \
         "runned"="auto_update_test_script"; \
         "updated"="auto_update_test_script"; \
         "uptodate"="" \
@@ -177,8 +198,8 @@
     :set res [$RunTestCase $res $DownloadAndImportScriptsFromList \
         "https://github.com/smirnovhub/my-mikrotik-scripts/raw/refs/heads/master/global/tests/test_data/auto_update_test_list.txt" \
         "true" "false" \
-        $result1 \
-        "Download and run script 1"]
+        $result2 \
+        "Download and run"]
 
     # Check for test var again
     :set res [$RunTestCase $res $GetGlobalVar $testGlobalVarName "empty" "nothing" "test global var value" "Check test var value"]
@@ -190,7 +211,7 @@
     # Check for test var again
     :set res [$RunTestCase $res $GetGlobalVar $testGlobalVarName "empty" "nothing" "some new value" "Check test var value"]
 
-    :local result2 { \
+    :local result3 { \
         "error"=false; \
         "failedtorun"=""; \
         "failedtoupdate"=""; \
@@ -202,8 +223,8 @@
     :set res [$RunTestCase $res $DownloadAndImportScriptsFromList \
         "https://github.com/smirnovhub/my-mikrotik-scripts/raw/refs/heads/master/global/tests/test_data/auto_update_test_list.txt" \
         "true" "false" \
-        $result2 \
-        "Download and run script 2"]
+        $result3 \
+        "Download and run again"]
 
     # Check for test var again
     :set res [$RunTestCase $res $GetGlobalVar $testGlobalVarName "empty" "nothing" "test global var value" "Check test var value"]

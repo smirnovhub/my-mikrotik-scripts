@@ -20,8 +20,12 @@
 :set FetchWithRedirectTest do={
     :global InitTestCaseState
     :global RunTestCase
+    :global RemoveGlobalVar
+    :global GetGlobalVar
+    :global SetGlobalVar
     :global FetchWithRedirect
     :global ParseScriptsListFromUrl
+    :global DownloadAndImportScriptsFromList
 
     :local res [$InitTestCaseState $1]
 
@@ -150,6 +154,60 @@
         "nothing" "nothing" \
         $sha256TestResults \
         "List with SHA256 hashes"]
+
+    :local testGlobalVarName "test-global-var"
+    :local hashGlobalVarName "auto-update-test-script-hash"
+
+    $RemoveGlobalVar $testGlobalVarName
+    $RemoveGlobalVar $hashGlobalVarName
+
+    # Check for test var. It should not exist before test run
+    :set res [$RunTestCase $res $GetGlobalVar $testGlobalVarName "empty" "nothing" "empty" "Check if test var exists"]
+
+    :local result1 { \
+        "error"=false; \
+        "failedtorun"=""; \
+        "failedtoupdate"=""; \
+        "runned"="auto_update_test_script"; \
+        "updated"="auto_update_test_script"; \
+        "uptodate"="" \
+    }
+
+    :set res [$RunTestCase $res $DownloadAndImportScriptsFromList \
+        "https://github.com/smirnovhub/my-mikrotik-scripts/raw/refs/heads/master/global/tests/test_data/auto_update_test_list.txt" \
+        "true" "nothing" \
+        $result1 \
+        "Download and run script 1"]
+
+    # Check for test var again
+    :set res [$RunTestCase $res $GetGlobalVar $testGlobalVarName "empty" "nothing" "test global var value" "Check test var value"]
+
+    # Change to any value
+    $SetGlobalVar $testGlobalVarName "some new value"
+
+    # Check for test var again
+    :set res [$RunTestCase $res $GetGlobalVar $testGlobalVarName "empty" "nothing" "some new value" "Check test var value"]
+
+    :local result2 { \
+        "error"=false; \
+        "failedtorun"=""; \
+        "failedtoupdate"=""; \
+        "runned"="auto_update_test_script"; \
+        "updated"=""; \
+        "uptodate"="auto_update_test_script" \
+    }
+
+    :set res [$RunTestCase $res $DownloadAndImportScriptsFromList \
+        "https://github.com/smirnovhub/my-mikrotik-scripts/raw/refs/heads/master/global/tests/test_data/auto_update_test_list.txt" \
+        "true" "nothing" \
+        $result2 \
+        "Download and run script 2"]
+
+    # Check for test var again
+    :set res [$RunTestCase $res $GetGlobalVar $testGlobalVarName "empty" "nothing" "test global var value" "Check test var value"]
+
+    $RemoveGlobalVar $testGlobalVarName
+    $RemoveGlobalVar $hashGlobalVarName
 
     :put "Testing completed."
     :return $res

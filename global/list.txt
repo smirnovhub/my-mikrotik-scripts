@@ -6,7 +6,7 @@
 
 f16ffc6002d598945c368b506c8a8424 https://github.com/smirnovhub/my-mikrotik-scripts/raw/refs/heads/master/global/global_functions.rsc
 3642a6156afddb9c5469e68d531f75e9 https://github.com/smirnovhub/my-mikrotik-scripts/raw/refs/heads/master/global/global_functions_array_str.rsc
-7c98b383689aba8dd98de5b64149896b https://github.com/smirnovhub/my-mikrotik-scripts/raw/refs/heads/master/global/global_functions_auto_update.rsc
+b02c2e08627917aca5768214bc7fe67f https://github.com/smirnovhub/my-mikrotik-scripts/raw/refs/heads/master/global/global_functions_auto_update.rsc
 2c5a82363b1d95dbdb0f18638bdfc054 https://github.com/smirnovhub/my-mikrotik-scripts/raw/refs/heads/master/global/global_functions_datetime.rsc
 21339942287aa5110bbb67b6af73541b https://github.com/smirnovhub/my-mikrotik-scripts/raw/refs/heads/master/global/global_functions_encoding.rsc
 91f082a87ce1edc31adc23ec425eba47 https://github.com/smirnovhub/my-mikrotik-scripts/raw/refs/heads/master/global/global_functions_global_vars.rsc

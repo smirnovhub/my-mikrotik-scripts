@@ -36,7 +36,6 @@
     :set res [$ReplaceStrTest $res]
     :set res [$RecursiveMergeSortTest $res]
     :set res [$RecursiveMergeSortStrTest $res]
-
     :set res [$ParseKeyValueStoreTest $res]
     :set res [$RandomTest $res]
 

@@ -24,6 +24,7 @@
 
 # global functions
 :global FetchWithRedirect
+:global ParseScriptsListFromUrl
 :global DownloadAndImportScript
 :global DownloadAndImportScriptsFromList
 
@@ -176,6 +177,117 @@
     :return ""
 }
 
+# Purpose: Download and parse a text file containing script URLs and hashes.
+#          Includes retry logic, ignores comments or empty lines, and constructs
+#          an associative array with script details.
+# Parameters:
+#   $1 - Target URL of the .txt list file to fetch and parse
+# Returns: Associative array keyed by script name, where each item contains:
+#          - url: Cleaned URL for downloading the script
+#          - hash: Hash sum provided in the list
+#          - hashtype: Auto-detected hash algorithm (md5, sha1, sha256, unknown)
+#          - scriptname: Extracted file name from the URL
+#          - listname: Identifier of the source list (last two URL segments)
+# Example: :put [$ParseScriptsListFromUrl "https://github.com/smirnovhub/my-mikrotik-scripts/raw/refs/heads/master/global/list.txt"]
+:set ParseScriptsListFromUrl do={
+    :global SplitStr
+    :global TrimStr
+    :global EndsWithStr
+    :global FetchWithRedirect
+    :global ExtractFileName
+
+    :local result [:toarray ""]
+
+    # Workaround for the MikroTik RouterOS interpreter bug
+    :if ([:len $0] = 0) do={
+        :return $result
+    }
+
+    :local listUrl [:tostr $1]
+
+    :if ([:len $listUrl] = 0) do={
+        :log error "ParseScriptsListFromUrl: List URL parameter is missing."
+        :return $result
+    }
+
+    :if ([$EndsWithStr $listUrl ".txt"] = false) do={
+        :log error "$ParseScriptsListFromUrl: File name should end with .txt"
+        :return $result
+    }
+
+    :local maxRetries 3
+    :local retryDelay 5s
+    :local content ""
+    :local fetchAttempt 0
+
+    :while ($fetchAttempt < $maxRetries and [:len $content] = 0) do={
+        :set fetchAttempt ($fetchAttempt + 1)
+
+        :do {
+            :set content [$FetchWithRedirect $listUrl]
+        } on-error={
+            :set content ""
+        }
+
+        :if ([:len $content] = 0 and $fetchAttempt < $maxRetries) do={
+            :log warning ("ParseScriptsListFromUrl: Retry " . $fetchAttempt . "/" . $maxRetries . " downloading list from " . $listUrl)
+            :delay $retryDelay
+        }
+    }
+
+    :if ([:len $content] = 0) do={
+        :log error ("ParseScriptsListFromUrl: Failed to download URL list or it content is empty " . $listUrl)
+        :return $result
+    }
+
+    # Extract listname by taking the last two parts of the URL
+    :local listParts [$SplitStr $listUrl "/"]
+    :local listPartsLen [:len $listParts]
+    :local listName ""
+    :if ($listPartsLen >= 2) do={
+        :set listName (($listParts->($listPartsLen - 2)) . "/" . ($listParts->($listPartsLen - 1)))
+    } else={
+        :set listName $listUrl
+    }
+
+    :local lines [$SplitStr $content ("\n")]
+
+    :foreach rawLine in=$lines do={
+        # Remove spaces, carriage returns, line feeds, and tabs from both ends
+        :local cleanLine [$TrimStr $rawLine]
+
+        # Ignore empty lines and comment lines
+        :if ([:len $cleanLine] > 0 and [:pick $cleanLine 0 1] != "#") do={
+            :local parts [$SplitStr $cleanLine " "]
+
+            :if ([:len $parts] >= 2) do={
+                :local hash [$TrimStr ($parts->0)]
+                :local cleanUrl [$TrimStr ($parts->1)]
+
+                # Extract script name from URL
+                :local scriptName [$ExtractFileName $cleanUrl]
+
+                # Determine hash type based on string length
+                :local hashLen [:len $hash]
+                :local hashType "unknown"
+                :if ($hashLen = 8) do={ :set hashType "crc32" }
+                :if ($hashLen = 32) do={ :set hashType "md5" }
+                :if ($hashLen = 40) do={ :set hashType "sha1" }
+                :if ($hashLen = 64) do={ :set hashType "sha256" }
+
+                # Build associative array and append to result
+                :local parsedItem { "url"=$cleanUrl; "hash"=$hash; "hashtype"=$hashType; "scriptname"=$scriptName; "listname"=$listName }
+
+                :set ($result->$scriptName) $parsedItem
+            } else={
+                :log error ("ParseScriptsListFromUrl: Hash sum or URL not found in line " . $cleanLine)
+            }
+        }
+    }
+
+    :return $result
+}
+
 # Purpose: Download a .rsc script from a URL, update or create it in RouterOS 
 #          system scripts, and execute it immediately.
 # Parameters:
@@ -293,18 +405,16 @@
 #   - "failedtorun": Array of script names that failed during execution
 # Example: $DownloadAndImportScriptsFromList "https://example.com/scripts/list.txt" true
 :set DownloadAndImportScriptsFromList do={
-    :global SplitStr
-    :global TrimStr
     :global EndsWithStr
     :global ReplaceStr
     :global GetUnixTimestamp
     :global FormatSecondsLong
-    :global FetchWithRedirect
     :global SetGlobalVar
     :global GetGlobalVar
     :global DownloadAndImportScript
     :global RecursiveMergeSortStr
     :global SendPrivateTelegramMessage
+    :global ParseScriptsListFromUrl
 
     :global largeGreenCircleEmoji
     :global largeRedCircleEmoji
@@ -353,35 +463,15 @@
     :local startTs [$GetUnixTimestamp]
     :log info "$prefix Start importing from $listUrl"
 
-    :local maxRetries 3
-    :local retryDelay 5s
+    :local parsedList [$ParseScriptsListFromUrl $listUrl]
 
-    :local content ""
-    :local fetchAttempt 0
-
-    :while ($fetchAttempt < $maxRetries and [:len $content] = 0) do={
-        :set fetchAttempt ($fetchAttempt + 1)
-
-        :do {
-            :set content [$FetchWithRedirect $listUrl]
-        } on-error={
-            :set content ""
-        }
-
-        :if ([:len $content] = 0 and $fetchAttempt < $maxRetries) do={
-            :log warning ("$prefix Retry " . $fetchAttempt . "/" . $maxRetries . " downloading list from " . $listUrl)
-            :delay $retryDelay
-        }
-    }
-
-    :if ([:len $content] = 0) do={
+    :if ([:len $parsedList] = 0) do={
         :set ($result->"error") true
-        :log error ("$prefix Failed to download URL list or it content is empty " . $listUrl)
+        :log error ("$prefix Failed to download URL list or its content is empty " . $listUrl)
         $SendPrivateTelegramMessage ("$failEmoji <b>$deviceName:</b> Failed to download URL list or its content is empty " . $listUrl)
         :return $result
     }
 
-    :local lines [$SplitStr $content ("\n")]
     :local importedScripts [:toarray ""]
 
     :local GetHashGlobalVarName do={
@@ -389,92 +479,61 @@
         :return ([$ReplaceStr $1 "_" "-"] . "-hash")
     }
 
-    :foreach rawLine in=$lines do={
-        # Remove spaces, carriage returns, line feeds, and tabs from both ends
-        :local cleanLine [$TrimStr $rawLine]
+    :local maxRetries 3
+    :local retryDelay 5s
 
-        # Ignore empty lines and comment lines (starting with #)
-        :if ([:len $cleanLine] > 0 and [:pick $cleanLine 0 1] != "#") do={
-            :local parts [$SplitStr $cleanLine " "]
+    # Process each parsed item from the list
+    :foreach item in=$parsedList do={
+        :local hashVarName [$GetHashGlobalVarName ($item->"scriptname")]
+        :local oldHash [$GetGlobalVar $hashVarName ""]
 
-            :if ([:len $parts] >= 2) do={
-                :local hash [$TrimStr ($parts->0)]
-                :local cleanUrl [$TrimStr ($parts->1)]
+        :if ($oldHash = ($item->"hash")) do={
+            :log info ("$prefix " . ($item->"scriptname") . " is already up to date")
+            :set ($result->"uptodate") (($result->"uptodate"), ($item->"scriptname"))
+            :set importedScripts ($importedScripts, ($item->"scriptname"))
+        } else={
+            :local res false
+            :local attempt 0
 
-                # Extract script name
-                :local fileName ""
-                :local lastSlash 0
-                :for i from=0 to=([:len $cleanUrl] - 1) do={
-                    :if ([:pick $cleanUrl $i ($i + 1)] = "/") do={
-                        :set lastSlash $i
-                    }
+            :log info ("$prefix " . ($item->"scriptname") . " downloading from " . ($item->"url"))
+
+            :while ($attempt < $maxRetries and $res = false) do={
+                :set attempt ($attempt + 1)
+                :set res [$DownloadAndImportScript ($item->"url") ($item->"hash")]
+
+                :if ($res = false and $attempt < $maxRetries) do={
+                    :log warning ("$prefix Retry " . $attempt . "/" . $maxRetries . " for " . ($item->"scriptname"))
+                    :delay $retryDelay
                 }
+            }
 
-                :set fileName [:pick $cleanUrl ($lastSlash + 1) [:len $cleanUrl]]
-                :local scriptName $fileName
-                :if ([:pick $fileName ([:len $fileName] - 4) [:len $fileName]] = ".rsc") do={
-                    :set scriptName [:pick $fileName 0 ([:len $fileName] - 4)]
-                }
+            :if ($res = true) do={
+                :log info ("$prefix " . ($item->"scriptname") . " imported successfully")
 
-                :local hashVarName [$GetHashGlobalVarName $scriptName]
-                :local storedHash [$GetGlobalVar $hashVarName ""]
+                :set ($result->"updated") (($result->"updated"), ($item->"scriptname"))
+                :set importedScripts ($importedScripts, ($item->"scriptname"))
 
-                :if ($storedHash = $hash) do={
-                    :log info ("$prefix " . $scriptName . " is already up to date")
-                    :set ($result->"uptodate") (($result->"uptodate"), $scriptName)
-                    :set importedScripts ($importedScripts, $scriptName)
-                } else={
-                    :local res false
-                    :local attempt 0
-
-                    :log info ("$prefix " . $scriptName . " downloading from " . $cleanUrl)
-
-                    :while ($attempt < $maxRetries and $res = false) do={
-                        :set attempt ($attempt + 1)
-                        :set res [$DownloadAndImportScript $cleanUrl $hash]
-
-                        :if ($res = false and $attempt < $maxRetries) do={
-                            :log warning ("$prefix Retry " . $attempt . "/" . $maxRetries . " for " . $scriptName)
-                            :delay $retryDelay
-                        }
-                    }
-
-                    :if ($res = true) do={
-                        :log info ("$prefix " . $scriptName . " imported successfully")
-
-                        :set ($result->"updated") (($result->"updated"), $scriptName)
-                        :set importedScripts ($importedScripts, $scriptName)
-
-                        $SetGlobalVar $hashVarName $hash
-                    } else={
-                        :log error ("$prefix " . $scriptName . " download error")
-                        :set ($result->"failedtoupdate") (($result->"failedtoupdate"), $scriptName)
-                    }
-                }
+                $SetGlobalVar $hashVarName ($item->"hash")
             } else={
-                :log error ("$prefix Hash sum or URL not found in line " . $cleanLine)
-                :set ($result->"failedtoupdate") (($result->"failedtoupdate"), $cleanLine)
+                :log error ("$prefix " . ($item->"scriptname") . " download error")
+                :set ($result->"failedtoupdate") (($result->"failedtoupdate"), ($item->"scriptname"))
             }
         }
     }
 
-    :local succCount [:len ($result->"updated")]
-    :local failCount [:len ($result->"failedtoupdate")]
-    :local upToDateCount [:len ($result->"uptodate")]
+    :local logStr ("$prefix Import completed. Success: " . [:len ($result->"updated")] . ", Failed: " . [:len ($result->"failedtoupdate")] . ", Up to date: " . [:len ($result->"uptodate")])
 
-    :local logStr ("$prefix Import completed. Success: " . $succCount . ", Failed: " . $failCount . ", Up to date: " . $upToDateCount)
-
-    :if ($failCount = 0) do={
+    :if ([:len ($result->"failedtoupdate")] = 0) do={
         :log info $logStr
     } else={
-        :if ($succCount = 0) do={
+        :if ([:len ($result->"updated")] = 0) do={
             :log error $logStr
         } else={
             :log warning $logStr
         }
     }
 
-    :if ($runScripts = true) do={
+    :if ($runScripts = "true") do={
         :delay 1s
 
         # Execute all successfully imported scripts
@@ -507,7 +566,7 @@
     :log info ("$prefix Finished in " . [$FormatSecondsLong $duration])
 
     :if ($result->"error") do={
-        $SendPrivateTelegramMessage ("$failEmoji <b>$deviceName:</b> Failed to update scripts from $listUrl")
+        $SendPrivateTelegramMessage ("$largeRedCircleEmoji <b>$deviceName:</b> Failed to update scripts from $listUrl")
         :return $result
     }
 
@@ -535,19 +594,19 @@
     }
 
     :if ([:len ($result->"updated")] > 0) do={
-        :set msg ($msg . "$successEmoji <b>Updated:</b>%0A" . [$FormatList ($result->"updated")] . "%0A")
+        :set msg ($msg . "$largeGreenCircleEmoji <b>Updated:</b>%0A" . [$FormatList ($result->"updated")] . "%0A")
     }
 
     :if ([:len ($result->"uptodate")] > 0) do={
-        :set msg ($msg . "$successEmoji <b>Up to date:</b>%0A" . [$FormatList ($result->"uptodate")] . "%0A")
+        :set msg ($msg . "$largeGreenCircleEmoji <b>Up to date:</b>%0A" . [$FormatList ($result->"uptodate")] . "%0A")
     }
 
     :if ([:len ($result->"failedtoupdate")] > 0) do={
-        :set msg ($msg . "$failEmoji <b>Failed to update:</b>%0A" . [$FormatList ($result->"failedtoupdate")] . "%0A")
+        :set msg ($msg . "$largeRedCircleEmoji <b>Failed to update:</b>%0A" . [$FormatList ($result->"failedtoupdate")] . "%0A")
     }
 
     :if ([:len ($result->"failedtorun")] > 0) do={
-        :set msg ($msg . "$failEmoji <b>Failed to run:</b>%0A" . [$FormatList ($result->"failedtorun")] . "%0A")
+        :set msg ($msg . "$largeRedCircleEmoji <b>Failed to run:</b>%0A" . [$FormatList ($result->"failedtorun")] . "%0A")
     }
 
     :set msg ($msg . "<i>Source: $listUrl</i>")

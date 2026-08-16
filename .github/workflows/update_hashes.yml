@@ -25,6 +25,11 @@ jobs:
           python update_hashes.py -a md5 global/list.txt
           python update_hashes.py -a md5 global/tests/list.txt
           python update_hashes.py -a md5 other/list.txt
+          
+          python update_hashes.py -a crc32 global/tests/test_data/test_list_crc32.txt
+          python update_hashes.py -a md5 global/tests/test_data/test_list_md5.txt
+          python update_hashes.py -a sha1 global/tests/test_data/test_list_sha1.txt
+          python update_hashes.py -a sha256 global/tests/test_data/test_list_sha256.txt
 
       - name: Commit and push changes
         uses: nick-fields/retry@v4
@@ -36,7 +41,7 @@ jobs:
             git config --global user.name "github-actions[bot]"
             git config --global user.email "github-actions[bot]@users.noreply.github.com"
             
-            git add global/list.txt global/tests/list.txt other/list.txt
+            git add "*.txt"
             
             # Commit only if there are uncommitted changes
             if ! git diff --quiet || ! git diff --staged --quiet; then

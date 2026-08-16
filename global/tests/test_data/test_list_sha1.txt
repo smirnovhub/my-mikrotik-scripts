@@ -1,0 +1,5 @@
+# This is test list. Do not change
+
+a0fb841ed773151daf1bf8996048c2345767f9e5 https://github.com/smirnovhub/my-mikrotik-scripts/raw/refs/heads/master/global/tests/test_data/test_string1.txt
+aae727b8b24204f98147017360f4fe078a0cf4a7 https://github.com/smirnovhub/my-mikrotik-scripts/raw/refs/heads/master/global/tests/test_data/test_string2.txt
+f950856eb995c9de01cf11340c5ee7a616f23ab8 https://github.com/smirnovhub/my-mikrotik-scripts/raw/refs/heads/master/global/tests/test_data/test_string3.txt

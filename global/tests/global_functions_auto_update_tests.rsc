@@ -175,7 +175,7 @@
 
     :set res [$RunTestCase $res $DownloadAndImportScriptsFromList \
         "https://github.com/smirnovhub/my-mikrotik-scripts/raw/refs/heads/master/global/tests/test_data/auto_update_test_list.txt" \
-        "true" "nothing" \
+        "true" "false" \
         $result1 \
         "Download and run script 1"]
 
@@ -199,7 +199,7 @@
 
     :set res [$RunTestCase $res $DownloadAndImportScriptsFromList \
         "https://github.com/smirnovhub/my-mikrotik-scripts/raw/refs/heads/master/global/tests/test_data/auto_update_test_list.txt" \
-        "true" "nothing" \
+        "true" "false" \
         $result2 \
         "Download and run script 2"]
 

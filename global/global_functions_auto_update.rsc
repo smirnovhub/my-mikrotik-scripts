@@ -460,6 +460,11 @@
         :set runScripts true
     }
 
+    :local sendMessage true
+    :if ([:tostr $3] = "false") do={
+        :set sendMessage false
+    }
+
     :local startTs [$GetUnixTimestamp]
     :log info "$prefix Start importing from $listUrl"
 
@@ -610,7 +615,10 @@
     }
 
     :set msg ($msg . "<i>Source: $listUrl</i>")
-    $SendPrivateTelegramMessage $msg
+
+    :if ($sendMessage) do={
+        $SendPrivateTelegramMessage $msg
+    }
 
     :return $result
 }

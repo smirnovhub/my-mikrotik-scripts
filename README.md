@@ -165,6 +165,17 @@ All hash algorithms are highly optimized for RouterOS. Exact benchmarks for RB75
 - **InitTestCaseState**: Initializes or passes through a test state accumulator array to track the count of passed and failed test executions.
 - **RunTestCase**: Safely executes a target function with dynamic arguments, evaluates the output against an expected result (including expected runtime errors), prints color-coded feedback to the console, and updates the test state accumulator.
 
+## Automatically Generated Data
+
+To optimize performance, the scripts automatically generate several lookup tables. By storing pre-calculated data mappings, these tables allow the system to instantly retrieve values instead of performing repetitive calculations on the fly, significantly speeding up overall processing.
+
+- **asciiCharTable**: A lookup table used to convert a numeric decimal code (from 0 to 255) into its corresponding ASCII character representation.
+- **asciiCodeTable**: A character-to-number dictionary that links standard text characters to their underlying numeric codes. Since the scripting language lacks a built-in way to extract the numerical value directly from a character, this table bridges that gap. It allows a script to take a character (like "A") and instantly retrieve its standard decimal value (65), which is essential for text parsing, decoding messages, or data conversion.
+- **crc32Table**: A standard CRC32 polynomial lookup table used to quickly generate checksums for verifying data integrity.
+- **hexByteTable**: A pre-calculated lookup list that stores the two-character hexadecimal equivalent for every possible byte (values from 0 to 255). Instead of calculating the hex value from scratch every time it is needed, a script can simply check this table to get the result instantly. This approach drastically speeds up tasks that involve data encoding, cryptography, or formatting.
+- **sha256KTable**: A standard table of SHA-256 round constants. It provides a fixed set of cryptographic values required by the SHA-256 hashing algorithm, allowing the script to securely process and encrypt data without calculating these constants from scratch.
+- **urlEncodeHexTable**: A reference dictionary used for URL encoding. It maps each character to either itself (if safe) or its percent-encoded hexadecimal format (%HH) to safely transmit text over web requests.
+
 ## Installation
 
 1. Save the scripts into your RouterOS environment using their respective module names (

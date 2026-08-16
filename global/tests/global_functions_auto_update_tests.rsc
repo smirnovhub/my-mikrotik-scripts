@@ -163,6 +163,7 @@
 
     # Check for test var. It should not exist before test run
     :set res [$RunTestCase $res $GetGlobalVar $testGlobalVarName "empty" "nothing" "empty" "Check if test var exists"]
+    :set res [$RunTestCase $res $GetGlobalVar $hashGlobalVarName "empty" "nothing" "empty" "Check if hash var exists"]
 
     :local result1 { \
         "error"=false; \
@@ -181,6 +182,7 @@
 
     # Check for test var again
     :set res [$RunTestCase $res $GetGlobalVar $testGlobalVarName "empty" "nothing" "test global var value" "Check test var value"]
+    :set res [$RunTestCase $res $GetGlobalVar $hashGlobalVarName "empty" "nothing" "3d2b160a6205b0adc5422f35b6258734" "Check hash var value"]
 
     # Change to any value
     $SetGlobalVar $testGlobalVarName "some new value"
@@ -205,6 +207,7 @@
 
     # Check for test var again
     :set res [$RunTestCase $res $GetGlobalVar $testGlobalVarName "empty" "nothing" "test global var value" "Check test var value"]
+    :set res [$RunTestCase $res $GetGlobalVar $hashGlobalVarName "empty" "nothing" "3d2b160a6205b0adc5422f35b6258734" "Check hash var value"]
 
     $RemoveGlobalVar $testGlobalVarName
     $RemoveGlobalVar $hashGlobalVarName

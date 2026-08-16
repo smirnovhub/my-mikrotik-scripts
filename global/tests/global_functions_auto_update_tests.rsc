@@ -157,9 +157,12 @@
 
     :local testGlobalVarName "test-global-var"
     :local hashGlobalVarName "auto-update-test-script-hash"
+    :local testScriptName "auto_update_test_script"
 
     $RemoveGlobalVar $testGlobalVarName
     $RemoveGlobalVar $hashGlobalVarName
+
+    /system script remove [find name=$testScriptName]
 
     # Check for test var. It should not exist before test run
     :set res [$RunTestCase $res $GetGlobalVar $testGlobalVarName "empty" "nothing" "empty" "Check if test var exists"]
@@ -170,7 +173,7 @@
         "failedtorun"=""; \
         "failedtoupdate"=""; \
         "runned"=""; \
-        "updated"="auto_update_test_script"; \
+        "updated"=$testScriptName; \
         "uptodate"="" \
     }
 
@@ -180,18 +183,23 @@
         $result1 \
         "Download without run"]
 
+    :set res [$RunTestCase $res [:len [/system script find name=$testScriptName]] "nothing" "nothing" "nothing" 1 "Check if test script exists"]
     :set res [$RunTestCase $res $GetGlobalVar $testGlobalVarName "empty" "nothing" "empty" "Check if test var exists"]
     :set res [$RunTestCase $res $GetGlobalVar $hashGlobalVarName "empty" "nothing" "3d2b160a6205b0adc5422f35b6258734" "Check hash var value"]
 
     $RemoveGlobalVar $testGlobalVarName
     $RemoveGlobalVar $hashGlobalVarName
 
+    /system script remove [find name=$testScriptName]
+
+    :set res [$RunTestCase $res [:len [/system script find name=$testScriptName]] "nothing" "nothing" "nothing" 0 "Check if test script doesn't exist"]
+
     :local result2 { \
         "error"=false; \
         "failedtorun"=""; \
         "failedtoupdate"=""; \
-        "runned"="auto_update_test_script"; \
-        "updated"="auto_update_test_script"; \
+        "runned"=$testScriptName; \
+        "updated"=$testScriptName; \
         "uptodate"="" \
     }
 
@@ -202,6 +210,7 @@
         "Download and run"]
 
     # Check for test var again
+    :set res [$RunTestCase $res [:len [/system script find name=$testScriptName]] "nothing" "nothing" "nothing" 1 "Check if test script exists"]
     :set res [$RunTestCase $res $GetGlobalVar $testGlobalVarName "empty" "nothing" "test global var value" "Check test var value"]
     :set res [$RunTestCase $res $GetGlobalVar $hashGlobalVarName "empty" "nothing" "3d2b160a6205b0adc5422f35b6258734" "Check hash var value"]
 
@@ -215,9 +224,9 @@
         "error"=false; \
         "failedtorun"=""; \
         "failedtoupdate"=""; \
-        "runned"="auto_update_test_script"; \
+        "runned"=$testScriptName; \
         "updated"=""; \
-        "uptodate"="auto_update_test_script" \
+        "uptodate"=$testScriptName \
     }
 
     :set res [$RunTestCase $res $DownloadAndImportScriptsFromList \
@@ -227,11 +236,14 @@
         "Download and run again"]
 
     # Check for test var again
+    :set res [$RunTestCase $res [:len [/system script find name=$testScriptName]] "nothing" "nothing" "nothing" 1 "Check if test script exists"]
     :set res [$RunTestCase $res $GetGlobalVar $testGlobalVarName "empty" "nothing" "test global var value" "Check test var value"]
     :set res [$RunTestCase $res $GetGlobalVar $hashGlobalVarName "empty" "nothing" "3d2b160a6205b0adc5422f35b6258734" "Check hash var value"]
 
     $RemoveGlobalVar $testGlobalVarName
     $RemoveGlobalVar $hashGlobalVarName
+
+    /system script remove [find name=$testScriptName]
 
     :put "Testing completed."
     :return $res

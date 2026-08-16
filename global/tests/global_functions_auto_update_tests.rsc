@@ -27,8 +27,8 @@
     :put "Starting FetchWithRedirect tests..."
 
     :set res [$RunTestCase $res $FetchWithRedirect \
-        "https://github.com/smirnovhub/my-mikrotik-scripts/raw/refs/heads/master/global/tests/test_string.txt" \
-        "nothing" "nothing" "This is test string. Do not change" "Test string fetching"]
+        "https://github.com/smirnovhub/my-mikrotik-scripts/raw/refs/heads/master/global/tests/test_data/test_string1.txt" \
+        "nothing" "nothing" "This is a first test string. Do not change" "Test string fetching"]
 
     :put "Testing completed."
     :return $res

@@ -1,3 +1,3 @@
 # This is test list. Do not change
 
-123 https://github.com/smirnovhub/my-mikrotik-scripts/raw/refs/heads/master/global/tests/test_data/test_string.txt
+82ac68ca960719fad626429e35c832d0bde1454ad5cb895b9534f8ed7cc17c4b https://github.com/smirnovhub/my-mikrotik-scripts/raw/refs/heads/master/global/tests/test_data/test_string.txt

@@ -533,7 +533,7 @@
         }
     }
 
-    :if ($runScripts = "true") do={
+    :if ($runScripts) do={
         :delay 1s
 
         # Execute all successfully imported scripts

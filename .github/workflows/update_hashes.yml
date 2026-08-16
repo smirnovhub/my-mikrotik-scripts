@@ -29,6 +29,7 @@ jobs:
           python update_hashes.py -a crc32 global/tests/test_data/test_list_crc32.txt
           python update_hashes.py -a md5 global/tests/test_data/test_list_md5.txt
           python update_hashes.py -a sha1 global/tests/test_data/test_list_sha1.txt
+          python update_hashes.py -a sha256 global/tests/test_data/test_list_sha256.txt
 
       - name: Commit and push changes
         uses: nick-fields/retry@v4

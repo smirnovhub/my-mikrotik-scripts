@@ -27,11 +27,17 @@ def calculate_sha1(filepath: Path) -> str:
     return hashlib.sha1(filepath.read_bytes()).hexdigest()
 
 
+def calculate_sha256(filepath: Path) -> str:
+    # Read bytes and calculate SHA256 checksum
+    return hashlib.sha256(filepath.read_bytes()).hexdigest()
+
+
 # Registry mapping algorithm names to their handler functions
 HASH_FUNCTIONS = {
     "crc32": calculate_crc32,
     "md5": calculate_md5,
     "sha1": calculate_sha1,
+    "sha256": calculate_sha256,
 }
 
 

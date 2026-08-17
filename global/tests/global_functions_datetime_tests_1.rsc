@@ -189,6 +189,21 @@
     :set res [$RunTestCase $res $ParseDateTime "123/09/2028 21:10:00" "nothing" "nothing" "error" "Numeric instead of literal month name"]
     :set res [$RunTestCase $res $ParseDateTime "qwe/28/2025 11:33:22" "nothing" "nothing" "error" "Invalid month name qwe"]
 
+    # Testing invalid day numbers (out of range and negative) that should cause an error
+    :set res [$RunTestCase $res $ParseDateTime "Jan/0/2023 08:15:30" "nothing" "nothing" "error" "Day out of range"]
+    :set res [$RunTestCase $res $ParseDateTime "Jan/-1/2024 16:23:05" "nothing" "nothing" "error" "Negative day value"]
+    :set res [$RunTestCase $res $ParseDateTime "Dec/-15/2021 05:45:30" "nothing" "nothing" "error" "Negative day value"]
+
+    # Testing invalid hours, minutes, and seconds that should cause an error
+    :set res [$RunTestCase $res $ParseDateTime "Apr/22/2021 -1:05:45" "nothing" "nothing" "error" "Negative hour value"]
+    :set res [$RunTestCase $res $ParseDateTime "May/09/2028 -05:30:00" "nothing" "nothing" "error" "Negative hour value"]
+
+    :set res [$RunTestCase $res $ParseDateTime "Sep/22/2021 03:-1:45" "nothing" "nothing" "error" "Negative minute value"]
+    :set res [$RunTestCase $res $ParseDateTime "Oct/09/2028 21:-15:00" "nothing" "nothing" "error" "Negative minute value"]
+
+    :set res [$RunTestCase $res $ParseDateTime "Feb/22/2021 03:05:-1" "nothing" "nothing" "error" "Negative second value"]
+    :set res [$RunTestCase $res $ParseDateTime "Mar/09/2028 11:33:-30" "nothing" "nothing" "error" "Negative second value"]
+
     :put "Testing completed."
     :return $res
 }

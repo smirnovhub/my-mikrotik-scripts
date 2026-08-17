@@ -461,6 +461,36 @@
     :set res [$RunTestCase $res $ToUnixTimestamp "123/09/2028 21:10:00" "nothing" "nothing" "error" "Numeric instead of literal month name"]
     :set res [$RunTestCase $res $ToUnixTimestamp "qwe/28/2025 11:33:22" "nothing" "nothing" "error" "Invalid month name qwe"]
 
+    # Testing invalid day numbers (out of range and negative) that should cause an error
+    :set res [$RunTestCase $res $ToUnixTimestamp "Jan/0/2023 08:15:30" "nothing" "nothing" "error" "Day out of range"]
+    :set res [$RunTestCase $res $ToUnixTimestamp "Jan/-1/2024 16:23:05" "nothing" "nothing" "error" "Negative day value"]
+    :set res [$RunTestCase $res $ToUnixTimestamp "Feb/30/2025 12:00:00" "nothing" "nothing" "error" "Day out of range for month"]
+    :set res [$RunTestCase $res $ToUnixTimestamp "Feb/31/2024 10:10:10" "nothing" "nothing" "error" "Day out of range for month"]
+    :set res [$RunTestCase $res $ToUnixTimestamp "Apr/31/2025 03:05:45" "nothing" "nothing" "error" "Day out of range for month"]
+    :set res [$RunTestCase $res $ToUnixTimestamp "Jun/32/2028 21:10:00" "nothing" "nothing" "error" "Day out of range"]
+    :set res [$RunTestCase $res $ToUnixTimestamp "Sep/35/2023 14:22:11" "nothing" "nothing" "error" "Day out of range"]
+    :set res [$RunTestCase $res $ToUnixTimestamp "Nov/99/2026 09:00:00" "nothing" "nothing" "error" "Day out of range"]
+    :set res [$RunTestCase $res $ToUnixTimestamp "Dec/-15/2021 05:45:30" "nothing" "nothing" "error" "Negative day value"]
+
+    # Testing invalid hours, minutes, and seconds that should cause an error
+    :set res [$RunTestCase $res $ToUnixTimestamp "Jan/14/2023 24:15:30" "nothing" "nothing" "error" "Hour out of range"]
+    :set res [$RunTestCase $res $ToUnixTimestamp "Feb/07/2024 25:00:00" "nothing" "nothing" "error" "Hour out of range"]
+    :set res [$RunTestCase $res $ToUnixTimestamp "Mar/03/2025 99:10:00" "nothing" "nothing" "error" "Hour out of range"]
+    :set res [$RunTestCase $res $ToUnixTimestamp "Apr/22/2021 -1:05:45" "nothing" "nothing" "error" "Negative hour value"]
+    :set res [$RunTestCase $res $ToUnixTimestamp "May/09/2028 -05:30:00" "nothing" "nothing" "error" "Negative hour value"]
+
+    :set res [$RunTestCase $res $ToUnixTimestamp "Jun/14/2023 12:60:30" "nothing" "nothing" "error" "Minute out of range"]
+    :set res [$RunTestCase $res $ToUnixTimestamp "Jul/07/2024 08:71:15" "nothing" "nothing" "error" "Minute out of range"]
+    :set res [$RunTestCase $res $ToUnixTimestamp "Aug/03/2025 15:99:59" "nothing" "nothing" "error" "Minute out of range"]
+    :set res [$RunTestCase $res $ToUnixTimestamp "Sep/22/2021 03:-1:45" "nothing" "nothing" "error" "Negative minute value"]
+    :set res [$RunTestCase $res $ToUnixTimestamp "Oct/09/2028 21:-15:00" "nothing" "nothing" "error" "Negative minute value"]
+
+    :set res [$RunTestCase $res $ToUnixTimestamp "Nov/14/2023 08:15:60" "nothing" "nothing" "error" "Second out of range"]
+    :set res [$RunTestCase $res $ToUnixTimestamp "Dec/07/2024 16:23:71" "nothing" "nothing" "error" "Second out of range"]
+    :set res [$RunTestCase $res $ToUnixTimestamp "Jan/03/2025 12:00:99" "nothing" "nothing" "error" "Second out of range"]
+    :set res [$RunTestCase $res $ToUnixTimestamp "Feb/22/2021 03:05:-1" "nothing" "nothing" "error" "Negative second value"]
+    :set res [$RunTestCase $res $ToUnixTimestamp "Mar/09/2028 11:33:-30" "nothing" "nothing" "error" "Negative second value"]
+
     :put "Testing completed."
     :return $res
 }

@@ -31,6 +31,8 @@ jobs:
             BRANCH="$GITHUB_REF_NAME"
           fi
 
+          echo "Target branch: $BRANCH"
+
           MAX_ATTEMPTS=5
           RETRY_DELAY=3
           ATTEMPT=1
@@ -38,12 +40,21 @@ jobs:
           while [ $ATTEMPT -le $MAX_ATTEMPTS ]; do
             echo "Attempt $ATTEMPT of $MAX_ATTEMPTS..."
 
-            # Reset everything to the current remote branch state
+            echo "Fetching latest branch state..."
+
             git fetch origin "$BRANCH"
+
+            echo "Fetch completed."
+
+            echo "Resetting local state to origin/$BRANCH..."
+
             git reset --hard "origin/$BRANCH"
             git clean -fd
 
-            # Re-run hash update script on the latest version of files
+            echo "Local state reset."
+
+            echo "Updating hashes..."
+
             python update_hashes.py -a md5 global/list.txt
             python update_hashes.py -a md5 global/tests/list.txt
             python update_hashes.py -a md5 other/list.txt
@@ -54,23 +65,30 @@ jobs:
             python update_hashes.py -a sha256 global/tests/test_data/test_list_sha256.txt
             python update_hashes.py -a md5 global/tests/test_data/auto_update_test_list.txt
 
-            # Check for any uncommitted changes
+            echo "Hash update completed."
+
+            echo "Staging changes..."
+
             git add "*.txt"
-            
+
             if git diff --cached --quiet; then
-              echo "No changes to commit after updating hashes."
+              echo "No changes to commit. Done."
               exit 0
             fi
 
-            # Commit generated changes
+            echo "Changes detected. Creating commit..."
+
             git commit -m "update hashes"
 
-            # Try to push changes; retry loop restarts if a concurrent commit arrives
+            echo "Commit created."
+
+            echo "Pushing changes..."
+
             if git push origin HEAD:"$BRANCH"; then
               echo "Successfully pushed updated hashes."
               exit 0
             else
-              echo "Push failed due to concurrent updates. Retrying..."
+              echo "Push failed. Retrying..."
             fi
 
             ATTEMPT=$((ATTEMPT + 1))

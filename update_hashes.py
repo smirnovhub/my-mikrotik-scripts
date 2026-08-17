@@ -1,3 +1,4 @@
+import json
 import re
 import sys
 import zlib
@@ -99,18 +100,82 @@ def process_list(list_file_path: Path, alg: str) -> bool:
     return True
 
 
+def process_config(config_path: Path) -> bool:
+    # Load and process multiple target configurations from a JSON file
+    if not config_path.exists():
+        print(f"Error: configuration file {config_path} not found.")
+        return False
+
+    try:
+        with open(config_path, "r", encoding="utf-8") as f:
+            tasks = json.load(f)
+    except Exception as e:
+        print(f"Error parsing JSON configuration file {config_path}: {e}")
+        return False
+
+    if not isinstance(tasks, list):
+        print("Error: JSON configuration must contain a list of objects.")
+        return False
+
+    success = True
+    for entry in tasks:
+        if not isinstance(entry, dict):
+            print(f"Error: invalid entry in configuration: {entry}")
+            success = False
+            return False
+
+        # Support flexible field names for algorithm and target file
+        alg = entry.get("alg")
+        file_path = entry.get("file")
+
+        if not alg or not file_path:
+            print(
+                f"Error: entry missing required 'algo' or 'file' key: {entry}")
+            success = False
+            return False
+
+        if not process_list(Path(file_path), alg):
+            success = False
+
+    return success
+
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
-        description="Update file checksums in a reference list.")
-    parser.add_argument("list_path", type=Path, help="Path to the list file")
+        description="Update file checksums in a reference list.",
+        formatter_class=lambda prog: argparse.HelpFormatter(
+            prog, max_help_position=50, width=100))
+
+    parser.add_argument(
+        "list_path",
+        nargs="?",
+        type=Path,
+        help="Path to the list file (required if --config is not used)",
+    )
+
     parser.add_argument(
         "-a",
         type=str,
-        required=True,
         choices=list(HASH_FUNCTIONS.keys()),
-        help="Hash algorithm to use",
+        help="Hash algorithm to use (required if --config is not used)",
+    )
+
+    parser.add_argument(
+        "-c",
+        "--config",
+        type=Path,
+        help="Path to JSON configuration file containing update targets",
     )
 
     args = parser.parse_args()
-    if not process_list(args.list_path, args.a):
-        sys.exit(1)
+
+    if args.config:
+        if not process_config(args.config):
+            sys.exit(1)
+    elif args.list_path and args.a:
+        if not process_list(args.list_path, args.a):
+            sys.exit(1)
+    else:
+        parser.error(
+            "Must provide either positional list_path with -a, or specify --config / -c."
+        )

@@ -932,7 +932,7 @@
         :return ""
     }
 
-    :local upperMap {
+    :local charMap {
         "a"="A"; "b"="B"; "c"="C"; "d"="D"; "e"="E"; "f"="F"; "g"="G"; "h"="H"; "i"="I"; "j"="J";
         "k"="K"; "l"="L"; "m"="M"; "n"="N"; "o"="O"; "p"="P"; "q"="Q"; "r"="R"; "s"="S"; "t"="T";
         "u"="U"; "v"="V"; "w"="W"; "x"="X"; "y"="Y"; "z"="Z"
@@ -942,16 +942,16 @@
     :local blockStart 0
 
     :for idx from=0 to=($len - 1) do={
-        :local upperChar ($upperMap->[:pick $input $idx])
+        :local char ($charMap->[:pick $input $idx])
 
-        :if ([:len $upperChar] > 0) do={
+        :if ([:len $char] > 0) do={
             # Append the unmodified chunk of the string if there is one
             :if ($blockStart < $idx) do={
                 :set result ($result . [:pick $input $blockStart $idx])
             }
 
-            # Append the converted uppercase character
-            :set result ($result . $upperChar)
+            # Append the converted character
+            :set result ($result . $char)
 
             # Move the start of the next potential chunk
             :set blockStart ($idx + 1)
@@ -981,7 +981,7 @@
         :return ""
     }
 
-    :local lowerMap {
+    :local charMap {
         "A"="a"; "B"="b"; "C"="c"; "D"="d"; "E"="e"; "F"="f"; "G"="g"; "H"="h"; "I"="i"; "J"="j";
         "K"="k"; "L"="l"; "M"="m"; "N"="n"; "O"="o"; "P"="p"; "Q"="q"; "R"="r"; "S"="s"; "T"="t";
         "U"="u"; "V"="v"; "W"="w"; "X"="x"; "Y"="y"; "Z"="z"
@@ -991,16 +991,16 @@
     :local blockStart 0
 
     :for idx from=0 to=($len - 1) do={
-        :local lowerChar ($lowerMap->[:pick $input $idx])
+        :local char ($charMap->[:pick $input $idx])
 
-        :if ([:len $lowerChar] > 0) do={
+        :if ([:len $char] > 0) do={
             # Append the unmodified chunk of the string if there is one
             :if ($blockStart < $idx) do={
                 :set result ($result . [:pick $input $blockStart $idx])
             }
 
-            # Append the converted uppercase character
-            :set result ($result . $lowerChar)
+            # Append the converted character
+            :set result ($result . $char)
 
             # Move the start of the next potential chunk
             :set blockStart ($idx + 1)

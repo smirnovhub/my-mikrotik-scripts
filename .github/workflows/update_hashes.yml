@@ -82,6 +82,8 @@ jobs:
 
             echo "Commit created."
 
+            sleep 30
+
             echo "Pushing changes..."
 
             if git push origin HEAD:"$BRANCH"; then

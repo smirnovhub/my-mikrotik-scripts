@@ -932,19 +932,35 @@
         :return ""
     }
 
-    :local upper "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
-    :local lower "abcdefghijklmnopqrstuvwxyz"
+    :local upperMap {
+        "a"="A"; "b"="B"; "c"="C"; "d"="D"; "e"="E"; "f"="F"; "g"="G"; "h"="H"; "i"="I"; "j"="J";
+        "k"="K"; "l"="L"; "m"="M"; "n"="N"; "o"="O"; "p"="P"; "q"="Q"; "r"="R"; "s"="S"; "t"="T";
+        "u"="U"; "v"="V"; "w"="W"; "x"="X"; "y"="Y"; "z"="Z"
+    }
+
     :local result ""
+    :local blockStart 0
 
     :for idx from=0 to=($len - 1) do={
-        :local char [:pick $input $idx]
-        :local pos [:find $lower $char]
+        :local upperChar ($upperMap->[:pick $input $idx])
 
-        :if ([:len $pos] > 0) do={
-            :set char [:pick $upper $pos]
+        :if ([:len $upperChar] > 0) do={
+            # Append the unmodified chunk of the string if there is one
+            :if ($blockStart < $idx) do={
+                :set result ($result . [:pick $input $blockStart $idx])
+            }
+
+            # Append the converted uppercase character
+            :set result ($result . $upperChar)
+
+            # Move the start of the next potential chunk
+            :set blockStart ($idx + 1)
         }
+    }
 
-        :set result ($result . $char)
+    # Append any remaining characters after the last conversion
+    :if ($blockStart < $len) do={
+        :set result ($result . [:pick $input $blockStart $len])
     }
 
     :return $result
@@ -965,19 +981,35 @@
         :return ""
     }
 
-    :local upper "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
-    :local lower "abcdefghijklmnopqrstuvwxyz"
+    :local lowerMap {
+        "A"="a"; "B"="b"; "C"="c"; "D"="d"; "E"="e"; "F"="f"; "G"="g"; "H"="h"; "I"="i"; "J"="j";
+        "K"="k"; "L"="l"; "M"="m"; "N"="n"; "O"="o"; "P"="p"; "Q"="q"; "R"="r"; "S"="s"; "T"="t";
+        "U"="u"; "V"="v"; "W"="w"; "X"="x"; "Y"="y"; "Z"="z"
+    }
+
     :local result ""
+    :local blockStart 0
 
     :for idx from=0 to=($len - 1) do={
-        :local char [:pick $input $idx]
-        :local pos [:find $upper $char]
+        :local lowerChar ($lowerMap->[:pick $input $idx])
 
-        :if ([:len $pos] > 0) do={
-            :set char [:pick $lower $pos]
+        :if ([:len $lowerChar] > 0) do={
+            # Append the unmodified chunk of the string if there is one
+            :if ($blockStart < $idx) do={
+                :set result ($result . [:pick $input $blockStart $idx])
+            }
+
+            # Append the converted uppercase character
+            :set result ($result . $lowerChar)
+
+            # Move the start of the next potential chunk
+            :set blockStart ($idx + 1)
         }
+    }
 
-        :set result ($result . $char)
+    # Append any remaining characters after the last conversion
+    :if ($blockStart < $len) do={
+        :set result ($result . [:pick $input $blockStart $len])
     }
 
     :return $result

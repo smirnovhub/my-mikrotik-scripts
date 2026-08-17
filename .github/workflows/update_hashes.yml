@@ -20,40 +20,73 @@ jobs:
         with:
           python-version: '3.14'
 
-      - name: Run hash update script for list files
+      - name: Update hashes and push with conflict handling
         run: |
-          python update_hashes.py -a md5 global/list.txt
-          python update_hashes.py -a md5 global/tests/list.txt
-          python update_hashes.py -a md5 other/list.txt
-          
-          python update_hashes.py -a crc32 global/tests/test_data/test_list_crc32.txt
-          python update_hashes.py -a md5 global/tests/test_data/test_list_md5.txt
-          python update_hashes.py -a sha1 global/tests/test_data/test_list_sha1.txt
-          python update_hashes.py -a sha256 global/tests/test_data/test_list_sha256.txt
-          python update_hashes.py -a md5 global/tests/test_data/auto_update_test_list.txt
+          MAX_ATTEMPTS=5
+          RETRY_DELAY=5
 
-      - name: Commit and push changes
-        uses: nick-fields/retry@v4
-        with:
-          timeout_minutes: 1
-          max_attempts: 3
-          retry_wait_seconds: 5
-          command: |
-            git config --global user.name "github-actions[bot]"
-            git config --global user.email "github-actions[bot]@users.noreply.github.com"
-            
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+
+          if [ -n "$GITHUB_HEAD_REF" ]; then
+            BRANCH="$GITHUB_HEAD_REF"
+          else
+            BRANCH="$GITHUB_REF_NAME"
+          fi
+
+          echo "Target branch: $BRANCH"
+
+          ATTEMPT=1
+
+          while [ $ATTEMPT -le $MAX_ATTEMPTS ]; do
+            echo "Attempt $ATTEMPT of $MAX_ATTEMPTS..."
+
+            echo "Fetching latest branch state..."
+
+            git fetch origin "$BRANCH"
+
+            echo "Fetch completed."
+
+            echo "Resetting local state to origin/$BRANCH..."
+
+            git reset --hard "origin/$BRANCH"
+            git clean -fd
+
+            echo "Local state reset."
+
+            echo "Updating hashes..."
+
+            python update_hashes.py --config hash_config.json
+
+            echo "Hash update completed."
+
+            echo "Staging changes..."
+
             git add "*.txt"
-            
-            # Commit only if there are uncommitted changes
-            if ! git diff --quiet || ! git diff --staged --quiet; then
-              git commit -m "update hashes"
+
+            if git diff --cached --quiet; then
+              echo "No changes to commit. Done."
+              exit 0
             fi
-            
-            if [ -n "$GITHUB_HEAD_REF" ]; then
-              BRANCH="$GITHUB_HEAD_REF"
+
+            echo "Changes detected. Creating commit..."
+
+            git commit -m "update hashes"
+
+            echo "Commit created."
+
+            echo "Pushing changes..."
+
+            if git push origin HEAD:"$BRANCH"; then
+              echo "Successfully pushed updated hashes."
+              exit 0
             else
-              BRANCH="$GITHUB_REF_NAME"
+              echo "Push failed. Retrying..."
             fi
-            
-            git pull --rebase origin "$BRANCH"
-            git push origin HEAD:"$BRANCH"
+
+            ATTEMPT=$((ATTEMPT + 1))
+            sleep "$RETRY_DELAY"
+          done
+
+          echo "Error: Max attempts reached for updating hashes."
+          exit 1

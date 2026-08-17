@@ -1,3 +1,4 @@
+import json
 import re
 import sys
 import zlib
@@ -53,10 +54,11 @@ def process_list(list_file_path: Path, alg: str) -> bool:
         )
         return False
 
+    has_updates = False
     updated_lines = []
     repo_root = Path.cwd()
 
-    print(f"Updating {list_file_path} using [{alg.upper()}] hashes...")
+    print(f"Updating {alg.upper()} hashes for {list_file_path}...")
 
     with open(list_file_path, "r", encoding="utf-8") as f:
         lines = f.readlines()
@@ -69,9 +71,10 @@ def process_list(list_file_path: Path, alg: str) -> bool:
             updated_lines.append(line)
             continue
 
-        # Extract target URL from line
+        # Extract target URL and existing hash from line
         parts = stripped.split()
         url = parts[-1]
+        existing_hash = parts[0] if len(parts) >= 2 else ""
 
         match = URL_PATTERN.match(url)
         if match:
@@ -82,35 +85,104 @@ def process_list(list_file_path: Path, alg: str) -> bool:
 
             if local_file.exists() and local_file.is_file():
                 file_hash = hash_func(local_file)
+
+                # Compare new hash with existing one
+                if file_hash != existing_hash:
+                    has_updates = True
+                    print(f"{file_hash} {url}")
                 updated_lines.append(f"{file_hash} {url}\n")
-                print(f"{file_hash} {url}")
                 continue
             else:
                 print(f"Error: file missing at {local_file} for URL: {url}")
                 return False
 
         # Preserve line if pattern matching fails or target file is missing
-        updated_lines.append(line if line.endswith("\n") else line + "\n")
+        updated_lines.append(stripped + "\n")
 
     with open(list_file_path, "w", encoding="utf-8", newline="\n") as f:
         f.writelines(updated_lines)
 
-    print(f"Hashes in {list_file_path} updated successfully.")
+    if has_updates:
+        print(f"Hashes in {list_file_path} updated successfully.\n")
+    else:
+        print(f"Hashes in {list_file_path} are already up to date.\n")
+
+    return True
+
+
+def process_config(config_path: Path) -> bool:
+    # Load and process multiple target configurations from a JSON file
+    if not config_path.exists():
+        print(f"Error: configuration file {config_path} not found.")
+        return False
+
+    try:
+        with open(config_path, "r", encoding="utf-8") as f:
+            tasks = json.load(f)
+    except Exception as e:
+        print(f"Error parsing JSON configuration file {config_path}: {e}")
+        return False
+
+    if not isinstance(tasks, list):
+        print("Error: JSON configuration must contain a list of objects.")
+        return False
+
+    for entry in tasks:
+        if not isinstance(entry, dict):
+            print(f"Error: invalid entry in configuration: {entry}")
+            return False
+
+        # Support flexible field names for algorithm and target file
+        alg = entry.get("alg")
+        file_path = entry.get("file")
+
+        if not alg or not file_path:
+            print(
+                f"Error: entry missing required 'algo' or 'file' key: {entry}")
+            return False
+
+        if not process_list(Path(file_path), alg):
+            return False
+
     return True
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
-        description="Update file checksums in a reference list.")
-    parser.add_argument("list_path", type=Path, help="Path to the list file")
+        description="Update file checksums in a reference list.",
+        formatter_class=lambda prog: argparse.HelpFormatter(
+            prog, max_help_position=50, width=100))
+
+    parser.add_argument(
+        "list_path",
+        nargs="?",
+        type=Path,
+        help="Path to the list file (required if --config is not used)",
+    )
+
     parser.add_argument(
         "-a",
         type=str,
-        required=True,
         choices=list(HASH_FUNCTIONS.keys()),
-        help="Hash algorithm to use",
+        help="Hash algorithm to use (required if --config is not used)",
+    )
+
+    parser.add_argument(
+        "-c",
+        "--config",
+        type=Path,
+        help="Path to JSON configuration file containing update targets",
     )
 
     args = parser.parse_args()
-    if not process_list(args.list_path, args.a):
-        sys.exit(1)
+
+    if args.config:
+        if not process_config(args.config):
+            sys.exit(1)
+    elif args.list_path and args.a:
+        if not process_list(args.list_path, args.a):
+            sys.exit(1)
+    else:
+        parser.error(
+            "Must provide either positional list_path with -a, or specify --config / -c."
+        )

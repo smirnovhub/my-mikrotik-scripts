@@ -174,11 +174,16 @@
     :set res [$RunTestCase $res $ToUpperCase "" "nothing" "nothing" "" "Empty string"]
     :set res [$RunTestCase $res $ToUpperCase "a" "nothing" "nothing" "A" "Single lowercase letter"]
     :set res [$RunTestCase $res $ToUpperCase "Z" "nothing" "nothing" "Z" "Single uppercase letter"]
+    :set res [$RunTestCase $res $ToUpperCase "ABCDEFGHIJKLMNOPQRSTUVWXYZ" "nothing" "nothing" "ABCDEFGHIJKLMNOPQRSTUVWXYZ" "All upper chars"]
+    :set res [$RunTestCase $res $ToUpperCase "abcdefghijklmnopqrstuvwxyz" "nothing" "nothing" "ABCDEFGHIJKLMNOPQRSTUVWXYZ" "All lower chars"]
+    :set res [$RunTestCase $res $ToUpperCase "ZYXWVUTSRQPONMLKJIHGFEDCBA" "nothing" "nothing" "ZYXWVUTSRQPONMLKJIHGFEDCBA" "All upper chars reversed"]
+    :set res [$RunTestCase $res $ToUpperCase "zyxwvutsrqponmlkjihgfedcba" "nothing" "nothing" "ZYXWVUTSRQPONMLKJIHGFEDCBA" "All lower chars reversed"]
 
     # Numbers and special characters (should remain unchanged)
     :set res [$RunTestCase $res $ToUpperCase "12345" "nothing" "nothing" "12345" "Digits only"]
     :set res [$RunTestCase $res $ToUpperCase "hello 123!" "nothing" "nothing" "HELLO 123!" "Lowercase with digits and spaces"]
     :set res [$RunTestCase $res $ToUpperCase "abc-def_ghi" "nothing" "nothing" "ABC-DEF_GHI" "Lowercase with symbols"]
+    :set res [$RunTestCase $res $ToUpperCase "abc-DEF_ghi" "nothing" "nothing" "ABC-DEF_GHI" "Mixed with symbols"]
     :set res [$RunTestCase $res $ToUpperCase "ABC-DEF_GHI" "nothing" "nothing" "ABC-DEF_GHI" "Uppercase with symbols"]
 
     :put "Testing completed."
@@ -203,11 +208,16 @@
     :set res [$RunTestCase $res $ToLowerCase "" "nothing" "nothing" "" "Empty string"]
     :set res [$RunTestCase $res $ToLowerCase "A" "nothing" "nothing" "a" "Single uppercase letter"]
     :set res [$RunTestCase $res $ToLowerCase "z" "nothing" "nothing" "z" "Single lowercase letter"]
+    :set res [$RunTestCase $res $ToLowerCase "ABCDEFGHIJKLMNOPQRSTUVWXYZ" "nothing" "nothing" "abcdefghijklmnopqrstuvwxyz" "All upper chars"]
+    :set res [$RunTestCase $res $ToLowerCase "abcdefghijklmnopqrstuvwxyz" "nothing" "nothing" "abcdefghijklmnopqrstuvwxyz" "All lower chars"]
+    :set res [$RunTestCase $res $ToLowerCase "ZYXWVUTSRQPONMLKJIHGFEDCBA" "nothing" "nothing" "zyxwvutsrqponmlkjihgfedcba" "All upper chars reversed"]
+    :set res [$RunTestCase $res $ToLowerCase "zyxwvutsrqponmlkjihgfedcba" "nothing" "nothing" "zyxwvutsrqponmlkjihgfedcba" "All lower chars reversed"]
 
     # Numbers and special characters (should remain unchanged)
     :set res [$RunTestCase $res $ToLowerCase "12345" "nothing" "nothing" "12345" "Digits only"]
     :set res [$RunTestCase $res $ToLowerCase "HELLO 123!" "nothing" "nothing" "hello 123!" "Uppercase with digits and spaces"]
     :set res [$RunTestCase $res $ToLowerCase "abc-def_ghi" "nothing" "nothing" "abc-def_ghi" "Lowercase with symbols"]
+    :set res [$RunTestCase $res $ToLowerCase "abc-DEF_ghi" "nothing" "nothing" "abc-def_ghi" "Mixed with symbols"]
     :set res [$RunTestCase $res $ToLowerCase "ABC-DEF_GHI" "nothing" "nothing" "abc-def_ghi" "Uppercase with symbols"]
 
     :put "Testing completed."

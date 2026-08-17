@@ -103,9 +103,9 @@ def process_list(list_file_path: Path, alg: str) -> bool:
         f.writelines(updated_lines)
 
     if has_updates:
-        print(f"Hashes in {list_file_path} updated successfully.")
+        print(f"Hashes in {list_file_path} updated successfully.\n")
     else:
-        print(f"Hashes in {list_file_path} are already up to date.")
+        print(f"Hashes in {list_file_path} are already up to date.\n")
 
     return True
 

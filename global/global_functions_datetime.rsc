@@ -130,8 +130,7 @@
             :local min  [:pick $input 15 17]
             :local sec  [:pick $input 18 20]
 
-            :local dateTime "$year-$month-$day $hour:$min:$sec"
-            :return $dateTime
+            :return "$year-$month-$day $hour:$min:$sec"
         } else={
             :log error "Invalid date-time format: '$input'. Expected YYYY-MM-DD HH:MM:SS or mmm/DD/YYYY HH:MM:SS"
             :error "Invalid date-time format: '$input'. Expected YYYY-MM-DD HH:MM:SS or mmm/DD/YYYY HH:MM:SS"
@@ -165,7 +164,8 @@
     }
 
     :global ToLowerCase
-    :local dt [$ToLowerCase [:tostr $1]]
+
+    :local input [:tostr $1]
 
     # Declare time variables
     :local year 0
@@ -177,19 +177,19 @@
 
     # Regex patterns
     :local regexISO "^[0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2}\$"
-    :local regexROS "^[a-z]{3}/[0-9]{2}/[0-9]{4} [0-9]{2}:[0-9]{2}:[0-9]{2}\$"
+    :local regexROS "^[a-zA-Z]{3}/[0-9]{2}/[0-9]{4} [0-9]{2}:[0-9]{2}:[0-9]{2}\$"
 
     # Parse based on detected format
-    :if ($dt ~ $regexISO) do={
-        :set year  [:tonum [:pick $dt 0 4]]
-        :set month [:tonum [:pick $dt 5 7]]
-        :set day   [:tonum [:pick $dt 8 10]]
-        :set hour  [:tonum [:pick $dt 11 13]]
-        :set min   [:tonum [:pick $dt 14 16]]
-        :set sec   [:tonum [:pick $dt 17 19]]
+    :if ($input ~ $regexISO) do={
+        :set year  [:tonum [:pick $input 0 4]]
+        :set month [:tonum [:pick $input 5 7]]
+        :set day   [:tonum [:pick $input 8 10]]
+        :set hour  [:tonum [:pick $input 11 13]]
+        :set min   [:tonum [:pick $input 14 16]]
+        :set sec   [:tonum [:pick $input 17 19]]
     } else={
-        :if ($dt ~ $regexROS) do={
-            :local monthStr [:pick $dt 0 3]
+        :if ($input ~ $regexROS) do={
+            :local monthStr [$ToLowerCase [:pick $input 0 3]]
 
             :if ($monthStr = "jan") do={ :set month 1 } else={
             :if ($monthStr = "feb") do={ :set month 2 } else={
@@ -207,14 +207,14 @@
                 :error "Invalid month name: '$monthStr'"
             }}}}}}}}}}}}
 
-            :set day   [:tonum [:pick $dt 4 6]]
-            :set year  [:tonum [:pick $dt 7 11]]
-            :set hour  [:tonum [:pick $dt 12 14]]
-            :set min   [:tonum [:pick $dt 15 17]]
-            :set sec   [:tonum [:pick $dt 18 20]]
+            :set day  [:tonum [:pick $input 4 6]]
+            :set year [:tonum [:pick $input 7 11]]
+            :set hour [:tonum [:pick $input 12 14]]
+            :set min  [:tonum [:pick $input 15 17]]
+            :set sec  [:tonum [:pick $input 18 20]]
         } else={
-            :log error "Invalid date-time format: '$dt'. Expected YYYY-MM-DD HH:MM:SS or mmm/DD/YYYY HH:MM:SS"
-            :error "Invalid date-time format: '$dt'. Expected YYYY-MM-DD HH:MM:SS or mmm/DD/YYYY HH:MM:SS"
+            :log error "Invalid date-time format: '$input'. Expected YYYY-MM-DD HH:MM:SS or mmm/DD/YYYY HH:MM:SS"
+            :error "Invalid date-time format: '$input'. Expected YYYY-MM-DD HH:MM:SS or mmm/DD/YYYY HH:MM:SS"
         }
     }
 
@@ -233,13 +233,13 @@
 
     :if (($month = 4) || ($month = 6) || ($month = 9) || ($month = 11)) do={
         :set maxDay 30
-    }
-
-    :if ($month = 2) do={
-        :set maxDay 28
-
-        :if ($leap) do={
-            :set maxDay 29
+    } else={
+        :if ($month = 2) do={
+            :if ($leap) do={
+                :set maxDay 29
+            } else={
+                :set maxDay 28
+            }
         }
     }
 
@@ -248,17 +248,17 @@
         :error "Invalid day: $day for month $month in year $year"
     }
 
-    :if (($hour < 0) || ($hour > 23)) do={
+    :if ($hour > 23) do={
         :log error "Invalid hour: $hour"
         :error "Invalid hour: $hour"
     }
 
-    :if (($min < 0) || ($min > 59)) do={
+    :if ($min > 59) do={
         :log error "Invalid minute: $min"
         :error "Invalid minute: $min"
     }
 
-    :if (($sec < 0) || ($sec > 59)) do={
+    :if ($sec > 59) do={
         :log error "Invalid second: $sec"
         :error "Invalid second: $sec"
     }
@@ -278,7 +278,7 @@
     :local days ((($year - 1970) * 365) + $leapYears)
 
     # Days before each month in a non-leap year
-    :local monthOffset {0;31;59;90;120;151;181;212;243;273;304;334}
+    :local monthOffset {0; 31; 59; 90; 120; 151; 181; 212; 243; 273; 304; 334}
 
     :set days ($days + ($monthOffset->($month - 1)))
 

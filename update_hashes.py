@@ -117,11 +117,9 @@ def process_config(config_path: Path) -> bool:
         print("Error: JSON configuration must contain a list of objects.")
         return False
 
-    success = True
     for entry in tasks:
         if not isinstance(entry, dict):
             print(f"Error: invalid entry in configuration: {entry}")
-            success = False
             return False
 
         # Support flexible field names for algorithm and target file
@@ -131,13 +129,12 @@ def process_config(config_path: Path) -> bool:
         if not alg or not file_path:
             print(
                 f"Error: entry missing required 'algo' or 'file' key: {entry}")
-            success = False
             return False
 
         if not process_list(Path(file_path), alg):
-            success = False
+            return False
 
-    return success
+    return True
 
 
 if __name__ == "__main__":

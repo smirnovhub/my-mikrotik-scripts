@@ -54,10 +54,11 @@ def process_list(list_file_path: Path, alg: str) -> bool:
         )
         return False
 
+    has_updates = False
     updated_lines = []
     repo_root = Path.cwd()
 
-    print(f"Updating {list_file_path} using [{alg.upper()}] hashes...")
+    print(f"Updating {alg.upper()} hashes for {list_file_path}...")
 
     with open(list_file_path, "r", encoding="utf-8") as f:
         lines = f.readlines()
@@ -70,9 +71,10 @@ def process_list(list_file_path: Path, alg: str) -> bool:
             updated_lines.append(line)
             continue
 
-        # Extract target URL from line
+        # Extract target URL and existing hash from line
         parts = stripped.split()
         url = parts[-1]
+        existing_hash = parts[0] if len(parts) >= 2 else ""
 
         match = URL_PATTERN.match(url)
         if match:
@@ -83,20 +85,28 @@ def process_list(list_file_path: Path, alg: str) -> bool:
 
             if local_file.exists() and local_file.is_file():
                 file_hash = hash_func(local_file)
+
+                # Compare new hash with existing one
+                if file_hash != existing_hash:
+                    has_updates = True
+                    print(f"{file_hash} {url}")
                 updated_lines.append(f"{file_hash} {url}\n")
-                print(f"{file_hash} {url}")
                 continue
             else:
                 print(f"Error: file missing at {local_file} for URL: {url}")
                 return False
 
         # Preserve line if pattern matching fails or target file is missing
-        updated_lines.append(line if line.endswith("\n") else line + "\n")
+        updated_lines.append(stripped + "\n")
 
     with open(list_file_path, "w", encoding="utf-8", newline="\n") as f:
         f.writelines(updated_lines)
 
-    print(f"Hashes in {list_file_path} updated successfully.")
+    if has_updates:
+        print(f"Hashes in {list_file_path} updated successfully.")
+    else:
+        print(f"Hashes in {list_file_path} are already up to date.")
+
     return True
 
 

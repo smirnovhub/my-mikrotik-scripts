@@ -286,6 +286,8 @@
 
     /system script remove [find name=$testScriptName]
 
+    :set res [$RunTestCase $res [:len [/system script find name=$testScriptName]] "nothing" "nothing" "nothing" 0 "Check if test script doesn't exist"]
+
     :put "Testing completed."
     :return $res
 }

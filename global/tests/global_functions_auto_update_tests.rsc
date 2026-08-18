@@ -30,6 +30,7 @@
     :global GetMd5Sum
     :global GetSha1Sum
     :global GetSha256Sum
+    :global GetSha512Sum
 
     :local res [$InitTestCaseState $1]
 
@@ -164,6 +165,36 @@
         "nothing" "nothing" \
         $sha256TestResults \
         "List with SHA256 hashes"]
+
+    :local sha512TestResults { \
+        "test_string1"={ \
+            "hash"=[$GetSha512Sum $testString1]; \
+            "hashtype"="sha512"; \
+            "listname"="test_data/test_list_sha512.txt"; \
+            "scriptname"="test_string1"; \
+            "url"=("$prefixUrl/test_string1.txt") \
+        }; \
+        "test_string2"={ \
+            "hash"=[$GetSha512Sum $testString2]; \
+            "hashtype"="sha512"; \
+            "listname"="test_data/test_list_sha512.txt"; \
+            "scriptname"="test_string2"; \
+            "url"=("$prefixUrl/test_string2.txt") \
+        }; \
+        "test_string3"={ \
+            "hash"=[$GetSha512Sum $testString3]; \
+            "hashtype"="sha512"; \
+            "listname"="test_data/test_list_sha512.txt"; \
+            "scriptname"="test_string3"; \
+            "url"=("$prefixUrl/test_string3.txt") \
+        } \
+    }
+
+    :set res [$RunTestCase $res $ParseScriptsListFromUrl \
+        ("$prefixUrl/test_list_sha512.txt") \
+        "nothing" "nothing" \
+        $sha512TestResults \
+        "List with SHA512 hashes"]
 
     :local testGlobalVarName "test-global-var"
     :local hashGlobalVarName "auto-update-test-script-hash"

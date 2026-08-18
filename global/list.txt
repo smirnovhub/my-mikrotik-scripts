@@ -12,4 +12,4 @@ f16ffc6002d598945c368b506c8a8424 https://github.com/smirnovhub/my-mikrotik-scrip
 91f082a87ce1edc31adc23ec425eba47 https://github.com/smirnovhub/my-mikrotik-scripts/raw/refs/heads/master/global/global_functions_global_vars.rsc
 121db6c0a4648935254c37136809470a https://github.com/smirnovhub/my-mikrotik-scripts/raw/refs/heads/master/global/global_functions_hashes.rsc
 8a301648a9695f5c1746dcb688f0bd9c https://github.com/smirnovhub/my-mikrotik-scripts/raw/refs/heads/master/global/global_functions_testing.rsc
-0d8c6858fc541ca4363132186f1a4eb0 https://github.com/smirnovhub/my-mikrotik-scripts/raw/refs/heads/master/global/global_functions_utils.rsc
+39ac399317af0f7fb7631450bfe655e3 https://github.com/smirnovhub/my-mikrotik-scripts/raw/refs/heads/master/global/global_functions_utils.rsc

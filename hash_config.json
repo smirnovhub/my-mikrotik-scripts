@@ -28,6 +28,10 @@
     "file": "global/tests/test_data/test_list_sha256.txt"
   },
   {
+    "alg": "sha512",
+    "file": "global/tests/test_data/test_list_sha512.txt"
+  },
+  {
     "alg": "md5",
     "file": "global/tests/test_data/auto_update_test_list.txt"
   }

@@ -651,13 +651,13 @@
     :global telegramBotToken
     :global telegramPublicChatID
 
-    :if ([:len $1] = 0) do={
+    :local messageText [:tostr $1]
+    :local parseMode "HTML"
+
+    :if ([:len $messageText] = 0) do={
         :log error "SendPublicTelegramMessage: message text is empty"
         :return false
     }
-
-    :local messageText [:tostr $1]
-    :local parseMode "HTML"
 
     :local url "https://api.telegram.org/bot$telegramBotToken/sendMessage"
 
@@ -684,13 +684,13 @@
     :global telegramBotToken
     :global telegramPrivateChatID
 
-    :if ([:len $1] = 0) do={
+    :local messageText [:tostr $1]
+    :local parseMode "HTML"
+
+    :if ([:len $messageText] = 0) do={
         :log error "SendPrivateTelegramMessage: message text is empty"
         :return false
     }
-
-    :local messageText [:tostr $1]
-    :local parseMode "HTML"
 
     :local url "https://api.telegram.org/bot$telegramBotToken/sendMessage"
 
@@ -721,20 +721,20 @@
     :global telegramBotToken
     :global telegramPublicChatID
 
-    :if ([:len $1] = 0) do={
+    :local messageText [:tostr $1]
+    :local parseMode "HTML"
+
+    :if ([:len $messageText] = 0) do={
         :log error "SendPublicTelegramDocument: message text is empty"
         :return false
     }
 
-    :if ([:len $2] = 0) do={
+    :local fileContent [:tostr $2]
+
+    :if ([:len $fileContent] = 0) do={
         :log error "SendPublicTelegramDocument: file content is empty"
         :return false
     }
-
-    :local messageText [:tostr $1]
-    :local parseMode "HTML"
-
-    :local fileContent [:tostr $2]
 
     :local filename "report.txt"
     :if ([:len $3] > 0) do={
@@ -799,20 +799,20 @@
     :global telegramBotToken
     :global telegramPrivateChatID
 
-    :if ([:len $1] = 0) do={
+    :local messageText [:tostr $1]
+    :local parseMode "HTML"
+
+    :if ([:len $messageText] = 0) do={
         :log error "SendPrivateTelegramDocument: message text is empty"
         :return false
     }
 
-    :if ([:len $2] = 0) do={
+    :local fileContent [:tostr $2]
+
+    :if ([:len $fileContent] = 0) do={
         :log error "SendPrivateTelegramDocument: file content is empty"
         :return false
     }
-
-    :local messageText [:tostr $1]
-    :local parseMode "HTML"
-
-    :local fileContent [:tostr $2]
 
     :local filename "report.txt"
     :if ([:len $3] > 0) do={

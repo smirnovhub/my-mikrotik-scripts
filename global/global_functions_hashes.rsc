@@ -27,6 +27,7 @@
 :global GetMd5Sum
 :global GetSha1Sum
 :global GetSha256Sum
+:global GetSha512Sum
 
 # EXTERNAL DEPENDENCY
 :global DecToChar
@@ -865,5 +866,201 @@
     ($hexByteTable->(($h5 >> 24) & 0xFF)) . ($hexByteTable->(($h5 >> 16) & 0xFF)) . ($hexByteTable->(($h5 >> 8) & 0xFF)) . ($hexByteTable->($h5 & 0xFF)) . \
     ($hexByteTable->(($h6 >> 24) & 0xFF)) . ($hexByteTable->(($h6 >> 16) & 0xFF)) . ($hexByteTable->(($h6 >> 8) & 0xFF)) . ($hexByteTable->($h6 & 0xFF)) . \
     ($hexByteTable->(($h7 >> 24) & 0xFF)) . ($hexByteTable->(($h7 >> 16) & 0xFF)) . ($hexByteTable->(($h7 >> 8) & 0xFF)) . ($hexByteTable->($h7 & 0xFF)) \
+  )
+}
+
+# Purpose: Calculate the SHA512 hash checksum for a given string.
+# Parameters:
+#   $1 - String to calculate the hash for
+# Returns: SHA512 checksum as a hex string
+# Example: :put [$GetSha512Sum "Hello World"]
+# Output:
+#   2c74fd17edafd80e8447b0d46741ee243b7eb74dd2149a0ab1b9246fb30382f27e853d8585719e0e67cbda0daa8f51671064615d645ae27acb15bfb1447f459b
+:set GetSha512Sum do={
+  :global asciiCodeTable
+  :global hexByteTable
+  :global sha512KTable
+
+  :local strMessage $1
+  :local lMessageLength [:len $strMessage]
+
+  # Fast return for empty string
+  :if ($lMessageLength = 0) do={
+    :return "cf83e1357eefb8bdf1542850d66d8007d620e4050b5715dc83f4a921d36ce9ce47d0d13c5d85f2b0ff8318d2877eec2f63b931bd47417a81a538327af927da3e"
+  }
+
+  # Initialize SHA-512 round constants as signed 64 bit decimals
+  :if ([:len $sha512KTable] != 80) do={
+    :set sha512KTable {
+       4794697086780616226;  8158064640168781261; -5349999486874862801; -1606136188198331460;
+       4131703408338449720;  6480981068601479193; -7908458776815382629; -6116909921290321640;
+      -2880145864133508542;  1334009975649890238;  2608012711638119052;  6128411473006802146;
+       8268148722764581231; -9160688886553864527; -7215885187991268811; -4495734319001033068;
+      -1973867731355612462; -1171420211273849373;  1135362057144423861;  2597628984639134821;
+       3308224258029322869;  5365058923640841347;  6679025012923562964;  8573033837759648693;
+      -7476448914759557205; -6327057829258317296; -5763719355590565569; -4658551843659510044;
+      -4116276920077217854; -3051310485924567259;   489312712824947311;  1452737877330783856;
+       2861767655752347644;  3322285676063803686;  5560940570517711597;  5996557281743188959;
+       7280758554555802590;  8532644243296465576; -9096487096722542874; -7894198246740708037;
+      -6719396339535248540; -6333637450476146687; -4446306890439682159; -4076793802049405392;
+      -3345356375505022440; -2983346525034927856;  -860691631967231958;  1182934255886127544;
+       1847814050463011016;  2177327727835720531;  2830643537854262169;  3796741975233480872;
+       4115178125766777443;  5681478168544905931;  6601373596472566643;  7507060721942968483;
+       8399075790359081724;  8693463985226723168; -8878714635349349518; -8302665154208450068;
+      -8016688836872298968; -6606660893046293015; -4685533653050689259; -4147400797238176981;
+      -3880063495543823972; -3348786107499101689; -1523767162380948706;  -757361751448694408;
+        500013540394364858;   748580250866718886;  1242879168328830382;  1977374033974150939;
+       2944078676154940804;  3659926193048069267;  4368137639120453308;  4836135668995329356;
+       5532061633213252278;  6448918945643986474;  6902733635092675308;  7801388544844847127
+    }
+  }
+
+  :local lWordArray [:toarray ""]
+
+  # Pack message bytes into sixty four bit words
+  :local i 0
+  :while (($i + 7) < $lMessageLength) do={
+    :set ($lWordArray->($i >> 3)) ( \
+      (($asciiCodeTable->[:pick $strMessage $i]) << 56) | \
+      (($asciiCodeTable->[:pick $strMessage ($i + 1)]) << 48) | \
+      (($asciiCodeTable->[:pick $strMessage ($i + 2)]) << 40) | \
+      (($asciiCodeTable->[:pick $strMessage ($i + 3)]) << 32) | \
+      (($asciiCodeTable->[:pick $strMessage ($i + 4)]) << 24) | \
+      (($asciiCodeTable->[:pick $strMessage ($i + 5)]) << 16) | \
+      (($asciiCodeTable->[:pick $strMessage ($i + 6)]) << 8) | \
+      ($asciiCodeTable->[:pick $strMessage ($i + 7)]) \
+    )
+    :set i ($i + 8)
+  }
+
+  # Pack remaining bytes
+  :local curVal 0
+  :if ($i < $lMessageLength) do={
+    :set curVal (($asciiCodeTable->[:pick $strMessage $i]) << 56)
+    :if (($i + 1) < $lMessageLength) do={
+      :set curVal ($curVal | (($asciiCodeTable->[:pick $strMessage ($i + 1)]) << 48))
+    }
+    :if (($i + 2) < $lMessageLength) do={
+      :set curVal ($curVal | (($asciiCodeTable->[:pick $strMessage ($i + 2)]) << 40))
+    }
+    :if (($i + 3) < $lMessageLength) do={
+      :set curVal ($curVal | (($asciiCodeTable->[:pick $strMessage ($i + 3)]) << 32))
+    }
+    :if (($i + 4) < $lMessageLength) do={
+      :set curVal ($curVal | (($asciiCodeTable->[:pick $strMessage ($i + 4)]) << 24))
+    }
+    :if (($i + 5) < $lMessageLength) do={
+      :set curVal ($curVal | (($asciiCodeTable->[:pick $strMessage ($i + 5)]) << 16))
+    }
+    :if (($i + 6) < $lMessageLength) do={
+      :set curVal ($curVal | (($asciiCodeTable->[:pick $strMessage ($i + 6)]) << 8))
+    }
+  }
+
+  # Add padding byte
+  :local padWIndex ($i >> 3)
+  :local padBPos ((7 - ($lMessageLength % 8)) * 8)
+  :set ($lWordArray->$padWIndex) ($curVal | (0x80 << $padBPos))
+
+  # Fill remaining words with zero and append bit length
+  :local lNumberOfWords (((($lMessageLength + 16) / 128) + 1) * 16)
+  :for w from=($padWIndex + 1) to=($lNumberOfWords - 1) do={
+    :set ($lWordArray->$w) 0
+  }
+
+  # Append length in bits as a one hundred twenty eight bit integer
+  :set ($lWordArray->($lNumberOfWords - 2)) 0
+  :set ($lWordArray->($lNumberOfWords - 1)) ($lMessageLength * 8)
+
+  # Initial SHA-512 state as signed 64 bit decimals
+  :local h0 7640891576956012808
+  :local h1 -4942790177534073029
+  :local h2 4354685564936845355
+  :local h3 -6534734903238641935
+  :local h4 5840696475078001361
+  :local h5 -7276294671716946913
+  :local h6 2270897969802886507
+  :local h7 6620516959819538809
+
+  :local lWordArrLen ([:len $lWordArray] - 1)
+  :local w [:toarray ""]
+
+  :for lcv from=0 to=$lWordArrLen step=16 do={
+    :for j from=0 to=15 do={
+      :set ($w->$j) ($lWordArray->($lcv + $j))
+    }
+
+    :for j from=16 to=79 do={
+      :set ($w->$j) ( ($w->($j - 16)) + \
+        ( (((($w->($j - 15)) >> 1) & 0x7FFFFFFFFFFFFFFF) | (($w->($j - 15)) << 63)) ^ \
+          (((($w->($j - 15)) >> 8) & 0x00FFFFFFFFFFFFFF) | (($w->($j - 15)) << 56)) ^ \
+          ((($w->($j - 15)) >> 7) & 0x01FFFFFFFFFFFFFF) ) + \
+        ($w->($j - 7)) + \
+        ( (((($w->($j - 2)) >> 19) & 0x00001FFFFFFFFFFF) | (($w->($j - 2)) << 45)) ^ \
+          (((($w->($j - 2)) >> 61) & 0x0000000000000007) | (($w->($j - 2)) << 3)) ^ \
+          ((($w->($j - 2)) >> 6) & 0x03FFFFFFFFFFFFFF) ) )
+    }
+
+    :local a $h0
+    :local b $h1
+    :local c $h2
+    :local d $h3
+    :local e $h4
+    :local f $h5
+    :local g $h6
+    :local h $h7
+
+    # Loop based SHA-512 Rounds
+    :for r from=0 to=79 do={
+      :local temp1 ( $h + \
+        ( ((($e >> 14) & 0x0003FFFFFFFFFFFF) | ($e << 50)) ^ \
+          ((($e >> 18) & 0x00003FFFFFFFFFFF) | ($e << 46)) ^ \
+          ((($e >> 41) & 0x00000000007FFFFF) | ($e << 23)) ) + \
+        ( $g ^ ($e & ($f ^ $g)) ) + ($sha512KTable->$r) + ($w->$r) )
+
+      :local temp2 ( \
+        ( ((($a >> 28) & 0x0000000FFFFFFFFF) | ($a << 36)) ^ \
+          ((($a >> 34) & 0x000000003FFFFFFF) | ($a << 30)) ^ \
+          ((($a >> 39) & 0x0000000001FFFFFF) | ($a << 25)) ) + \
+        ( ($a & $b) | ($c & ($a ^ $b)) ) )
+
+      :set h $g
+      :set g $f
+      :set f $e
+      :set e ($d + $temp1)
+      :set d $c
+      :set c $b
+      :set b $a
+      :set a ($temp1 + $temp2)
+    }
+
+    :set h0 ($h0 + $a)
+    :set h1 ($h1 + $b)
+    :set h2 ($h2 + $c)
+    :set h3 ($h3 + $d)
+    :set h4 ($h4 + $e)
+    :set h5 ($h5 + $f)
+    :set h6 ($h6 + $g)
+    :set h7 ($h7 + $h)
+  }
+
+  # Build final Hex string
+  :return ( \
+    ($hexByteTable->((($h0 >> 56) & 0xFF))) . ($hexByteTable->((($h0 >> 48) & 0xFF))) . ($hexByteTable->((($h0 >> 40) & 0xFF))) . ($hexByteTable->((($h0 >> 32) & 0xFF))) . \
+    ($hexByteTable->((($h0 >> 24) & 0xFF))) . ($hexByteTable->((($h0 >> 16) & 0xFF))) . ($hexByteTable->((($h0 >> 8) & 0xFF))) . ($hexByteTable->(($h0 & 0xFF))) . \
+    ($hexByteTable->((($h1 >> 56) & 0xFF))) . ($hexByteTable->((($h1 >> 48) & 0xFF))) . ($hexByteTable->((($h1 >> 40) & 0xFF))) . ($hexByteTable->((($h1 >> 32) & 0xFF))) . \
+    ($hexByteTable->((($h1 >> 24) & 0xFF))) . ($hexByteTable->((($h1 >> 16) & 0xFF))) . ($hexByteTable->((($h1 >> 8) & 0xFF))) . ($hexByteTable->(($h1 & 0xFF))) . \
+    ($hexByteTable->((($h2 >> 56) & 0xFF))) . ($hexByteTable->((($h2 >> 48) & 0xFF))) . ($hexByteTable->((($h2 >> 40) & 0xFF))) . ($hexByteTable->((($h2 >> 32) & 0xFF))) . \
+    ($hexByteTable->((($h2 >> 24) & 0xFF))) . ($hexByteTable->((($h2 >> 16) & 0xFF))) . ($hexByteTable->((($h2 >> 8) & 0xFF))) . ($hexByteTable->(($h2 & 0xFF))) . \
+    ($hexByteTable->((($h3 >> 56) & 0xFF))) . ($hexByteTable->((($h3 >> 48) & 0xFF))) . ($hexByteTable->((($h3 >> 40) & 0xFF))) . ($hexByteTable->((($h3 >> 32) & 0xFF))) . \
+    ($hexByteTable->((($h3 >> 24) & 0xFF))) . ($hexByteTable->((($h3 >> 16) & 0xFF))) . ($hexByteTable->((($h3 >> 8) & 0xFF))) . ($hexByteTable->(($h3 & 0xFF))) . \
+    ($hexByteTable->((($h4 >> 56) & 0xFF))) . ($hexByteTable->((($h4 >> 48) & 0xFF))) . ($hexByteTable->((($h4 >> 40) & 0xFF))) . ($hexByteTable->((($h4 >> 32) & 0xFF))) . \
+    ($hexByteTable->((($h4 >> 24) & 0xFF))) . ($hexByteTable->((($h4 >> 16) & 0xFF))) . ($hexByteTable->((($h4 >> 8) & 0xFF))) . ($hexByteTable->(($h4 & 0xFF))) . \
+    ($hexByteTable->((($h5 >> 56) & 0xFF))) . ($hexByteTable->((($h5 >> 48) & 0xFF))) . ($hexByteTable->((($h5 >> 40) & 0xFF))) . ($hexByteTable->((($h5 >> 32) & 0xFF))) . \
+    ($hexByteTable->((($h5 >> 24) & 0xFF))) . ($hexByteTable->((($h5 >> 16) & 0xFF))) . ($hexByteTable->((($h5 >> 8) & 0xFF))) . ($hexByteTable->(($h5 & 0xFF))) . \
+    ($hexByteTable->((($h6 >> 56) & 0xFF))) . ($hexByteTable->((($h6 >> 48) & 0xFF))) . ($hexByteTable->((($h6 >> 40) & 0xFF))) . ($hexByteTable->((($h6 >> 32) & 0xFF))) . \
+    ($hexByteTable->((($h6 >> 24) & 0xFF))) . ($hexByteTable->((($h6 >> 16) & 0xFF))) . ($hexByteTable->((($h6 >> 8) & 0xFF))) . ($hexByteTable->(($h6 & 0xFF))) . \
+    ($hexByteTable->((($h7 >> 56) & 0xFF))) . ($hexByteTable->((($h7 >> 48) & 0xFF))) . ($hexByteTable->((($h7 >> 40) & 0xFF))) . ($hexByteTable->((($h7 >> 32) & 0xFF))) . \
+    ($hexByteTable->((($h7 >> 24) & 0xFF))) . ($hexByteTable->((($h7 >> 16) & 0xFF))) . ($hexByteTable->((($h7 >> 8) & 0xFF))) . ($hexByteTable->(($h7 & 0xFF))) \
   )
 }

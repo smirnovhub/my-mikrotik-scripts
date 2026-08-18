@@ -1,10 +1,10 @@
-:global RunAllHashesTests
+:global RunAllHashesTests1
 :global GetCrc32SumTest
 :global GetMd5SumTest
 :global GetSha1SumTest
 :global GetSha256SumTest
 
-:set RunAllHashesTests do={
+:set RunAllHashesTests1 do={
     :global InitTestCaseState
     :global GetCrc32SumTest
     :global GetMd5SumTest
@@ -13,14 +13,14 @@
 
     :local res [$InitTestCaseState $1]
 
-    :put "\1B[35m=== STARTING ALL HASHES TESTS ===\1B[0m"
+    :put "\1B[35m=== STARTING ALL HASHES TESTS 1 ===\1B[0m"
 
     :set res [$GetCrc32SumTest $res]
     :set res [$GetMd5SumTest $res]
     :set res [$GetSha1SumTest $res]
     :set res [$GetSha256SumTest $res]
 
-    :put "\1B[35m=== ALL HASHES TESTS COMPLETED ===\1B[0m"
+    :put "\1B[35m=== ALL HASHES TESTS 1 COMPLETED ===\1B[0m"
 
     :return $res
 }
@@ -29,7 +29,6 @@
     :global InitTestCaseState
     :global GetCrc32Sum
     :global DecToChar
-    :global IsPrintableStr
     :global RunTestCase
 
     :local res [$InitTestCaseState $1]
@@ -212,7 +211,6 @@
     :global InitTestCaseState
     :global GetMd5Sum
     :global DecToChar
-    :global IsPrintableStr
     :global RunTestCase
 
     :local res [$InitTestCaseState $1]
@@ -378,7 +376,6 @@
     :global InitTestCaseState
     :global GetSha1Sum
     :global DecToChar
-    :global IsPrintableStr
     :global RunTestCase
 
     :local res [$InitTestCaseState $1]
@@ -728,7 +725,6 @@
     :global InitTestCaseState
     :global GetSha256Sum
     :global DecToChar
-    :global IsPrintableStr
     :global RunTestCase
 
     :local res [$InitTestCaseState $1]

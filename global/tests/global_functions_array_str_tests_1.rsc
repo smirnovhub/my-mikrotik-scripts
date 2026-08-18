@@ -123,14 +123,10 @@
 
     :put "Starting Randomness & Generation tests..."
 
-    # Helper anonymous closures for dynamic evaluations
-    :local EvalHexLen do={ :global GetRandom20CharHex; :return [:len [$GetRandom20CharHex]] }
-    :local EvalHexPrintable do={ :global GetRandom20CharHex; :global IsPrintableStr; :return [$IsPrintableStr [$GetRandom20CharHex]] }
-
     # GetRandom20CharHex Tests
 
     # Verify exact string length
-    :set res [$RunTestCase $res $EvalHexLen "nothing" "nothing" "nothing" 20 "Verify random hex string length is exactly 20 chars"]
+    :set res [$RunTestCase $res [:len [$GetRandom20CharHex]] "nothing" "nothing" "nothing" 20 "Verify random hex string length is exactly 20 chars"]
 
     :local lenOk true
     :for i from=1 to=100 do={
@@ -141,7 +137,7 @@
     :set res [$RunTestCase $res $EvalLen100 $lenOk "nothing" "nothing" true "Verify 100 generated hex strings have correct length"]
 
     # Verify it contains only printable characters
-    :set res [$RunTestCase $res $EvalHexPrintable "nothing" "nothing" "nothing" true "Verify random hex string consists only of printable characters"]
+    :set res [$RunTestCase $res [$IsPrintableStr [$GetRandom20CharHex]] "nothing" "nothing" "nothing" true "Verify random hex string consists only of printable characters"]
 
     # Uniqueness check (two consecutive calls must not yield the exact same string)
     :local hexStr1 [$GetRandom20CharHex]

@@ -44,6 +44,8 @@
 :global GetRouterOSVersion
 :global SendPublicTelegramMessage
 :global SendPrivateTelegramMessage
+:global SendPublicTelegramDocument
+:global SendPrivateTelegramDocument
 
 # Global dependencies:
 #   Telegram (if you want to use SendPublicTelegramMessage or SendPrivateTelegramMessage)
@@ -644,7 +646,7 @@
 # Globals:
 #   telegramBotToken     - Telegram bot token
 #   telegramPublicChatID - Chat ID to send the message to
-# Returns: None
+# Returns: true on success, false on failure
 :set SendPublicTelegramMessage do={
     :global telegramBotToken
     :global telegramPublicChatID
@@ -652,12 +654,23 @@
     :local messageText [:tostr $1]
     :local parseMode "HTML"
 
+    :if ([:len $messageText] = 0) do={
+        :log error "SendPublicTelegramMessage: message text is empty"
+        :return false
+    }
+
     :local url "https://api.telegram.org/bot$telegramBotToken/sendMessage"
 
     :local payload "chat_id=$telegramPublicChatID&parse_mode=$parseMode&text=$messageText"
 
-    /tool fetch url=$url http-method=post http-data=$payload keep-result=no
-    :log info "Send public Telegram message: $messageText"
+    :do {
+        /tool fetch url=$url http-method=post http-data=$payload keep-result=no
+        :log info "Sent public Telegram message: $messageText"
+        :return true
+    } on-error={
+        :log error "An error occurred while sending public Telegram message: $messageText"
+        :return false
+    }
 }
 
 # Purpose: Send a message to the private Telegram chat using a bot token.
@@ -666,7 +679,7 @@
 # Globals:
 #   telegramBotToken      - Telegram bot token
 #   telegramPrivateChatID - Chat ID to send the message to
-# Returns: None
+# Returns: true on success, false on failure
 :set SendPrivateTelegramMessage do={
     :global telegramBotToken
     :global telegramPrivateChatID
@@ -674,10 +687,177 @@
     :local messageText [:tostr $1]
     :local parseMode "HTML"
 
+    :if ([:len $messageText] = 0) do={
+        :log error "SendPrivateTelegramMessage: message text is empty"
+        :return false
+    }
+
     :local url "https://api.telegram.org/bot$telegramBotToken/sendMessage"
 
     :local payload "chat_id=$telegramPrivateChatID&parse_mode=$parseMode&text=$messageText"
 
-    /tool fetch url=$url http-method=post http-data=$payload keep-result=no
-    :log info "Send private Telegram message: $messageText"
+    :do {
+        /tool fetch url=$url http-method=post http-data=$payload keep-result=no
+        :log info "Sent private Telegram message: $messageText"
+        :return true
+    } on-error={
+        :log error "An error occurred while sending private Telegram message: $messageText"
+        :return false
+    }
+}
+
+# Purpose: Send a text document with a caption to the public Telegram chat using a bot token.
+# Parameters:
+#   $1 - Caption text for the document (supports HTML parse mode)
+#   $2 - String content to be saved inside the text document
+#   $3 - Optional custom filename (defaults to "report.txt")
+# Globals:
+#   GetRandom20CharHex   - Function to generate a random hex string for the multipart boundary
+#   telegramBotToken     - Telegram bot token
+#   telegramPublicChatID - Public chat ID to send the document to
+# Returns: true on success, false on failure
+:set SendPublicTelegramDocument do={
+    :global GetRandom20CharHex
+    :global telegramBotToken
+    :global telegramPublicChatID
+
+    :local messageText [:tostr $1]
+    :local parseMode "HTML"
+
+    :if ([:len $messageText] = 0) do={
+        :log error "SendPublicTelegramDocument: message text is empty"
+        :return false
+    }
+
+    :local fileContent [:tostr $2]
+
+    :if ([:len $fileContent] = 0) do={
+        :log error "SendPublicTelegramDocument: file content is empty"
+        :return false
+    }
+
+    :local filename "report.txt"
+    :if ([:len $3] > 0) do={
+        :set filename [:tostr $3]
+    }
+
+    :local boundary [$GetRandom20CharHex]
+    :local payload ""
+
+    # Build multipart form data payload step by step
+    :set payload ($payload . "--" . $boundary . "\r\n")
+    :set payload ($payload . "Content-Disposition: form-data; name=\"chat_id\"\r\n\r\n")
+    :set payload ($payload . $telegramPublicChatID . "\r\n")
+
+    # Include HTML parse mode for the caption
+    :set payload ($payload . "--" . $boundary . "\r\n")
+    :set payload ($payload . "Content-Disposition: form-data; name=\"parse_mode\"\r\n\r\n")
+    :set payload ($payload . $parseMode . "\r\n")
+
+    # Attach the caption text
+    :set payload ($payload . "--" . $boundary . "\r\n")
+    :set payload ($payload . "Content-Disposition: form-data; name=\"caption\"\r\n\r\n")
+    :set payload ($payload . $messageText . "\r\n")
+
+    # Attach the string content as a plain text file
+    :set payload ($payload . "--" . $boundary . "\r\n")
+    :set payload ($payload . "Content-Disposition: form-data; name=\"document\"; filename=\"" . $filename . "\"\r\n")
+    :set payload ($payload . "Content-Type: text/plain\r\n\r\n")
+    :set payload ($payload . $fileContent . "\r\n")
+
+    # Close the boundary
+    :set payload ($payload . "--" . $boundary . "--\r\n")
+
+    # Execute post request to Telegram API
+    :do {
+        /tool fetch url="https://api.telegram.org/bot$telegramBotToken/sendDocument" \
+            http-method=post \
+            http-header-field="content-type: multipart/form-data; boundary=$boundary" \
+            http-data=$payload \
+            keep-result=no
+
+        :log info "Sent public Telegram document: $messageText"
+        :return true
+    } on-error={
+        :log error "An error occurred while sending public Telegram document: $messageText"
+        :return false
+    }
+}
+
+# Purpose: Send a text document with a caption to the private Telegram chat using a bot token.
+# Parameters:
+#   $1 - Caption text for the document (supports HTML parse mode)
+#   $2 - String content to be saved inside the text document
+#   $3 - Optional custom filename (defaults to "report.txt")
+# Globals:
+#   GetRandom20CharHex    - Function to generate a random hex string for the multipart boundary
+#   telegramBotToken      - Telegram bot token
+#   telegramPrivateChatID - Private chat ID to send the document to
+# Returns: true on success, false on failure
+:set SendPrivateTelegramDocument do={
+    :global GetRandom20CharHex
+    :global telegramBotToken
+    :global telegramPrivateChatID
+
+    :local messageText [:tostr $1]
+    :local parseMode "HTML"
+
+    :if ([:len $messageText] = 0) do={
+        :log error "SendPrivateTelegramDocument: message text is empty"
+        :return false
+    }
+
+    :local fileContent [:tostr $2]
+
+    :if ([:len $fileContent] = 0) do={
+        :log error "SendPrivateTelegramDocument: file content is empty"
+        :return false
+    }
+
+    :local filename "report.txt"
+    :if ([:len $3] > 0) do={
+        :set filename [:tostr $3]
+    }
+
+    :local boundary [$GetRandom20CharHex]
+    :local payload ""
+
+    # Build multipart form data payload step by step
+    :set payload ($payload . "--" . $boundary . "\r\n")
+    :set payload ($payload . "Content-Disposition: form-data; name=\"chat_id\"\r\n\r\n")
+    :set payload ($payload . $telegramPrivateChatID . "\r\n")
+
+    # Include HTML parse mode for the caption
+    :set payload ($payload . "--" . $boundary . "\r\n")
+    :set payload ($payload . "Content-Disposition: form-data; name=\"parse_mode\"\r\n\r\n")
+    :set payload ($payload . $parseMode . "\r\n")
+
+    # Attach the caption text
+    :set payload ($payload . "--" . $boundary . "\r\n")
+    :set payload ($payload . "Content-Disposition: form-data; name=\"caption\"\r\n\r\n")
+    :set payload ($payload . $messageText . "\r\n")
+
+    # Attach the string content as a plain text file
+    :set payload ($payload . "--" . $boundary . "\r\n")
+    :set payload ($payload . "Content-Disposition: form-data; name=\"document\"; filename=\"" . $filename . "\"\r\n")
+    :set payload ($payload . "Content-Type: text/plain\r\n\r\n")
+    :set payload ($payload . $fileContent . "\r\n")
+
+    # Close the boundary
+    :set payload ($payload . "--" . $boundary . "--\r\n")
+
+    # Execute post request to Telegram API
+    :do {
+        /tool fetch url="https://api.telegram.org/bot$telegramBotToken/sendDocument" \
+            http-method=post \
+            http-header-field="content-type: multipart/form-data; boundary=$boundary" \
+            http-data=$payload \
+            keep-result=no
+
+        :log info "Sent private Telegram document: $messageText"
+        :return true
+    } on-error={
+        :log error "An error occurred while sending private Telegram document: $messageText"
+        :return false
+    }
 }

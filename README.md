@@ -150,9 +150,11 @@ All hash algorithms are highly optimized for RouterOS. Exact benchmarks for RB75
 - **ExportConfiguration**: Export RouterOS configuration with a standardized filename.
 - **RunScript**: Execute another RouterOS script with optional parameters.  
 
-### Notifications
+### Notifications & Messaging
 
+- **SendPrivateTelegramDocument**: Send text documents with captions via Telegram to private chat (requires bot token and chat ID).
 - **SendPrivateTelegramMessage**: Send messages via Telegram to private chat (requires bot token and chat ID).
+- **SendPublicTelegramDocument**: Send text documents with captions via Telegram to public chat (requires bot token and chat ID).
 - **SendPublicTelegramMessage**: Send messages via Telegram to public chat (requires bot token and chat ID).
 
 ### Auto-Update & Remote Fetching Utilities

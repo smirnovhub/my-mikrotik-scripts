@@ -1,5 +1,5 @@
 # This is test list. Do not change
 
-123 https://github.com/smirnovhub/my-mikrotik-scripts/raw/refs/heads/master/global/tests/test_data/test_string1.txt
-123 https://github.com/smirnovhub/my-mikrotik-scripts/raw/refs/heads/master/global/tests/test_data/test_string2.txt
-123 https://github.com/smirnovhub/my-mikrotik-scripts/raw/refs/heads/master/global/tests/test_data/test_string3.txt
+d6d5c36a0599477ec544a02852232a0dd72f96b802dcfb88284e6784f7e49847f956bc83f8a12508b73f3d29046a2e4a2f98d4a60d52df50e721711dedab316a https://github.com/smirnovhub/my-mikrotik-scripts/raw/refs/heads/master/global/tests/test_data/test_string1.txt
+dcb7ea91c9485d185c07db65049dd8a2d77bea4d058d0d76e2b0f7ddf00185f654e4f88c9fd222fd7e7c9f4d9f704a21e5aadab4b3fe0e21f5795d0e68aad76f https://github.com/smirnovhub/my-mikrotik-scripts/raw/refs/heads/master/global/tests/test_data/test_string2.txt
+8411fc9c11f7dd5507844595695209763491c07db401b75374b05addd27f69de35632691352ff59503f4da293ed3f420d38220b854b22e0354df58061bb7b90d https://github.com/smirnovhub/my-mikrotik-scripts/raw/refs/heads/master/global/tests/test_data/test_string3.txt

@@ -134,6 +134,7 @@ The following global settings are required to configure Telegram integration. Th
 - **GetMd5Sum**: Generate an MD5 hash (lowercase hexadecimal) from an input string according to RFC 1321.
 - **GetSha1Sum**: Generate an SHA1 hash (lowercase hexadecimal) from an input string according to RFC 3174.
 - **GetSha256Sum**: Generate an SHA256 hash (lowercase hexadecimal) from an input string according to RFC 6234.
+- **GetSha512Sum**: Generate an SHA512 hash (lowercase hexadecimal) from an input string according to RFC 6234.
 
 #### Checksum and Hash Benchmarks on RB750Gr3
 
@@ -142,7 +143,8 @@ All hash algorithms are highly optimized for RouterOS. Exact benchmarks for RB75
 - **GetCrc32Sum**: 1.0x baseline
 - **GetMd5Sum**: 1.04x slower than CRC32
 - **GetSha1Sum**: 1.35x slower than CRC32
-- **GetSha256Sum**: 2.95x slower than CRC32
+- **GetSha256Sum**: 3.0x slower than CRC32
+- **GetSha512Sum**: 2.24x slower than CRC32
 
 ### File & Script Utilities
 
@@ -176,6 +178,7 @@ To optimize performance, the scripts automatically generate several lookup table
 - **crc32Table**: A standard CRC32 polynomial lookup table used to quickly generate checksums for verifying data integrity.
 - **hexByteTable**: A pre-calculated lookup list that stores the two-character hexadecimal equivalent for every possible byte (values from 0 to 255). Instead of calculating the hex value from scratch every time it is needed, a script can simply check this table to get the result instantly. This approach drastically speeds up tasks that involve data encoding, cryptography, or formatting.
 - **sha256KTable**: A standard table of SHA-256 round constants. It provides a fixed set of cryptographic values required by the SHA-256 hashing algorithm, allowing the script to securely process and encrypt data without calculating these constants from scratch.
+- **sha512KTable**: A standard table of SHA-512 round constants. It provides a fixed set of cryptographic values required by the SHA-512 hashing algorithm, allowing the script to securely process and encrypt data without calculating these constants from scratch.
 - **urlEncodeHexTable**: A reference dictionary used for URL encoding. It maps each character to either itself (if safe) or its percent-encoded hexadecimal format (%HH) to safely transmit text over web requests.
 
 ## Installation
@@ -237,6 +240,7 @@ Generate MD5 hashes or CRC32 checksums for strings or binary payloads:
 :global GetMd5Sum
 :global GetSha1Sum
 :global GetSha256Sum
+:global GetSha512Sum
 
 # Generate a CRC32 checksum
 :put ("CRC32: " . [$GetCrc32Sum "123456789"])
@@ -253,6 +257,10 @@ Generate MD5 hashes or CRC32 checksums for strings or binary payloads:
 # Generate a SHA256 hash
 :put ("SHA256: " . [$GetSha256Sum "password"])
 # Output: SHA256: 5e884898da28047151d0e56f8dc6292773603d0d6aabbdd62a11ef721d1542d8
+
+# Generate a SHA512 hash
+:put ("SHA512: " . [$GetSha512Sum "root"])
+# Output: SHA512: 99adc231b045331e514a516b4b7680f588e3823213abe901738bc3ad67b2f6fcb3c64efb93d18002588d3ccc1a49efbae1ce20cb43df36b38651f11fa75678e8
 ```
 
 ### Base64 and URL Encoding / Decoding

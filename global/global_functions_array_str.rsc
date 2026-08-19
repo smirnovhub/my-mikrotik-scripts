@@ -63,11 +63,9 @@
 
 # Automatically generated ASCII code table
 :global asciiCodeTable
-:if ([:len $asciiCodeTable] != 256) do={
-    :set asciiCodeTable [:toarray ""]
-    :for i from=0 to=255 do={
-        :set ($asciiCodeTable->[$DecToChar $i]) $i
-    }
+:set asciiCodeTable [:toarray ""]
+:for i from=0 to=255 do={
+    :set ($asciiCodeTable->[$DecToChar $i]) $i
 }
 
 # Purpose: Parse a list of key-value pairs (or standalone keys) into an associative array (map).

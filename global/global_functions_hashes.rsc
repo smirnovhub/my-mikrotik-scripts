@@ -973,14 +973,14 @@
   :set ($lWordArray->($lNumberOfWords - 1)) ($lMessageLength * 8)
 
   # Initial SHA-512 state as signed 64 bit decimals
-  :local h0 7640891576956012808
+  :local h0  7640891576956012808
   :local h1 -4942790177534073029
-  :local h2 4354685564936845355
+  :local h2  4354685564936845355
   :local h3 -6534734903238641935
-  :local h4 5840696475078001361
+  :local h4  5840696475078001361
   :local h5 -7276294671716946913
-  :local h6 2270897969802886507
-  :local h7 6620516959819538809
+  :local h6  2270897969802886507
+  :local h7  6620516959819538809
 
   :local lWordArrLen ([:len $lWordArray] - 1)
   :local w [:toarray ""]

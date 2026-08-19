@@ -89,9 +89,8 @@
   }
 
   :local varName [$CreateGlobalVarName $1]
-  :local value $2
+  :local encoded [$UrlEncode [:tostr $2]]
 
-  :local encoded [$UrlEncode [:tostr $value]]
   :execute (":global \"" . $varName . "\"; :set \"" . $varName . "\" \"" . $encoded . "\"")
 }
 
@@ -122,13 +121,13 @@
   :global CleanStr
   :global TrimStr
 
-  :local name [$CleanStr $1 "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-"]
-  :set name [$TrimStr $name "-"]
+  :local varName [$CleanStr $1 "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-"]
+  :set varName [$TrimStr $varName "-"]
 
-  :if ([:len $name] = 0) do={
+  :if ([:len $varName] = 0) do={
     :log error "Global variable name is empty"
     :return ""
   }
 
-  :return ("globalVar-" . $name)
+  :return ("globalVar-" . $varName)
 }

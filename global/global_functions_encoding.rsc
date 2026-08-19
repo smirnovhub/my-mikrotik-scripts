@@ -39,40 +39,34 @@
 
 # Automatically generated ASCII code table
 :global asciiCodeTable
-:if ([:len $asciiCodeTable] != 256) do={
-    :set asciiCodeTable [:toarray ""]
-    :for i from=0 to=255 do={
-        :set ($asciiCodeTable->[$DecToChar $i]) $i
-    }
+:set asciiCodeTable [:toarray ""]
+:for i from=0 to=255 do={
+    :set ($asciiCodeTable->[$DecToChar $i]) $i
 }
 
 # Automatically generated ASCII char table
 :global asciiCharTable
-:if ([:len $asciiCharTable] != 256) do={
-    :set asciiCharTable [:toarray ""]
-    :for i from=0 to=255 do={
-        :set ($asciiCharTable->$i) [$DecToChar $i]
-    }
+:set asciiCharTable [:toarray ""]
+:for i from=0 to=255 do={
+    :set ($asciiCharTable->$i) [$DecToChar $i]
 }
 
 # Automatically generated ASCII to HEX (%HH) table
 :global urlEncodeHexTable
-:if ([:len $urlEncodeHexTable] != 256) do={
-    :set urlEncodeHexTable [:toarray ""]
-    :local hexChars "0123456789ABCDEF"
-    # Unreserved ASCII characters
-    :local unreserved "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-/_.~"
+:set urlEncodeHexTable [:toarray ""]
+:local hexChars "0123456789ABCDEF"
+# Unreserved ASCII characters
+:local unreserved "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-/_.~"
 
-    :for i from=0 to=255 do={
-        :local char [$DecToChar $i]
+:for i from=0 to=255 do={
+    :local char [$DecToChar $i]
 
-        :if ([:typeof [:find $unreserved $char]] != "nil") do={
-            :set ($urlEncodeHexTable->$char) $char
-        } else={
-            :local h1 [:pick $hexChars ($i >> 4)]
-            :local h2 [:pick $hexChars ($i & 15)]
-            :set ($urlEncodeHexTable->$char) ("%" . $h1 . $h2)
-        }
+    :if ([:typeof [:find $unreserved $char]] != "nil") do={
+        :set ($urlEncodeHexTable->$char) $char
+    } else={
+        :local h1 [:pick $hexChars ($i >> 4)]
+        :local h2 [:pick $hexChars ($i & 15)]
+        :set ($urlEncodeHexTable->$char) ("%" . $h1 . $h2)
     }
 }
 

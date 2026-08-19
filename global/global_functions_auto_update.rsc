@@ -185,7 +185,7 @@
 # Returns: Associative array keyed by script name, where each item contains:
 #          - url: Cleaned URL for downloading the script
 #          - hash: Hash sum provided in the list
-#          - hashtype: Auto-detected hash algorithm (md5, sha1, sha256, unknown)
+#          - hashtype: Auto-detected hash algorithm (md5, sha1, sha256, sha512, unknown)
 #          - scriptname: Extracted file name from the URL
 #          - listname: Identifier of the source list (last two URL segments)
 # Example: :put [$ParseScriptsListFromUrl "https://github.com/smirnovhub/my-mikrotik-scripts/raw/refs/heads/master/global/list.txt"]
@@ -274,6 +274,7 @@
                 :if ($hashLen = 32) do={ :set hashType "md5" }
                 :if ($hashLen = 40) do={ :set hashType "sha1" }
                 :if ($hashLen = 64) do={ :set hashType "sha256" }
+                :if ($hashLen = 128) do={ :set hashType "sha512" }
 
                 # Build associative array and append to result
                 :local parsedItem { "url"=$cleanUrl; "hash"=$hash; "hashtype"=$hashType; "scriptname"=$scriptName; "listname"=$listName }

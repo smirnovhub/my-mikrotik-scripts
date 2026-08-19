@@ -9,7 +9,8 @@
     :global RunAllDateTimeTests2
     :global RunAllEncodingTests
     :global RunAllGlobalVarTests
-    :global RunAllHashesTests
+    :global RunAllHashesTests1
+    :global RunAllHashesTests2
     :global RunAllUtilsTests
 
     :local RunTestSuite do={
@@ -56,7 +57,8 @@
     :set res [$RunTestSuite $res "DateTime2" $RunAllDateTimeTests2]
     :set res [$RunTestSuite $res "Encoding" $RunAllEncodingTests]
     :set res [$RunTestSuite $res "GlobalVar" $RunAllGlobalVarTests]
-    :set res [$RunTestSuite $res "Hashes" $RunAllHashesTests]
+    :set res [$RunTestSuite $res "Hashes1" $RunAllHashesTests1]
+    :set res [$RunTestSuite $res "Hashes2" $RunAllHashesTests2]
     :set res [$RunTestSuite $res "Utils" $RunAllUtilsTests]
 
     :return $res

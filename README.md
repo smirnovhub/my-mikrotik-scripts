@@ -143,7 +143,8 @@ All hash algorithms are highly optimized for RouterOS. Exact benchmarks for RB75
 - **GetCrc32Sum**: 1.0x baseline
 - **GetMd5Sum**: 1.04x slower than CRC32
 - **GetSha1Sum**: 1.35x slower than CRC32
-- **GetSha256Sum**: 2.95x slower than CRC32
+- **GetSha256Sum**: 3.0x slower than CRC32
+- **GetSha512Sum**: 2.24x slower than CRC32
 
 ### File & Script Utilities
 

@@ -259,22 +259,24 @@
         :return $result
     }
 
+    :local prefix "ParseScriptsListFromUrl:"
+
     :local listUrl [:tostr $1]
 
     :if ([:len $listUrl] = 0) do={
-        :log error "ParseScriptsListFromUrl: List URL parameter is missing."
+        :log error "$prefix List URL parameter is missing."
         :return $result
     }
 
     :if ([$EndsWithStr $listUrl ".txt"] = false) do={
-        :log error "$ParseScriptsListFromUrl: File name should end with .txt"
+        :log error "$prefix File name should end with .txt"
         :return $result
     }
 
     :local content [$FetchWithRedirectAndRetry $listUrl]
 
     :if ([:len $content] = 0) do={
-        :log error ("ParseScriptsListFromUrl: Failed to download URL list or it content is empty " . $listUrl)
+        :log error ("$prefix Failed to download URL list or it content is empty " . $listUrl)
         :return $result
     }
 
@@ -319,7 +321,7 @@
 
                 :set ($result->$scriptName) $parsedItem
             } else={
-                :log error ("ParseScriptsListFromUrl: Hash sum or URL not found in line " . $cleanLine)
+                :log error ("$prefix Hash sum or URL not found in line " . $cleanLine)
             }
         }
     }

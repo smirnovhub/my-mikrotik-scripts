@@ -519,28 +519,30 @@
 
     # Process each parsed item from the list
     :foreach item in=$parsedList do={
-        :local hashVarName [$GetHashGlobalVarName ($item->"scriptname")]
+        :local scriptName ($item->"scriptname")
+        :local hashVarName [$GetHashGlobalVarName $scriptName]
         :local oldHash [$GetGlobalVar $hashVarName ""]
+        :local scriptExists ([:len [/system script find name=$scriptName]] > 0)
 
-        :if ($oldHash = ($item->"hash")) do={
-            :log info ("$prefix " . ($item->"scriptname") . " is already up to date")
-            :set ($result->"uptodate") (($result->"uptodate"), ($item->"scriptname"))
-            :set importedScripts ($importedScripts, ($item->"scriptname"))
+        :if ($oldHash = ($item->"hash") && $scriptExists) do={
+            :log info ("$prefix " . $scriptName . " is already up to date")
+            :set ($result->"uptodate") (($result->"uptodate"), $scriptName)
+            :set importedScripts ($importedScripts, $scriptName)
         } else={
-            :log info ("$prefix " . ($item->"scriptname") . " downloading from " . ($item->"url"))
+            :log info ("$prefix " . $scriptName . " downloading from " . ($item->"url"))
 
             :local res [$DownloadAndImportScript ($item->"url") ($item->"hash")]
 
             :if ($res = true) do={
-                :log info ("$prefix " . ($item->"scriptname") . " imported successfully")
+                :log info ("$prefix " . $scriptName . " imported successfully")
 
-                :set ($result->"updated") (($result->"updated"), ($item->"scriptname"))
-                :set importedScripts ($importedScripts, ($item->"scriptname"))
+                :set ($result->"updated") (($result->"updated"), $scriptName)
+                :set importedScripts ($importedScripts, $scriptName)
 
                 $SetGlobalVar $hashVarName ($item->"hash")
             } else={
-                :log error ("$prefix " . ($item->"scriptname") . " download error")
-                :set ($result->"failedtoupdate") (($result->"failedtoupdate"), ($item->"scriptname"))
+                :log error ("$prefix " . $scriptName . " download error")
+                :set ($result->"failedtoupdate") (($result->"failedtoupdate"), $scriptName)
             }
         }
     }

@@ -178,6 +178,7 @@ To optimize performance, the scripts automatically generate several lookup table
 - **crc32Table**: A standard CRC32 polynomial lookup table used to quickly generate checksums for verifying data integrity.
 - **hexByteTable**: A pre-calculated lookup list that stores the two-character hexadecimal equivalent for every possible byte (values from 0 to 255). Instead of calculating the hex value from scratch every time it is needed, a script can simply check this table to get the result instantly. This approach drastically speeds up tasks that involve data encoding, cryptography, or formatting.
 - **sha256KTable**: A standard table of SHA-256 round constants. It provides a fixed set of cryptographic values required by the SHA-256 hashing algorithm, allowing the script to securely process and encrypt data without calculating these constants from scratch.
+- **sha512KTable**: A standard table of SHA-512 round constants. It provides a fixed set of cryptographic values required by the SHA-512 hashing algorithm, allowing the script to securely process and encrypt data without calculating these constants from scratch.
 - **urlEncodeHexTable**: A reference dictionary used for URL encoding. It maps each character to either itself (if safe) or its percent-encoded hexadecimal format (%HH) to safely transmit text over web requests.
 
 ## Installation

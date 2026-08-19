@@ -134,6 +134,7 @@ The following global settings are required to configure Telegram integration. Th
 - **GetMd5Sum**: Generate an MD5 hash (lowercase hexadecimal) from an input string according to RFC 1321.
 - **GetSha1Sum**: Generate an SHA1 hash (lowercase hexadecimal) from an input string according to RFC 3174.
 - **GetSha256Sum**: Generate an SHA256 hash (lowercase hexadecimal) from an input string according to RFC 6234.
+- **GetSha512Sum**: Generate an SHA512 hash (lowercase hexadecimal) from an input string according to RFC 6234.
 
 #### Checksum and Hash Benchmarks on RB750Gr3
 
@@ -237,6 +238,7 @@ Generate MD5 hashes or CRC32 checksums for strings or binary payloads:
 :global GetMd5Sum
 :global GetSha1Sum
 :global GetSha256Sum
+:global GetSha512Sum
 
 # Generate a CRC32 checksum
 :put ("CRC32: " . [$GetCrc32Sum "123456789"])
@@ -253,6 +255,10 @@ Generate MD5 hashes or CRC32 checksums for strings or binary payloads:
 # Generate a SHA256 hash
 :put ("SHA256: " . [$GetSha256Sum "password"])
 # Output: SHA256: 5e884898da28047151d0e56f8dc6292773603d0d6aabbdd62a11ef721d1542d8
+
+# Generate a SHA512 hash
+:put ("SHA512: " . [$GetSha512Sum "root"])
+# Output: SHA512: 99adc231b045331e514a516b4b7680f588e3823213abe901738bc3ad67b2f6fcb3c64efb93d18002588d3ccc1a49efbae1ce20cb43df36b38651f11fa75678e8
 ```
 
 ### Base64 and URL Encoding / Decoding

@@ -60,6 +60,7 @@
 :global EllipsisStrCenter
 :global IsPrintableStr
 :global ExtractFileName
+:global DumpStr
 
 # Automatically generated ASCII code table
 :global asciiCodeTable
@@ -1164,4 +1165,53 @@
     }
 
     :return [:pick $file $startPin $endPin]
+}
+
+# Purpose: Convert an input string into a formatted hexadecimal dump representation with line breaks based on a specified byte limit.
+# Parameters:
+#    $1 - The input string to convert into hex (string, required)
+#    $2 - Number of hexadecimal bytes to display per line (number, required)
+# Returns: Formatted hexadecimal dump as a string with space-separated bytes and CRLF line breaks
+# Example: :put [$DumpStr "Hello World RouterOS" 8]
+# Output:
+#   48 65 6c 6c 6f 20 57 6f
+#   72 6c 64 20 52 6f 75 74
+#   65 72 4f 53
+:set DumpStr do={
+    :global asciiCodeTable
+    :global hexByteTable
+
+    :local inputStr [:tostr $1]
+
+    :local bytesPerLine 8
+
+    :if ([:len $2] > 0) do={
+        :local bpl [:tonum $2]
+        :if ($bpl > 0) do={
+            :set bytesPerLine $bpl
+        }
+    }
+
+    :local strLen [:len $inputStr]
+
+    :if ($strLen = 0) do={
+        :return ""
+    }
+
+    :local result ""
+
+    # Iterate through each character of the input string
+    :for i from=0 to=($strLen - 1) do={
+        # Get character and lookup its numeric ASCII code and hex representation
+        :local hexByte ($hexByteTable->($asciiCodeTable->[:pick $inputStr $i]))
+
+        # Add new line sequence when row byte limit is reached, excluding the final character
+        :if ((($i + 1) % $bytesPerLine) = 0 && ($i + 1) < $strLen) do={
+            :set result ($result . $hexByte . "\r\n")
+        } else={
+            :set result ($result . $hexByte . " ")
+        }
+    }
+
+    :return $result
 }

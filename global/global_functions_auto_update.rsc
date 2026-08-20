@@ -202,16 +202,24 @@
     }
 
     :local maxRetries 3
+
     :if ([:len $2] > 0) do={
-        :set maxRetries [:tonum $2]
+        :local mr [:tonum $2]
+        :if ($mr > 0) do={
+            :set maxRetries $mr
+        }
     }
 
-    :local retryDelay 5s
+    :if ($maxRetries > 10) do={
+        :set maxRetries 10
+    }
+
+    :local retryDelay 1
     :local fetchAttempt 0
 
     :local content ""
 
-    :while ($fetchAttempt < $maxRetries and [:len $content] = 0) do={
+    :while ($fetchAttempt <= $maxRetries && [:len $content] = 0) do={
         :set fetchAttempt ($fetchAttempt + 1)
 
         :do {
@@ -220,9 +228,10 @@
             :set content ""
         }
 
-        :if ([:len $content] = 0 and $fetchAttempt <= $maxRetries) do={
+        :if ([:len $content] = 0 && $fetchAttempt <= $maxRetries) do={
             :log warning ("$prefix Retry " . $fetchAttempt . "/" . $maxRetries . " downloading from " . $targetUrl)
-            :delay $retryDelay
+            :delay ($retryDelay . "s")
+            :set retryDelay ($retryDelay + 1)
         }
     }
 
@@ -333,8 +342,9 @@
 #          system scripts, and execute it immediately.
 # Parameters:
 #   $1 - URL to the script file ending with .rsc
+#   $2 - Expected hash sum
 # Returns: true on successful script update and execution, or false on failure
-# Example: $DownloadAndImportScript "https://example.com/scripts/my_script.rsc"
+# Example: $DownloadAndImportScript "https://example.com/scripts/my_script.rsc" "hash"
 :set DownloadAndImportScript do={
     :global GetCrc32Sum
     :global GetMd5Sum

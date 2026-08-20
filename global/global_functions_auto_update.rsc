@@ -444,6 +444,9 @@
     :global FormatSecondsLong
     :global SetGlobalVar
     :global GetGlobalVar
+    :global GetCrc32Sum
+    :global GetMd5Sum
+    :global GetSha1Sum
     :global DownloadAndImportScript
     :global RecursiveMergeSortStr
     :global SendPrivateTelegramMessage
@@ -522,13 +525,46 @@
         :local scriptName ($item->"scriptname")
         :local hashVarName [$GetHashGlobalVarName $scriptName]
         :local oldHash [$GetGlobalVar $hashVarName ""]
-        :local scriptExists ([:len [/system script find name=$scriptName]] > 0)
 
-        :if ($oldHash = ($item->"hash") && $scriptExists) do={
+        :local oldScriptHash ""
+
+        :if ($oldHash = ($item->"hash")) do={
+            :local oldScriptId [/system script find name=$scriptName]
+            :if ([:len $oldScriptId] > 0) do={
+                :local oldScriptText [/system script get $oldScriptId source]
+
+                :if ($item->"hashtype" = "crc32") do={
+                    :log info "$prefix $scriptName checking CRC32 sum for existing script..."
+                    :set oldScriptHash [$GetCrc32Sum $oldScriptText]
+                } else={
+                    :if ($item->"hashtype" = "md5") do={
+                        :log info "$prefix $scriptName checking MD5 sum for existing script..."
+                        :set oldScriptHash [$GetMd5Sum $oldScriptText]
+                    } else={
+                        :if ($item->"hashtype" = "sha1") do={
+                            :log info "$prefix $scriptName checking SHA1 sum for existing script..."
+                            :set oldScriptHash [$GetSha1Sum $oldScriptText]
+                        }
+                    }
+                }
+            }
+        } else={
+            :set oldScriptHash $oldHash
+        }
+
+        :if ($oldHash = ($item->"hash") && $oldHash = $oldScriptHash) do={
             :log info ("$prefix " . $scriptName . " is already up to date")
             :set ($result->"uptodate") (($result->"uptodate"), $scriptName)
             :set importedScripts ($importedScripts, $scriptName)
         } else={
+            :if ($oldHash != $oldScriptHash) do={
+                :log warning ("$prefix " . $scriptName . " local script has changed and needs to be updated")
+            }
+
+            :if ($oldHash != ($item->"hash")) do={
+                :log info ("$prefix " . $scriptName . " remote script has updates, downloading new version...")
+            }
+
             :log info ("$prefix " . $scriptName . " downloading from " . ($item->"url"))
 
             :local res [$DownloadAndImportScript ($item->"url") ($item->"hash")]

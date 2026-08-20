@@ -54,8 +54,6 @@ The following global settings are required to configure Telegram integration. Th
 - **DefaultRouteIsReachable, WaitDefaultRouteReachable**: Check or wait for default route availability.
 - **GetDhcpClientAddress**: Retrieves the assigned IPv4 address (without CIDR prefix) from a bound DHCP client on a specified interface.
 - **GetDhcpClientGateway**: Retrieves the default gateway IPv4 address provided by a bound DHCP client on a specified interface.
-- **GetHttpFileContent**: Downloads file content from an HTTP URL into memory, enforcing a 64 KB size limit.
-- **GetHttpFileContentWithRetry**: Fetches HTTP file content with automatic retries and incremental backoff delays between attempts.
 - **GetRouterOSVersion**: Retrieves the system RouterOS version string, automatically stripping release channels or build suffixes (e.g., returning `"7.21.5"`).
 - **SilentPing**: Perform silent pings to a single host or multiple hosts in parallel.  
 - **TimeIsSync, WaitTimeSync**: Check or wait for NTP time synchronization.
@@ -164,6 +162,7 @@ All hash algorithms are highly optimized for RouterOS. Exact benchmarks for RB75
 - **DownloadAndImportScript**: Fetches an individual `.rsc` script file from a URL, validates its integrity against a provided expected hash (supporting 8-character CRC32 or 32-character MD5 checksums), and creates or updates the entry in `/system script`.
 - **DownloadAndImportScriptsFromList**: Fetches and parses a remote text file (`.txt`) containing space-separated checksums and script URLs line-by-line (ignoring comments and empty lines). Automatically downloads, validates, and imports each script, tracks performance execution time, and optionally executes all updated scripts sequentially. See list.txt files in this repo for example.
 - **FetchWithRedirect**: Downloads content from a specified URL using `/tool fetch` with full support for HTTP 3xx redirects across both RouterOS v6 and v7 environments. Captures errors via temporary output logs and returns the downloaded content directly in memory without writing the final payload to disk.
+- **FetchWithRedirectAndRetry**: Downloads content from a specified URL with support for HTTP 3xx redirects and built-in retry logic, making multiple attempts with configurable delays to ensure reliable retrieval during temporary network failures, returning the downloaded content directly in memory.
 
 ### Unit Testing Utilities
 - **InitTestCaseState**: Initializes or passes through a test state accumulator array to track the count of passed and failed test executions.

@@ -192,7 +192,29 @@
     :set res [$RunTestCase $res $GetGlobalVar $hashGlobalVarName "empty" "nothing" "3d2b160a6205b0adc5422f35b6258734" "Check hash var value"]
 
     $RemoveGlobalVar $testGlobalVarName
-    $RemoveGlobalVar $hashGlobalVarName
+
+    # Test local modification. Scripts should be reloaded if local modified
+    /system script set [find name=$testScriptName] source="# Do nothing for test"
+
+    :local result4 { \
+        "error"=false; \
+        "failedtorun"=""; \
+        "failedtoupdate"=""; \
+        "runned"=$testScriptName; \
+        "updated"=$testScriptName; \
+        "uptodate"="" \
+    }
+
+    :set res [$RunTestCase $res $DownloadAndImportScriptsFromList \
+        ("$prefixUrl/auto_update_test_list.txt") \
+        "true" "false" \
+        $result4 \
+        "Download and run after local changes"]
+
+    # Check for test var again
+    :set res [$RunTestCase $res [:len [/system script find name=$testScriptName]] "nothing" "nothing" "nothing" 1 "Check if test script exists"]
+    :set res [$RunTestCase $res $GetGlobalVar $testGlobalVarName "empty" "nothing" "test global var value" "Check test var value"]
+    :set res [$RunTestCase $res $GetGlobalVar $hashGlobalVarName "empty" "nothing" "3d2b160a6205b0adc5422f35b6258734" "Check hash var value"]
 
     /system script remove [find name=$testScriptName]
 

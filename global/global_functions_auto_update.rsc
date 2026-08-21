@@ -202,16 +202,24 @@
     }
 
     :local maxRetries 3
+
     :if ([:len $2] > 0) do={
-        :set maxRetries [:tonum $2]
+        :local mr [:tonum $2]
+        :if ($mr > 0) do={
+            :set maxRetries $mr
+        }
     }
 
-    :local retryDelay 5s
+    :if ($maxRetries > 10) do={
+        :set maxRetries 10
+    }
+
+    :local retryDelay 1
     :local fetchAttempt 0
 
     :local content ""
 
-    :while ($fetchAttempt < $maxRetries and [:len $content] = 0) do={
+    :while ($fetchAttempt <= $maxRetries && [:len $content] = 0) do={
         :set fetchAttempt ($fetchAttempt + 1)
 
         :do {
@@ -220,9 +228,10 @@
             :set content ""
         }
 
-        :if ([:len $content] = 0 and $fetchAttempt <= $maxRetries) do={
+        :if ([:len $content] = 0 && $fetchAttempt <= $maxRetries) do={
             :log warning ("$prefix Retry " . $fetchAttempt . "/" . $maxRetries . " downloading from " . $targetUrl)
-            :delay $retryDelay
+            :delay ($retryDelay . "s")
+            :set retryDelay ($retryDelay + 1)
         }
     }
 
@@ -333,8 +342,9 @@
 #          system scripts, and execute it immediately.
 # Parameters:
 #   $1 - URL to the script file ending with .rsc
+#   $2 - Expected hash sum
 # Returns: true on successful script update and execution, or false on failure
-# Example: $DownloadAndImportScript "https://example.com/scripts/my_script.rsc"
+# Example: $DownloadAndImportScript "https://example.com/scripts/my_script.rsc" "hash"
 :set DownloadAndImportScript do={
     :global GetCrc32Sum
     :global GetMd5Sum
@@ -444,6 +454,9 @@
     :global FormatSecondsLong
     :global SetGlobalVar
     :global GetGlobalVar
+    :global GetCrc32Sum
+    :global GetMd5Sum
+    :global GetSha1Sum
     :global DownloadAndImportScript
     :global RecursiveMergeSortStr
     :global SendPrivateTelegramMessage
@@ -522,13 +535,46 @@
         :local scriptName ($item->"scriptname")
         :local hashVarName [$GetHashGlobalVarName $scriptName]
         :local oldHash [$GetGlobalVar $hashVarName ""]
-        :local scriptExists ([:len [/system script find name=$scriptName]] > 0)
 
-        :if ($oldHash = ($item->"hash") && $scriptExists) do={
+        :local oldScriptHash ""
+
+        :if ($oldHash = ($item->"hash")) do={
+            :local oldScriptId [/system script find name=$scriptName]
+            :if ([:len $oldScriptId] > 0) do={
+                :local oldScriptText [/system script get $oldScriptId source]
+
+                :if ($item->"hashtype" = "crc32") do={
+                    :log info "$prefix $scriptName checking CRC32 sum for existing script..."
+                    :set oldScriptHash [$GetCrc32Sum $oldScriptText]
+                } else={
+                    :if ($item->"hashtype" = "md5") do={
+                        :log info "$prefix $scriptName checking MD5 sum for existing script..."
+                        :set oldScriptHash [$GetMd5Sum $oldScriptText]
+                    } else={
+                        :if ($item->"hashtype" = "sha1") do={
+                            :log info "$prefix $scriptName checking SHA1 sum for existing script..."
+                            :set oldScriptHash [$GetSha1Sum $oldScriptText]
+                        }
+                    }
+                }
+            }
+        } else={
+            :set oldScriptHash $oldHash
+        }
+
+        :if ($oldHash = ($item->"hash") && $oldHash = $oldScriptHash) do={
             :log info ("$prefix " . $scriptName . " is already up to date")
             :set ($result->"uptodate") (($result->"uptodate"), $scriptName)
             :set importedScripts ($importedScripts, $scriptName)
         } else={
+            :if ($oldHash != $oldScriptHash) do={
+                :log warning ("$prefix " . $scriptName . " local script has changed and needs to be updated")
+            }
+
+            :if ($oldHash != ($item->"hash")) do={
+                :log info ("$prefix " . $scriptName . " remote script has updates, downloading new version...")
+            }
+
             :log info ("$prefix " . $scriptName . " downloading from " . ($item->"url"))
 
             :local res [$DownloadAndImportScript ($item->"url") ($item->"hash")]

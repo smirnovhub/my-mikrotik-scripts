@@ -1,26 +1,27 @@
-:global RunAllBigIntTests
-:global BigIntTest
+:global RunAllBigIntTests1
+:global BigIntTest1
 
-:set RunAllBigIntTests do={
+:set RunAllBigIntTests1 do={
     :global InitTestCaseState
-    :global BigIntTest
+    :global BigIntTest1
 
     :local res [$InitTestCaseState $1]
 
-    :put "\1B[35m=== STARTING ALL BIG INT TESTS ===\1B[0m"
+    :put "\1B[35m=== STARTING ALL BIG INT 1 TESTS ===\1B[0m"
 
-    :set res [$BigIntTest $res]
+    :set res [$BigIntTest1 $res]
 
-    :put "\1B[35m=== ALL BIG INT TESTS COMPLETED ===\1B[0m"
+    :put "\1B[35m=== ALL BIG INT 1 TESTS COMPLETED ===\1B[0m"
 
     :return $res
 }
 
-:set BigIntTest do={
+:set BigIntTest1 do={
     :global InitTestCaseState
     :global RunTestCase
     :global BigIntToArray
     :global ArrayToBigInt
+    :global BigIntCleanArr
     :global BigIntCmp
     :global BigIntAdd
     :global BigIntSub
@@ -28,17 +29,16 @@
     :global BigIntMod
     :global BigIntDiv
     :global BigIntPow
-    :global BigIntPowMod
-    :global BigIntGcd
-    :global BigIntModInverse
 
     :local res [$InitTestCaseState $1]
 
     :put "Starting BigInt tests..."
 
-    # Conversion test cases for BigIntToArray and ArrayToBigInt
+    # ==========================================
+    # Conversion Test Cases
+    # ==========================================
 
-# Positive single digits
+    # Positive single digits
     :set res [$RunTestCase $res $BigIntToArray "0" "nothing" "nothing" ({"data"=0;"sign"=1}) "Zero array representation"]
     :set res [$RunTestCase $res $BigIntToArray "-0" "nothing" "nothing" ({"data"=0;"sign"=1}) "Negative zero array representation"]
     :set res [$RunTestCase $res $BigIntToArray "1" "nothing" "nothing" ({"data"={1};"sign"=1}) "Single digit 1"]
@@ -111,6 +111,48 @@
 
     :set res [$RunTestCase $res $ArrayToBigInt [$BigIntToArray "999888777666555444333222111000999888777666555"] "nothing" "nothing" "999888777666555444333222111000999888777666555" "Round-trip five-chunk positive number"]
     :set res [$RunTestCase $res $ArrayToBigInt [$BigIntToArray "-999888777666555444333222111000999888777666555"] "nothing" "nothing" "-999888777666555444333222111000999888777666555" "Round-trip five-chunk negative number"]
+
+    # ==========================================
+    # BigIntCleanArr Test Cases
+    # ==========================================
+
+    # Clean array positive and negative chunks
+    :set res [$RunTestCase $res $BigIntCleanArr ({"sign"=1; "data"=[:toarray 123]}) "nothing" "nothing" ({"sign"=1; "data"=[:toarray 123]}) "Single positive chunk"]
+    :set res [$RunTestCase $res $BigIntCleanArr ({"sign"=-1; "data"=[:toarray 123]}) "nothing" "nothing" ({"sign"=-1; "data"=[:toarray 123]}) "Single negative chunk"]
+    
+    # Clean array multiple chunks without trailing zeros
+    :set res [$RunTestCase $res $BigIntCleanArr ({"sign"=1; "data"=(123, 456)}) "nothing" "nothing" ({"sign"=1; "data"=(123, 456)}) "Multiple chunks without trailing zeros"]
+    :set res [$RunTestCase $res $BigIntCleanArr ({"sign"=-1; "data"=(123, 456)}) "nothing" "nothing" ({"sign"=-1; "data"=(123, 456)}) "Multiple negative chunks without trailing zeros"]
+    
+    # Clean array one trailing zero
+    :set res [$RunTestCase $res $BigIntCleanArr ({"sign"=1; "data"=(123, 0)}) "nothing" "nothing" ({"sign"=1; "data"=[:toarray 123]}) "One trailing zero positive"]
+    :set res [$RunTestCase $res $BigIntCleanArr ({"sign"=-1; "data"=(123, 0)}) "nothing" "nothing" ({"sign"=-1; "data"=[:toarray 123]}) "One trailing zero negative"]
+    
+    # Clean array multiple trailing zeros
+    :set res [$RunTestCase $res $BigIntCleanArr ({"sign"=1; "data"=(123, 0, 0, 0)}) "nothing" "nothing" ({"sign"=1; "data"=[:toarray 123]}) "Multiple trailing zeros"]
+    :set res [$RunTestCase $res $BigIntCleanArr ({"sign"=-1; "data"=(123, 0, 0, 0)}) "nothing" "nothing" ({"sign"=-1; "data"=[:toarray 123]}) "Multiple trailing zeros negative"]
+    
+    # Clean array single zero chunks
+    :set res [$RunTestCase $res $BigIntCleanArr ({"sign"=1; "data"=[:toarray 0]}) "nothing" "nothing" ({"sign"=1; "data"=[:toarray 0]}) "Single zero chunk positive"]
+    :set res [$RunTestCase $res $BigIntCleanArr ({"sign"=-1; "data"=[:toarray 0]}) "nothing" "nothing" ({"sign"=1; "data"=[:toarray 0]}) "Single zero chunk negative normalizes to positive"]
+    
+    # Clean array multiple zero chunks entirely
+    :set res [$RunTestCase $res $BigIntCleanArr ({"sign"=1; "data"=(0, 0)}) "nothing" "nothing" ({"sign"=1; "data"=[:toarray 0]}) "Two zero chunks positive"]
+    :set res [$RunTestCase $res $BigIntCleanArr ({"sign"=-1; "data"=(0, 0)}) "nothing" "nothing" ({"sign"=1; "data"=[:toarray 0]}) "Two zero chunks negative normalizes to positive"]
+    :set res [$RunTestCase $res $BigIntCleanArr ({"sign"=1; "data"=(0, 0, 0, 0, 0)}) "nothing" "nothing" ({"sign"=1; "data"=[:toarray 0]}) "Many zero chunks positive"]
+    :set res [$RunTestCase $res $BigIntCleanArr ({"sign"=-1; "data"=(0, 0, 0, 0, 0)}) "nothing" "nothing" ({"sign"=1; "data"=[:toarray 0]}) "Many zero chunks negative normalizes to positive"]
+    
+    # Clean array zeros placed in the middle
+    :set res [$RunTestCase $res $BigIntCleanArr ({"sign"=1; "data"=(123, 0, 456)}) "nothing" "nothing" ({"sign"=1; "data"=(123, 0, 456)}) "Zeros in the middle only"]
+    :set res [$RunTestCase $res $BigIntCleanArr ({"sign"=1; "data"=(123, 0, 456, 0, 0)}) "nothing" "nothing" ({"sign"=1; "data"=(123, 0, 456)}) "Zeros in the middle and at the end"]
+    :set res [$RunTestCase $res $BigIntCleanArr ({"sign"=1; "data"=(1, 0, 2, 0, 3, 0)}) "nothing" "nothing" ({"sign"=1; "data"=(1, 0, 2, 0, 3)}) "Zeros separating digits with trailing zero"]
+    
+    # Clean array starting with zero chunks
+    :set res [$RunTestCase $res $BigIntCleanArr ({"sign"=1; "data"=(0, 123, 0)}) "nothing" "nothing" ({"sign"=1; "data"=(0, 123)}) "Array starts with zero chunk"]
+    :set res [$RunTestCase $res $BigIntCleanArr ({"sign"=1; "data"=(0, 0, 123, 0, 0)}) "nothing" "nothing" ({"sign"=1; "data"=(0, 0, 123)}) "Array starts with multiple zero chunks"]
+    
+    # Clean array with max chunk boundaries
+    :set res [$RunTestCase $res $BigIntCleanArr ({"sign"=1; "data"=(999999999, 0)}) "nothing" "nothing" ({"sign"=1; "data"=[:toarray 999999999]}) "Max chunk size with trailing zero"]
 
     # ==========================================
     # BigIntCmp Test Cases
@@ -258,6 +300,13 @@
     :set res [$RunTestCase $res $BigIntSub "10005" "10000" "nothing" "5" "Large scale borrow chain single digit"]
     :set res [$RunTestCase $res $BigIntSub "100000" "99991" "nothing" "9" "Multi-zero borrow resulting in single digit"]
     :set res [$RunTestCase $res $BigIntSub "100" "98" "nothing" "2" "Small bounds single digit result"]
+
+    :set res [$RunTestCase $res $BigIntSub \
+        "1000000000000000000000000000100" \
+        "1000000000000000000000000000000" \
+        "nothing" \
+        "100" \
+        "Leading zeros removing"]
 
     # Sign combinations and negative arithmetic
     :set res [$RunTestCase $res $BigIntSub "10" "-5" "nothing" "15" "Subtract negative equivalent to addition"]
@@ -474,8 +523,8 @@
     :set res [$RunTestCase $res $BigIntDiv "-10" "2" "nothing" "-5" "Divide negative by positive"]
     :set res [$RunTestCase $res $BigIntDiv "10" "-2" "nothing" "-5" "Divide positive by negative"]
     :set res [$RunTestCase $res $BigIntDiv "-10" "-2" "nothing" "5" "Divide negative by negative"]
-    :set res [$RunTestCase $res $BigIntDiv "-10" "3" "nothing" "-3" "Divide negative with remainder truncated"]
-    :set res [$RunTestCase $res $BigIntDiv "10" "-3" "nothing" "-3" "Divide positive by negative with remainder"]
+    :set res [$RunTestCase $res $BigIntDiv "-10" "3" "nothing" "-4" "Divide negative with remainder truncated"]
+    :set res [$RunTestCase $res $BigIntDiv "10" "-3" "nothing" "-4" "Divide positive by negative with remainder"]
     :set res [$RunTestCase $res $BigIntDiv "-10" "-3" "nothing" "3" "Divide negative by negative with remainder"]
     :set res [$RunTestCase $res $BigIntDiv "-5" "-5" "nothing" "1" "Divide equal negatives"]
     :set res [$RunTestCase $res $BigIntDiv "-5" "5" "nothing" "-1" "Divide equal absolute value opposite signs"]
@@ -485,7 +534,7 @@
     :set res [$RunTestCase $res $BigIntDiv "12345678987654321" "123456789" "nothing" "100000000" "Divide large scale symmetric"]
     :set res [$RunTestCase $res $BigIntDiv "9876543210" "123456789" "nothing" "80" "Divide large distinct scale"]
     :set res [$RunTestCase $res $BigIntDiv "1000000000000000000" "1000000000" "nothing" "1000000000" "Divide quintillion by billion"]
-    :set res [$RunTestCase $res $BigIntDiv "-9876543210" "123456789" "nothing" "-80" "Divide large negative distinct scale"]
+    :set res [$RunTestCase $res $BigIntDiv "-9876543210" "123456789" "nothing" "-81" "Divide large negative distinct scale"]
 
     # Zero and one boundary rules
     :set res [$RunTestCase $res $BigIntPow "5" "0" "nothing" "1" "Power of zero returns one"]
@@ -555,191 +604,6 @@
         "nothing" \
         "478094999421155150422985667277310426143689613841376402956943893710007433030697521627089424034492049170903669577619543090049379379551666773377947115329000" \
         "781936345870195933245368379441061400465076853022090 pow 3"]
-
-    # Basic small modular arithmetic
-    :set res [$RunTestCase $res $BigIntPowMod "2" "2" "3" "1" "Square of two modulo three"]
-    :set res [$RunTestCase $res $BigIntPowMod "2" "3" "5" "3" "Cube of two modulo five"]
-    :set res [$RunTestCase $res $BigIntPowMod "3" "2" "7" "2" "Square of three modulo seven"]
-    :set res [$RunTestCase $res $BigIntPowMod "3" "3" "10" "7" "Cube of three modulo ten"]
-    :set res [$RunTestCase $res $BigIntPowMod "4" "4" "15" "1" "Four to the fourth modulo fifteen"]
-    :set res [$RunTestCase $res $BigIntPowMod "5" "3" "12" "5" "Cube of five modulo twelve"]
-    :set res [$RunTestCase $res $BigIntPowMod "6" "3" "7" "6" "Cube of six modulo seven"]
-    :set res [$RunTestCase $res $BigIntPowMod "10" "3" "13" "12" "Cube of ten modulo thirteen"]
-
-    # Edge cases with zero and one
-    :set res [$RunTestCase $res $BigIntPowMod "123" "0" "10" "1" "Any number to zero power modulo is one"]
-    :set res [$RunTestCase $res $BigIntPowMod "0" "10" "10" "0" "Zero base modulo is zero"]
-    :set res [$RunTestCase $res $BigIntPowMod "1" "100" "99" "1" "One base modulo is one"]
-    :set res [$RunTestCase $res $BigIntPowMod "12345" "10" "1" "0" "Modulo one always returns zero"]
-    :set res [$RunTestCase $res $BigIntPowMod "10" "1" "10" "0" "Power of one modulo itself is zero"]
-    :set res [$RunTestCase $res $BigIntPowMod "10" "5" "10" "0" "Power modulo itself is zero"]
-    :set res [$RunTestCase $res $BigIntPowMod "7" "3" "7" "0" "Base equals modulo returns zero"]
-
-    # Fermat's Little Theorem with prime moduli
-    :set res [$RunTestCase $res $BigIntPowMod "2" "10" "11" "1" "Fermat prime mod eleven"]
-    :set res [$RunTestCase $res $BigIntPowMod "3" "16" "17" "1" "Fermat prime mod seventeen"]
-    :set res [$RunTestCase $res $BigIntPowMod "5" "6" "7" "1" "Fermat prime mod seven"]
-    :set res [$RunTestCase $res $BigIntPowMod "12" "22" "23" "1" "Fermat prime mod twenty three"]
-    :set res [$RunTestCase $res $BigIntPowMod "100" "96" "97" "1" "Fermat prime mod ninety seven"]
-
-    # Large numbers and properties of powers
-    :set res [$RunTestCase $res $BigIntPowMod "10" "2" "99" "1" "Hundred modulo ninety nine"]
-    :set res [$RunTestCase $res $BigIntPowMod "10" "4" "99" "1" "Ten thousand modulo ninety nine"]
-    :set res [$RunTestCase $res $BigIntPowMod "10" "6" "999" "1" "Million modulo nine hundred ninety nine"]
-    :set res [$RunTestCase $res $BigIntPowMod "10" "10" "99999" "1" "Power of ten boundary mod nines"]
-    :set res [$RunTestCase $res $BigIntPowMod "11" "10" "100" "1" "Eleven to tenth ends in zero one"]
-    :set res [$RunTestCase $res $BigIntPowMod "99" "99" "100" "99" "Ninety nine to odd power ends in ninety nine"]
-
-    # Negative base testing
-    :set res [$RunTestCase $res $BigIntPowMod "-2" "2" "5" "4" "Negative two square modulo five"]
-    :set res [$RunTestCase $res $BigIntPowMod "-2" "3" "5" "2" "Negative two cube modulo five"]
-    :set res [$RunTestCase $res $BigIntPowMod "-3" "3" "10" "3" "Negative three cube modulo ten"]
-    :set res [$RunTestCase $res $BigIntPowMod "-10" "3" "13" "1" "Negative ten cube modulo thirteen"]
-
-    # Automorphic numbers and cyclic properties
-    :set res [$RunTestCase $res $BigIntPowMod "5" "123" "10" "5" "Powers of five end in five"]
-    :set res [$RunTestCase $res $BigIntPowMod "6" "123" "10" "6" "Powers of six end in six"]
-    :set res [$RunTestCase $res $BigIntPowMod "25" "25" "100" "25" "Powers of twenty five end in twenty five"]
-    :set res [$RunTestCase $res $BigIntPowMod "76" "76" "100" "76" "Powers of seventy six end in seventy six"]
-
-    # Chunk boundaries and massive number simulations
-    :set res [$RunTestCase $res $BigIntPowMod "123456789" "2" "10" "1" "Large chunk squared modulo ten"]
-    :set res [$RunTestCase $res $BigIntPowMod "999999999" "2" "1000000000" "1" "Max chunk minus one squared modulo max chunk"]
-    :set res [$RunTestCase $res $BigIntPowMod "1000000000" "2" "999999999" "1" "Max chunk squared modulo max chunk minus one"]
-    :set res [$RunTestCase $res $BigIntPowMod "2" "100" "10" "6" "Two to hundredth power modulo ten"]
-    :set res [$RunTestCase $res $BigIntPowMod "3" "100" "10" "1" "Three to hundredth power modulo ten"]
-    :set res [$RunTestCase $res $BigIntPowMod "7" "100" "10" "1" "Seven to hundredth power modulo ten"]
-    :set res [$RunTestCase $res $BigIntPowMod "2" "30" "100" "24" "Two to thirtieth modulo hundred"]
-    :set res [$RunTestCase $res $BigIntPowMod "2" "20" "100" "76" "Two to twentieth modulo hundred"]
-
-    # Very big numbers
-    :set res [$RunTestCase $res $BigIntPowMod "2" "4096" "6555" "4501" "Modular exponentiation with power of two base"]
-    :set res [$RunTestCase $res $BigIntPowMod "7" "7684" "3743" "273" "Modular exponentiation with prime base and composite modulus"]
-    :set res [$RunTestCase $res $BigIntPowMod "3" "5345345" "653453455" "97594538" "Modular exponentiation with large exponent values"]
-    :set res [$RunTestCase $res $BigIntPowMod "345453453" "53" "1039565" "685728" "Modular exponentiation with large base and small exponent"]
-
-    # Basic small GCD tests
-    :set res [$RunTestCase $res $BigIntGcd "12" "15" "nothing" "3" "GCD of twelve and fifteen"]
-    :set res [$RunTestCase $res $BigIntGcd "24" "36" "nothing" "12" "GCD of twenty four and thirty six"]
-    :set res [$RunTestCase $res $BigIntGcd "17" "19" "nothing" "1" "GCD of two primes"]
-    :set res [$RunTestCase $res $BigIntGcd "100" "75" "nothing" "25" "GCD of hundred and seventy five"]
-    :set res [$RunTestCase $res $BigIntGcd "8" "12" "nothing" "4" "GCD of eight and twelve"]
-    :set res [$RunTestCase $res $BigIntGcd "54" "24" "nothing" "6" "GCD of fifty four and twenty four"]
-    :set res [$RunTestCase $res $BigIntGcd "48" "18" "nothing" "6" "GCD of forty eight and eighteen"]
-    :set res [$RunTestCase $res $BigIntGcd "20" "30" "nothing" "10" "GCD of twenty and thirty"]
-
-    # Edge cases with zero and one
-    :set res [$RunTestCase $res $BigIntGcd "0" "5" "nothing" "5" "GCD of zero and five"]
-    :set res [$RunTestCase $res $BigIntGcd "7" "0" "nothing" "7" "GCD of seven and zero"]
-    :set res [$RunTestCase $res $BigIntGcd "0" "0" "nothing" "0" "GCD of zero and zero"]
-    :set res [$RunTestCase $res $BigIntGcd "1" "100" "nothing" "1" "GCD of one and hundred"]
-    :set res [$RunTestCase $res $BigIntGcd "12345" "1" "nothing" "1" "GCD with one"]
-    :set res [$RunTestCase $res $BigIntGcd "999" "999" "nothing" "999" "GCD of identical numbers"]
-
-    # Negative numbers handling
-    :set res [$RunTestCase $res $BigIntGcd "-12" "15" "nothing" "3" "GCD with negative first argument"]
-    :set res [$RunTestCase $res $BigIntGcd "12" "-15" "nothing" "3" "GCD with negative second argument"]
-    :set res [$RunTestCase $res $BigIntGcd "-24" "-36" "nothing" "12" "GCD with both negative arguments"]
-    :set res [$RunTestCase $res $BigIntGcd "-100" "0" "nothing" "100" "GCD of negative and zero"]
-
-    # Co-prime numbers and large spacing
-    :set res [$RunTestCase $res $BigIntGcd "101" "103" "nothing" "1" "GCD of large consecutive primes"]
-    :set res [$RunTestCase $res $BigIntGcd "997" "991" "nothing" "1" "GCD of large prime numbers"]
-    :set res [$RunTestCase $res $BigIntGcd "1000" "3" "nothing" "1" "GCD of thousand and three"]
-    :set res [$RunTestCase $res $BigIntGcd "123456" "789" "nothing" "3" "GCD of medium numbers"]
-
-    # Multiples and divisors
-    :set res [$RunTestCase $res $BigIntGcd "1000" "100" "nothing" "100" "GCD where one divides another"]
-    :set res [$RunTestCase $res $BigIntGcd "999999999" "3" "nothing" "3" "GCD of max chunk and three"]
-    :set res [$RunTestCase $res $BigIntGcd "1000000000" "5" "nothing" "5" "GCD of chunk boundary and five"]
-    :set res [$RunTestCase $res $BigIntGcd "123456789123456789" "123456789" "nothing" "123456789" "GCD of large numbers with common factor"]
-
-    # Massive numbers across multiple chunks
-    :set res [$RunTestCase $res $BigIntGcd "340282366920938463463374607431768211456" "6553" "nothing" "1" "GCD of 128-bit boundary and prime"]
-    :set res [$RunTestCase $res $BigIntGcd "1000000000000000000" "500000000000000000" "nothing" "500000000000000000" "GCD of massive multiples"]
-    :set res [$RunTestCase $res $BigIntGcd "999999999999999999999" "111111111111111111111" "nothing" "111111111111111111111" "GCD of repeated digit massive numbers"]
-    :set res [$RunTestCase $res $BigIntGcd "1000000000000" "999999999999" "nothing" "1" "GCD of numbers differing by one"]
-
-# Basic small modular inverse tests
-    :set res [$RunTestCase $res $BigIntModInverse "3" "11" "nothing" "4" "Modular inverse of three modulo eleven"]
-    :set res [$RunTestCase $res $BigIntModInverse "2" "7" "nothing" "4" "Modular inverse of two modulo seven"]
-    :set res [$RunTestCase $res $BigIntModInverse "3" "7" "nothing" "5" "Modular inverse of three modulo seven"]
-    :set res [$RunTestCase $res $BigIntModInverse "4" "7" "nothing" "2" "Modular inverse of four modulo seven"]
-    :set res [$RunTestCase $res $BigIntModInverse "5" "11" "nothing" "9" "Modular inverse of five modulo eleven"]
-    :set res [$RunTestCase $res $BigIntModInverse "7" "13" "nothing" "2" "Modular inverse of seven modulo thirteen"]
-    :set res [$RunTestCase $res $BigIntModInverse "2" "5" "nothing" "3" "Modular inverse of two modulo five"]
-    :set res [$RunTestCase $res $BigIntModInverse "4" "9" "nothing" "7" "Modular inverse of four modulo nine"]
-
-    # Edge cases where inverse does not exist (GCD != 1)
-    :set res [$RunTestCase $res $BigIntModInverse "2" "4" "nothing" "0" "No inverse when sharing common factor two"]
-    :set res [$RunTestCase $res $BigIntModInverse "3" "9" "nothing" "0" "No inverse when sharing common factor three"]
-    :set res [$RunTestCase $res $BigIntModInverse "0" "5" "nothing" "0" "Modular inverse of zero is zero"]
-    :set res [$RunTestCase $res $BigIntModInverse "5" "0" "nothing" "0" "Modular inverse with zero modulus is zero"]
-    :set res [$RunTestCase $res $BigIntModInverse "4" "2" "nothing" "0" "No inverse when base greater than modulus with factor"]
-
-    # Self-inverse numbers (where x = x^-1 mod m)
-    :set res [$RunTestCase $res $BigIntModInverse "1" "11" "nothing" "1" "Modular inverse of one is one"]
-    :set res [$RunTestCase $res $BigIntModInverse "6" "7" "nothing" "6" "Self inverse six modulo seven"]
-    :set res [$RunTestCase $res $BigIntModInverse "10" "11" "nothing" "10" "Self inverse ten modulo eleven"]
-    :set res [$RunTestCase $res $BigIntModInverse "12" "13" "nothing" "12" "Self inverse twelve modulo thirteen"]
-
-    # Larger prime moduli and composite numbers
-    :set res [$RunTestCase $res $BigIntModInverse "123" "1000" "nothing" "187" "Modular inverse of hundred twenty three modulo thousand"]
-    :set res [$RunTestCase $res $BigIntModInverse "50" "97" "nothing" "33" "Modular inverse with prime ninety seven"]
-    :set res [$RunTestCase $res $BigIntModInverse "12345" "65537" "nothing" "31651" "Modular inverse with Fermat prime modulus"]
-    :set res [$RunTestCase $res $BigIntModInverse "999" "1000" "nothing" "999" "Modular inverse of nine hundred ninety nine modulo thousand"]
-
-    # Negative base values
-    :set res [$RunTestCase $res $BigIntModInverse "-3" "11" "nothing" "7" "Modular inverse of negative three modulo eleven"]
-    :set res [$RunTestCase $res $BigIntModInverse "-2" "7" "nothing" "3" "Modular inverse of negative two modulo seven"]
-    :set res [$RunTestCase $res $BigIntModInverse "-5" "13" "nothing" "5" "Modular inverse of negative five modulo thirteen"]
-
-    # Massive numbers across multiple chunks
-    :set res [$RunTestCase $res $BigIntModInverse "123456789123456789" "1000000000000000003" "nothing" "244581051350687566" "Modular inverse of large numbers across chunks"]
-    :set res [$RunTestCase $res $BigIntModInverse "987654321" "1000000007" "nothing" "152057246" "Modular inverse with standard crypto prime"]
-
-    # Additional small prime moduli tests
-    :set res [$RunTestCase $res $BigIntModInverse "3" "13" "nothing" "9" "Modular inverse of three modulo thirteen"]
-    :set res [$RunTestCase $res $BigIntModInverse "4" "13" "nothing" "10" "Modular inverse of four modulo thirteen"]
-    :set res [$RunTestCase $res $BigIntModInverse "5" "13" "nothing" "8" "Modular inverse of five modulo thirteen"]
-    :set res [$RunTestCase $res $BigIntModInverse "6" "13" "nothing" "11" "Modular inverse of six modulo thirteen"]
-    :set res [$RunTestCase $res $BigIntModInverse "8" "13" "nothing" "5" "Modular inverse of eight modulo thirteen"]
-    :set res [$RunTestCase $res $BigIntModInverse "9" "13" "nothing" "3" "Modular inverse of nine modulo thirteen"]
-    :set res [$RunTestCase $res $BigIntModInverse "10" "13" "nothing" "4" "Modular inverse of ten modulo thirteen"]
-    :set res [$RunTestCase $res $BigIntModInverse "11" "13" "nothing" "6" "Modular inverse of eleven modulo thirteen"]
-
-    # Modulo seventeen tests
-    :set res [$RunTestCase $res $BigIntModInverse "2" "17" "nothing" "9" "Modular inverse of two modulo seventeen"]
-    :set res [$RunTestCase $res $BigIntModInverse "3" "17" "nothing" "6" "Modular inverse of three modulo seventeen"]
-    :set res [$RunTestCase $res $BigIntModInverse "5" "17" "nothing" "7" "Modular inverse of five modulo seventeen"]
-    :set res [$RunTestCase $res $BigIntModInverse "10" "17" "nothing" "12" "Modular inverse of ten modulo seventeen"]
-    :set res [$RunTestCase $res $BigIntModInverse "15" "17" "nothing" "8" "Modular inverse of fifteen modulo seventeen"]
-
-    # Modulo nineteen tests
-    :set res [$RunTestCase $res $BigIntModInverse "4" "19" "nothing" "5" "Modular inverse of four modulo nineteen"]
-    :set res [$RunTestCase $res $BigIntModInverse "7" "19" "nothing" "11" "Modular inverse of seven modulo nineteen"]
-    :set res [$RunTestCase $res $BigIntModInverse "11" "19" "nothing" "7" "Modular inverse of eleven modulo nineteen"]
-    :set res [$RunTestCase $res $BigIntModInverse "16" "19" "nothing" "6" "Modular inverse of sixteen modulo nineteen"]
-
-    # Composite moduli tests
-    :set res [$RunTestCase $res $BigIntModInverse "3" "25" "nothing" "17" "Modular inverse of three modulo twenty five"]
-    :set res [$RunTestCase $res $BigIntModInverse "7" "25" "nothing" "18" "Modular inverse of seven modulo twenty five"]
-    :set res [$RunTestCase $res $BigIntModInverse "2" "27" "nothing" "14" "Modular inverse of two modulo twenty seven"]
-    :set res [$RunTestCase $res $BigIntModInverse "5" "26" "nothing" "21" "Modular inverse of five modulo twenty six"]
-    :set res [$RunTestCase $res $BigIntModInverse "7" "30" "nothing" "13" "Modular inverse of seven modulo thirty"]
-    :set res [$RunTestCase $res $BigIntModInverse "11" "30" "nothing" "11" "Modular inverse of eleven modulo thirty"]
-    :set res [$RunTestCase $res $BigIntModInverse "13" "35" "nothing" "27" "Modular inverse of thirteen modulo thirty five"]
-
-    # Negative numbers and mixed signs
-    :set res [$RunTestCase $res $BigIntModInverse "-4" "13" "nothing" "3" "Modular inverse of negative four modulo thirteen"]
-    :set res [$RunTestCase $res $BigIntModInverse "-7" "17" "nothing" "12" "Modular inverse of negative seven modulo seventeen"]
-    :set res [$RunTestCase $res $BigIntModInverse "-11" "19" "nothing" "12" "Modular inverse of negative eleven modulo nineteen"]
-    :set res [$RunTestCase $res $BigIntModInverse "-3" "25" "nothing" "8" "Modular inverse of negative three modulo twenty five"]
-
-    # Larger moduli and chunk boundaries
-    :set res [$RunTestCase $res $BigIntModInverse "1234" "9999" "nothing" "5275" "Modular inverse of thousand two hundred thirty four modulo nine thousand nine hundred ninety nine"]
-    :set res [$RunTestCase $res $BigIntModInverse "5555" "10007" "nothing" "1751" "Modular inverse with prime ten thousand seven"]
-    :set res [$RunTestCase $res $BigIntModInverse "9876" "32767" "nothing" "30554" "Modular inverse with fifteen bit modulus"]
 
     :put "Testing completed."
     :return $res

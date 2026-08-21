@@ -370,6 +370,7 @@
     :local numObj $1
     :local modObj $2
     :local numSign ($numObj->"sign")
+    :local modSign ($modObj->"sign")
     :local numDigits ($numObj->"data")
     :local modDigits ($modObj->"data")
 
@@ -377,7 +378,6 @@
         :return {"sign"=1; "data"=[:toarray 0]}
     }
 
-    :local absNum {"sign"=1; "data"=$numDigits}
     :local absMod {"sign"=1; "data"=$modDigits}
 
     :local remainderDigits [:toarray 0]
@@ -385,11 +385,14 @@
 
     :for chunkIndex from=($numLen - 1) to=0 step=-1 do={
         :local nextChunkValue ($numDigits->$chunkIndex)
+
+        # Shift remainder left by one base-10^9 chunk and append next chunk.
         :if ([:len $remainderDigits] = 1 && ($remainderDigits->0) = 0) do={
             :set remainderDigits [:toarray $nextChunkValue]
         } else={
             :local extendedRem [:toarray $nextChunkValue]
             :local remLen [:len $remainderDigits]
+
             :for remIndex from=0 to=($remLen - 1) do={
                 :set extendedRem ($extendedRem, ($remainderDigits->$remIndex))
             }
@@ -403,6 +406,7 @@
         :while ($searchLow <= $searchHigh) do={
             :local midVal (($searchLow + $searchHigh) >> 1)
             :local candidateProduct [$BigIntMulArr $absMod ({"sign"=1; "data"=[:toarray $midVal]})]
+
             :if ([$BigIntCmpArr $candidateProduct ({"sign"=1; "data"=$remainderDigits})] = 1) do={
                 :set searchHigh ($midVal - 1)
             } else={
@@ -418,11 +422,18 @@
     }
 
     :local isZero ([:len $remainderDigits] = 1 && ($remainderDigits->0) = 0)
-    :if ($numSign = -1 && !$isZero) do={
-        :return [$BigIntSubArr $absMod ({sign=1; data=$remainderDigits})]
+    :if ($isZero) do={
+        :return {"sign"=1; "data"=$remainderDigits}
     }
 
-    :return {"sign"=1; "data"=$remainderDigits}
+    # Python floor-division remainder must have the divisor's sign.
+    :if ($numSign != $modSign) do={
+        :local adjustedRemainder [$BigIntSubArr $absMod ({"sign"=1; "data"=$remainderDigits})]
+        :set remainderDigits ($adjustedRemainder->"data")
+        :return {"sign"=$modSign; "data"=$remainderDigits}
+    }
+
+    :return {"sign"=$modSign; "data"=$remainderDigits}
 }
 
 # Purpose: Divide one BigInt chunked array object by another.
@@ -437,6 +448,7 @@
     :global BigIntCmpArr
     :global BigIntSubArr
     :global BigIntMulArr
+    :global BigIntAddArr
 
     :local numObj $1
     :local divObj $2
@@ -446,6 +458,11 @@
     :local divDigits ($divObj->"data")
 
     :if ([:len $divDigits] = 1 && ($divDigits->0) = 0) do={
+        :return {"sign"=1; "data"=[:toarray 0]}
+    }
+
+    # Zero dividend always produces zero.
+    :if ([:len $numDigits] = 1 && ($numDigits->0) = 0) do={
         :return {"sign"=1; "data"=[:toarray 0]}
     }
 
@@ -459,8 +476,12 @@
     :local comparisonState [$BigIntCmpArr $absNum $absDiv]
 
     :if ($comparisonState = -1) do={
+        :if ($finalSign = -1) do={
+            :return {"sign"=-1; "data"=[:toarray 1]}
+        }
         :return {"sign"=1; "data"=[:toarray 0]}
     }
+
     :if ($comparisonState = 0) do={
         :return {"sign"=$finalSign; "data"=[:toarray 1]}
     }
@@ -471,11 +492,14 @@
 
     :for chunkIndex from=($numLen - 1) to=0 step=-1 do={
         :local nextChunkValue ($numDigits->$chunkIndex)
+
+        # Shift remainder left by one base-10^9 chunk and append next chunk.
         :if ([:len $remainderDigits] = 1 && ($remainderDigits->0) = 0) do={
             :set remainderDigits [:toarray $nextChunkValue]
         } else={
             :local extendedRem [:toarray $nextChunkValue]
             :local remLen [:len $remainderDigits]
+
             :for remIndex from=0 to=($remLen - 1) do={
                 :set extendedRem ($extendedRem, ($remainderDigits->$remIndex))
             }
@@ -489,6 +513,7 @@
         :while ($searchLow <= $searchHigh) do={
             :local midVal (($searchLow + $searchHigh) >> 1)
             :local candidateProduct [$BigIntMulArr $absDiv ({"sign"=1; "data"=[:toarray $midVal]})]
+
             :if ([$BigIntCmpArr $candidateProduct ({"sign"=1; "data"=$remainderDigits})] = 1) do={
                 :set searchHigh ($midVal - 1)
             } else={
@@ -505,11 +530,21 @@
         :if ([:len $quotientDigits] > 0 || $searchHigh > 0) do={
             :local updatedQuotient [:toarray $searchHigh]
             :local quotLen [:len $quotientDigits]
+
             :for quotIndex from=0 to=($quotLen - 1) do={
                 :set updatedQuotient ($updatedQuotient, ($quotientDigits->$quotIndex))
             }
+
             :set quotientDigits $updatedQuotient
         }
+    }
+
+    # Floor division adjustment.
+    # For a negative result with a non-zero remainder,
+    # floor(x / y) is one less than truncation toward zero.
+    :if ($finalSign = -1 && !([:len $remainderDigits] = 1 && ($remainderDigits->0) = 0)) do={
+        :local incrementedQuotient [$BigIntAddArr ({"sign"=1; "data"=$quotientDigits}) ({"sign"=1; "data"=[:toarray 1]})]
+        :set quotientDigits ($incrementedQuotient->"data")
     }
 
     :return {"sign"=$finalSign; "data"=$quotientDigits}

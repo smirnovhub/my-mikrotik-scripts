@@ -98,6 +98,53 @@
     :set res [$RunTestCase $res $BigIntPowMod "3" "5345345" "653453455" "97594538" "Modular exponentiation with large exponent values"]
     :set res [$RunTestCase $res $BigIntPowMod "345453453" "53" "1039565" "685728" "Modular exponentiation with large base and small exponent"]
 
+    # Basic positive exponents
+    :set res [$RunTestCase $res $BigIntPowMod "2" "3" "5" "3" "Python basic powmod"]
+    :set res [$RunTestCase $res $BigIntPowMod "5" "3" "7" "6" "Python basic powmod"]
+    :set res [$RunTestCase $res $BigIntPowMod "10" "5" "123" "1" "Python powmod yielding one"]
+    
+    # Edge cases with zeros and ones
+    :set res [$RunTestCase $res $BigIntPowMod "0" "0" "1" "0" "Python zero base zero exp mod one"]
+    :set res [$RunTestCase $res $BigIntPowMod "0" "0" "5" "1" "Python zero base zero exp mod five"]
+    :set res [$RunTestCase $res $BigIntPowMod "10" "0" "1" "0" "Python positive base zero exp mod one"]
+    :set res [$RunTestCase $res $BigIntPowMod "10" "0" "5" "1" "Python positive base zero exp mod five"]
+    :set res [$RunTestCase $res $BigIntPowMod "0" "5" "7" "0" "Python zero base positive exp"]
+    :set res [$RunTestCase $res $BigIntPowMod "1" "5" "7" "1" "Python one base positive exp"]
+    
+    # Negative base with Python modulo semantics
+    :set res [$RunTestCase $res $BigIntPowMod "-2" "3" "5" "2" "Python negative base odd exp"]
+    :set res [$RunTestCase $res $BigIntPowMod "-2" "2" "5" "4" "Python negative base even exp"]
+    :set res [$RunTestCase $res $BigIntPowMod "-5" "3" "7" "1" "Python negative base odd exp mod seven"]
+    :set res [$RunTestCase $res $BigIntPowMod "-5" "4" "7" "2" "Python negative base even exp mod seven"]
+    :set res [$RunTestCase $res $BigIntPowMod "-10" "5" "123" "122" "Python negative base resulting in large remainder"]
+    
+    # Negative exponent requiring modular inverse
+    :set res [$RunTestCase $res $BigIntPowMod "3" "-1" "11" "4" "Python simple modular inverse"]
+    :set res [$RunTestCase $res $BigIntPowMod "3" "-2" "11" "5" "Python negative exp power of two"]
+    :set res [$RunTestCase $res $BigIntPowMod "11" "-1" "13" "6" "Python modular inverse mod thirteen"]
+    :set res [$RunTestCase $res $BigIntPowMod "11" "-2" "13" "10" "Python negative exp power of two mod thirteen"]
+    :set res [$RunTestCase $res $BigIntPowMod "7" "-3" "17" "6" "Python negative odd exp mod seventeen"]
+    :set res [$RunTestCase $res $BigIntPowMod "2" "-10" "11" "1" "Python Fermat little theorem inverse"]
+    
+    # Combined negative base and negative exponent
+    :set res [$RunTestCase $res $BigIntPowMod "-3" "-1" "11" "7" "Python negative base and negative exp"]
+    :set res [$RunTestCase $res $BigIntPowMod "-3" "-2" "11" "5" "Python negative base and negative even exp"]
+    :set res [$RunTestCase $res $BigIntPowMod "-11" "-1" "13" "7" "Python large negative base and negative exp"]
+    :set res [$RunTestCase $res $BigIntPowMod "-11" "-2" "13" "10" "Python large negative base and negative even exp"]
+    
+    # Negative modulus
+    :set res [$RunTestCase $res $BigIntPowMod "2" "3" "-5" "-2" "Python positive base negative mod"]
+    :set res [$RunTestCase $res $BigIntPowMod "-2" "3" "-5" "-3" "Python negative base negative mod"]
+    :set res [$RunTestCase $res $BigIntPowMod "5" "2" "-7" "-3" "Python even power negative mod"]
+    :set res [$RunTestCase $res $BigIntPowMod "-5" "2" "-7" "-3" "Python negative base even power negative mod"]
+    
+    # Large values simulating BigInt operations
+    :set res [$RunTestCase $res $BigIntPowMod "12345" "3" "100000" "63625" "Python large base and mod"]
+    :set res [$RunTestCase $res $BigIntPowMod "999999" "2" "1000000" "1" "Python base minus one even exp"]
+    :set res [$RunTestCase $res $BigIntPowMod "999999" "3" "1000000" "999999" "Python base minus one odd exp"]
+    :set res [$RunTestCase $res $BigIntPowMod "999999" "-1" "1000000" "999999" "Python base minus one negative exp"]
+    :set res [$RunTestCase $res $BigIntPowMod "999999" "-2" "1000000" "1" "Python base minus one negative even exp"]
+
     # Basic small GCD tests
     :set res [$RunTestCase $res $BigIntGcd "12" "15" "nothing" "3" "GCD of twelve and fifteen"]
     :set res [$RunTestCase $res $BigIntGcd "24" "36" "nothing" "12" "GCD of twenty four and thirty six"]
@@ -221,9 +268,37 @@
     :set res [$RunTestCase $res $BigIntModInverse "5555" "10007" "nothing" "1751" "Modular inverse with prime ten thousand seven"]
     :set res [$RunTestCase $res $BigIntModInverse "9876" "32767" "nothing" "30554" "Modular inverse with fifteen bit modulus"]
 
-    # ==========================================
-    # BigInt Property / Invariant Test Cases
-    # ==========================================
+    # Basic positive modulus inverses
+    :set res [$RunTestCase $res $BigIntModInverse "3" "11" "nothing" "4" "Python basic mod inverse"]
+    :set res [$RunTestCase $res $BigIntModInverse "5" "7" "nothing" "3" "Python basic mod inverse"]
+    :set res [$RunTestCase $res $BigIntModInverse "17" "3120" "nothing" "2753" "Python larger mod inverse"]
+    :set res [$RunTestCase $res $BigIntModInverse "99" "100" "nothing" "99" "Python base minus one inverse"]
+    
+    # Edge cases where inverse does not exist
+    # Python raises ValueError, script gracefully returns 0
+    :set res [$RunTestCase $res $BigIntModInverse "2" "4" "nothing" "0" "Python non-coprime returns zero"]
+    :set res [$RunTestCase $res $BigIntModInverse "3" "9" "nothing" "0" "Python non-coprime returns zero"]
+    :set res [$RunTestCase $res $BigIntModInverse "0" "5" "nothing" "0" "Python zero base returns zero"]
+    :set res [$RunTestCase $res $BigIntModInverse "5" "1" "nothing" "0" "Python mod one returns zero"]
+    
+    # Edge cases with base 1 and -1
+    :set res [$RunTestCase $res $BigIntModInverse "1" "5" "nothing" "1" "Python one base returns one"]
+    :set res [$RunTestCase $res $BigIntModInverse "-1" "5" "nothing" "4" "Python negative one base"]
+    
+    # Negative base a
+    :set res [$RunTestCase $res $BigIntModInverse "-3" "11" "nothing" "7" "Python negative base mod inverse"]
+    :set res [$RunTestCase $res $BigIntModInverse "-5" "7" "nothing" "4" "Python negative base mod inverse"]
+    :set res [$RunTestCase $res $BigIntModInverse "-3" "10" "nothing" "3" "Python negative base even mod"]
+    :set res [$RunTestCase $res $BigIntModInverse "-17" "3120" "nothing" "367" "Python large negative base"]
+    
+    # Negative modulus m (Python supports this, result has the same sign as modulus)
+    :set res [$RunTestCase $res $BigIntModInverse "3" "-11" "nothing" "-7" "Python negative mod"]
+    :set res [$RunTestCase $res $BigIntModInverse "5" "-7" "nothing" "-4" "Python negative mod"]
+    :set res [$RunTestCase $res $BigIntModInverse "17" "-3120" "nothing" "-367" "Python larger negative mod"]
+    
+    # Combined negative base and negative modulus
+    :set res [$RunTestCase $res $BigIntModInverse "-3" "-11" "nothing" "-4" "Python negative base and negative mod"]
+    :set res [$RunTestCase $res $BigIntModInverse "-5" "-7" "nothing" "-3" "Python negative base and negative mod"]
 
     # ------------------------------------------
     # BigIntAdd / BigIntSub inverse properties
@@ -728,6 +803,26 @@
         "nothing" \
         [$BigIntPowMod "-7" "13" "1000003"] \
         "PowMod exponent decomposition negative base"]
+
+    # Floor division when dividend absolute value is smaller than divisor
+    :set res [$RunTestCase $res $BigIntDiv "-3" "7" "nothing" "-1" "Python floor div small negative dividend"]
+    :set res [$RunTestCase $res $BigIntMod "-3" "7" "nothing" "4" "Python mod small negative dividend"]
+    
+    :set res [$RunTestCase $res $BigIntDiv "3" "-7" "nothing" "-1" "Python floor div small negative divisor"]
+    :set res [$RunTestCase $res $BigIntMod "3" "-7" "nothing" "-4" "Python mod small negative divisor"]
+    
+    # Python math.gcd always returns positive result
+    :set res [$RunTestCase $res $BigIntGcd "-12" "-18" "nothing" "6" "GCD of negative numbers is positive in Python"]
+    :set res [$RunTestCase $res $BigIntGcd "-7" "0" "nothing" "7" "GCD of negative and zero is positive"]
+    
+    # Python pow with negative exponent using modular inverse
+    # pow(3, -2, 11) -> mod inverse of 3 mod 11 is 4 -> pow(4, 2, 11) = 5
+    :set res [$RunTestCase $res $BigIntPowMod "3" "-2" "11" "5" "Python pow with negative exponent"]
+    
+    # Zero base to zero exponent edge cases
+    :set res [$RunTestCase $res $BigIntPow "0" "0" "nothing" "1" "Python pow zero to zero power"]
+    :set res [$RunTestCase $res $BigIntPowMod "0" "0" "1" "0" "Python powmod zero to zero with modulus 1"]
+    :set res [$RunTestCase $res $BigIntPowMod "0" "0" "5" "1" "Python powmod zero to zero with modulus 5"]
 
     :put "Testing completed."
     :return $res

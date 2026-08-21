@@ -625,15 +625,16 @@
     :global BigIntDivArr
     :global BigIntModArr
     :global BigIntCmpArr
+    :global BigIntModInverseArr
 
     :local baseObj $1
     :local expObj $2
     :local modObj $3
-    :local expSign ($expObj->"sign")
 
-    # Handle negative exponent as zero or unsupported
-    :if ($expSign = -1) do={
-        :return {"sign"=1; "data"=[:toarray 0]}
+    # Handle negative exponent using modular inverse
+    :if (($expObj->"sign") = -1) do={
+        :set baseObj [$BigIntModInverseArr $baseObj $modObj]
+        :set expObj {"sign"=1; "data"=($expObj->"data")}
     }
 
     :local zeroObj {"sign"=1; "data"=[:toarray 0]}
@@ -651,20 +652,16 @@
 
     :local currentResult $oneObj
     :local activeBase [$BigIntModArr $baseObj $modObj]
-    :local activeExp $expObj
 
-    :while ([$BigIntCmpArr $activeExp $zeroObj] = 1) do={
-        :local expDigits ($activeExp->"data")
-        :local lowestExpChunk ($expDigits->0)
-
+    :while ([$BigIntCmpArr $expObj $zeroObj] = 1) do={
         # If the lowest chunk is odd
-        :if (($lowestExpChunk % 2) != 0) do={
+        :if (((($expObj->"data")->0) % 2) != 0) do={
             :set currentResult [$BigIntModArr [$BigIntMulArr $currentResult $activeBase] $modObj]
         }
 
-        :set activeExp [$BigIntDivArr $activeExp ({"sign"=1; "data"=[:toarray 2]})]
+        :set expObj [$BigIntDivArr $expObj ({"sign"=1; "data"=[:toarray 2]})]
 
-        :if ([$BigIntCmpArr $activeExp $zeroObj] != 0) do={
+        :if ([$BigIntCmpArr $expObj $zeroObj] != 0) do={
             :set activeBase [$BigIntModArr [$BigIntMulArr $activeBase $activeBase] $modObj]
         }
     }
@@ -730,14 +727,18 @@
     :local zeroObj {"sign"=1; "data"=[:toarray 0]}
     :local oneObj {"sign"=1; "data"=[:toarray 1]}
 
-    :if ([$BigIntCmpArr $mObj $oneObj] != 1) do={
+    :local originalMSign ($mObj->"sign")
+    :local absMObj {"sign"=1; "data"=($mObj->"data")}
+
+    # Guard against absolute modulus less than or equal to one
+    :if ([$BigIntCmpArr $absMObj $oneObj] != 1) do={
         :return $zeroObj
     }
 
     :local tObj $zeroObj
     :local newTObj $oneObj
-    :local rObj $mObj
-    :local newRObj [$BigIntModArr $aObj $mObj]
+    :local rObj $absMObj
+    :local newRObj [$BigIntModArr $aObj $absMObj]
 
     :local quotient $zeroObj
     :local temp $zeroObj
@@ -754,14 +755,19 @@
         :set tObj $temp
     }
 
-    # If r > 1, then gcd(a, m) != 1, so inverse does not exist
+    # If r is not one then greatest common divisor is not one and inverse does not exist
     :if ([$BigIntCmpArr $rObj $oneObj] != 0) do={
         :return $zeroObj
     }
 
-    # If t < 0, add modulus m to make it positive
+    # Make t positive if it is negative
     :if (($tObj->"sign") = -1) do={
-        :set tObj [$BigIntAddArr $tObj $mObj]
+        :set tObj [$BigIntAddArr $tObj $absMObj]
+    }
+
+    # Shift result to negative space if original modulus was negative
+    :if ($originalMSign = -1 && [$BigIntCmpArr $tObj $zeroObj] != 0) do={
+        :set tObj [$BigIntSubArr $tObj $absMObj]
     }
 
     :return $tObj

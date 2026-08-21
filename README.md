@@ -148,29 +148,43 @@ All hash algorithms are highly optimized for RouterOS. Exact benchmarks for RB75
 
 A suite of functions for performing mathematical operations on arbitrary-precision integers (BigInt) in RouterOS. This library bypasses native 64-bit integer size limits by processing numbers of arbitrary length using string representations and internal 9-digit chunked arrays, supporting basic arithmetic, comparisons, modular math, and cryptographic primitives.
 
+#### Type Conversion Methods
+
+These functions handle the translation between standard text strings and the internal dictionary objects used for calculations. You should use these when you need to manually prepare data for batch processing or when extracting a final readable result from a raw array object.
+
 - **ArrayToBigInt**: Convert a signed chunked array object back into a BigInt string.
-- **BigIntAdd**: Add two BigInt string representations.
+- **BigIntToArray**: Parse a BigInt string representation into a signed 9-digit chunked array object.
+
+#### Internal Array Operations
+
+Methods with the `*Arr` suffix operate directly on the internal chunked array representations. These are designed for performance and should be used when chaining multiple sequential operations together, as they prevent the overhead of repeatedly parsing and serializing strings between each mathematical step.
+
 - **BigIntAddArr**: Add two BigInt chunked array objects.
 - **BigIntCleanArr**: Normalize a BigInt chunked array object by removing trailing zero chunks.
-- **BigIntCmp**: Compare two BigInt string representations (-1 if left < right, 0 if equal, 1 if left > right).
 - **BigIntCmpArr**: Compare two BigInt chunked array objects (-1 if left < right, 0 if equal, 1 if left > right).
-- **BigIntDiv**: Divide one BigInt string representation by another (integer quotient).
 - **BigIntDivArr**: Divide one BigInt chunked array object by another (integer quotient).
-- **BigIntGcd**: Calculate the Greatest Common Divisor (GCD) of two BigInt string representations.
 - **BigIntGcdArr**: Calculate the Greatest Common Divisor (GCD) of two BigInt chunked array objects.
-- **BigIntMod**: Calculate the remainder (modulo) of division of two BigInt string representations.
 - **BigIntModArr**: Calculate the remainder (modulo) of division of two BigInt chunked array objects.
-- **BigIntModInverse**: Calculate the modular multiplicative inverse of a BigInt string representation.
 - **BigIntModInverseArr**: Calculate the modular multiplicative inverse of a BigInt chunked array object.
-- **BigIntMul**: Multiply two BigInt string representations.
 - **BigIntMulArr**: Multiply two BigInt chunked array objects.
-- **BigIntPow**: Raise a BigInt string representation to a specified power.
 - **BigIntPowArr**: Raise a BigInt chunked array object to a specified power.
-- **BigIntPowMod**: Perform modular exponentiation ((base ^ exp) % mod) using BigInt string representations.
-- **BigIntPowModArr**: Perform modular exponentiation ((base ^ exp) % mod) using BigInt chunked array objects.
-- **BigIntSub**: Subtract one BigInt string representation from another.
+- **BigIntPowModArr**: Perform modular exponentiation (`(base ^ exp) % mod`) using BigInt chunked array objects.
 - **BigIntSubArr**: Subtract one BigInt chunked array object from another.
-- **BigIntToArray**: Parse a BigInt string representation into a signed 9-digit chunked array object.
+
+#### Standard String Operations
+
+These are the primary, user-friendly methods. They accept standard strings as inputs and return string results, handling all internal array conversions automatically. Use these for straightforward, single-step calculations where maximum execution speed is not critical.
+
+- **BigIntAdd**: Add two BigInt string representations.
+- **BigIntCmp**: Compare two BigInt string representations (-1 if left < right, 0 if equal, 1 if left > right).
+- **BigIntDiv**: Divide one BigInt string representation by another (integer quotient).
+- **BigIntGcd**: Calculate the Greatest Common Divisor (GCD) of two BigInt string representations.
+- **BigIntMod**: Calculate the remainder (modulo) of division of two BigInt string representations.
+- **BigIntModInverse**: Calculate the modular multiplicative inverse of a BigInt string representation.
+- **BigIntMul**: Multiply two BigInt string representations.
+- **BigIntPow**: Raise a BigInt string representation to a specified power.
+- **BigIntPowMod**: Perform modular exponentiation (`(base ^ exp) % mod`) using BigInt string representations.
+- **BigIntSub**: Subtract one BigInt string representation from another.
 
 ### File & Script Utilities
 

@@ -144,6 +144,34 @@ All hash algorithms are highly optimized for RouterOS. Exact benchmarks for RB75
 - **GetSha256Sum**: 3.0x slower than CRC32
 - **GetSha512Sum**: 2.24x slower than CRC32
 
+### Arbitrary-Precision Integer (BigInt) Utilities
+
+A suite of functions for performing mathematical operations on arbitrary-precision integers (BigInt) in RouterOS. This library bypasses native 64-bit integer size limits by processing numbers of arbitrary length using string representations and internal 9-digit chunked arrays, supporting basic arithmetic, comparisons, modular math, and cryptographic primitives.
+
+- **ArrayToBigInt**: Convert a signed chunked array object back into a BigInt string.
+- **BigIntAdd**: Add two BigInt string representations.
+- **BigIntAddArr**: Add two BigInt chunked array objects.
+- **BigIntCleanArr**: Normalize a BigInt chunked array object by removing trailing zero chunks.
+- **BigIntCmp**: Compare two BigInt string representations (-1 if left < right, 0 if equal, 1 if left > right).
+- **BigIntCmpArr**: Compare two BigInt chunked array objects (-1 if left < right, 0 if equal, 1 if left > right).
+- **BigIntDiv**: Divide one BigInt string representation by another (integer quotient).
+- **BigIntDivArr**: Divide one BigInt chunked array object by another (integer quotient).
+- **BigIntGcd**: Calculate the Greatest Common Divisor (GCD) of two BigInt string representations.
+- **BigIntGcdArr**: Calculate the Greatest Common Divisor (GCD) of two BigInt chunked array objects.
+- **BigIntMod**: Calculate the remainder (modulo) of division of two BigInt string representations.
+- **BigIntModArr**: Calculate the remainder (modulo) of division of two BigInt chunked array objects.
+- **BigIntModInverse**: Calculate the modular multiplicative inverse of a BigInt string representation.
+- **BigIntModInverseArr**: Calculate the modular multiplicative inverse of a BigInt chunked array object.
+- **BigIntMul**: Multiply two BigInt string representations.
+- **BigIntMulArr**: Multiply two BigInt chunked array objects.
+- **BigIntPow**: Raise a BigInt string representation to a specified power.
+- **BigIntPowArr**: Raise a BigInt chunked array object to a specified power.
+- **BigIntPowMod**: Perform modular exponentiation ((base ^ exp) % mod) using BigInt string representations.
+- **BigIntPowModArr**: Perform modular exponentiation ((base ^ exp) % mod) using BigInt chunked array objects.
+- **BigIntSub**: Subtract one BigInt string representation from another.
+- **BigIntSubArr**: Subtract one BigInt chunked array object from another.
+- **BigIntToArray**: Parse a BigInt string representation into a signed 9-digit chunked array object.
+
 ### File & Script Utilities
 
 - **EnsureFileWithIdExists**: Ensure a file exists and return its ID.  
@@ -296,6 +324,63 @@ Encode and decode strings using Standard/URL-safe Base64 alphabets or URL percen
 :local urlDec [$UrlDecode "search%3Fq%3Dtest%26a%3D1"]
 :put ("URL Decoded: " . $urlDec)
 # Output: URL Decoded: search?q=test&a=1
+```
+
+### BigInt Examples
+
+Arbitrary-precision integers examples:
+
+```routeros
+:global BigIntAdd
+:global BigIntSub
+:global BigIntMul
+:global BigIntDiv
+:global BigIntMod
+:global BigIntPow
+:global BigIntPowMod
+:global BigIntGcd
+:global BigIntModInverse
+:global BigIntCmp
+
+# Add two arbitrary-precision integers
+:put ("Add: " . [$BigIntAdd "9223372036854775807" "1000000000000000000"])
+# Output: Add: 10223372036854775807
+
+# Subtract two arbitrary-precision integers
+:put ("Sub: " . [$BigIntSub "100000000000000000000" "1"])
+# Output: Sub: 99999999999999999999
+
+# Multiply two arbitrary-precision integers
+:put ("Mul: " . [$BigIntMul "1234567890123456789" "9876543210987654321"])
+# Output: Mul: 12193263113702179522374638011112635269
+
+# Divide two arbitrary-precision integers (integer quotient)
+:put ("Div: " . [$BigIntDiv "100000000000000000000" "3"])
+# Output: Div: 33333333333333333333
+
+# Calculate remainder of division (modulo)
+:put ("Mod: " . [$BigIntMod "1234567890123456789" "1000000000"])
+# Output: Mod: 123456789
+
+# Raise a base to a power
+:put ("Pow: " . [$BigIntPow "2" "128"])
+# Output: Pow: 340282366920938463463374607431768211456
+
+# Perform modular exponentiation ((base ^ exp) % mod)
+:put ("PowMod: " . [$BigIntPowMod "2" "100" "1000"])
+# Output: PowMod: 376
+
+# Find the Greatest Common Divisor
+:put ("GCD: " . [$BigIntGcd "27000000000000000000" "18000000000000000000"])
+# Output: GCD: 9000000000000000000
+
+# Calculate modular multiplicative inverse
+:put ("ModInverse: " . [$BigIntModInverse "7" "1000000007"])
+# Output: ModInverse: 142857144
+
+# Compare two arbitrary-precision integers (-1, 0, or 1)
+:put ("Cmp: " . [$BigIntCmp "10000000000000000000" "2000000000000000000"])
+# Output: Cmp: 1
 ```
 
 ### Network and Utility Functions

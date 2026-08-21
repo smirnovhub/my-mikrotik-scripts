@@ -5,6 +5,7 @@
     :global RunAllArrayStrTests2
     :global RunAllArrayStrTests3
     :global RunAllAutoUpdateTests
+    :global RunAllBigIntTests
     :global RunAllDateTimeTests1
     :global RunAllDateTimeTests2
     :global RunAllEncodingTests
@@ -53,6 +54,7 @@
     :set res [$RunTestSuite $res "ArrayStr2" $RunAllArrayStrTests2]
     :set res [$RunTestSuite $res "ArrayStr3" $RunAllArrayStrTests3]
     :set res [$RunTestSuite $res "AutoUpdate" $RunAllAutoUpdateTests]
+    :set res [$RunTestSuite $res "BigInt" $RunAllBigIntTests]
     :set res [$RunTestSuite $res "DateTime1" $RunAllDateTimeTests1]
     :set res [$RunTestSuite $res "DateTime2" $RunAllDateTimeTests2]
     :set res [$RunTestSuite $res "Encoding" $RunAllEncodingTests]

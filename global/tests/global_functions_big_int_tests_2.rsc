@@ -36,115 +36,6 @@
 
     :put "Starting BigInt tests..."
 
-    # Basic small modular arithmetic
-    :set res [$RunTestCase $res $BigIntPowMod "2" "2" "3" "1" "Square of two modulo three"]
-    :set res [$RunTestCase $res $BigIntPowMod "2" "3" "5" "3" "Cube of two modulo five"]
-    :set res [$RunTestCase $res $BigIntPowMod "3" "2" "7" "2" "Square of three modulo seven"]
-    :set res [$RunTestCase $res $BigIntPowMod "3" "3" "10" "7" "Cube of three modulo ten"]
-    :set res [$RunTestCase $res $BigIntPowMod "4" "4" "15" "1" "Four to the fourth modulo fifteen"]
-    :set res [$RunTestCase $res $BigIntPowMod "5" "3" "12" "5" "Cube of five modulo twelve"]
-    :set res [$RunTestCase $res $BigIntPowMod "6" "3" "7" "6" "Cube of six modulo seven"]
-    :set res [$RunTestCase $res $BigIntPowMod "10" "3" "13" "12" "Cube of ten modulo thirteen"]
-
-    # Edge cases with zero and one
-    :set res [$RunTestCase $res $BigIntPowMod "123" "0" "10" "1" "Any number to zero power modulo is one"]
-    :set res [$RunTestCase $res $BigIntPowMod "0" "10" "10" "0" "Zero base modulo is zero"]
-    :set res [$RunTestCase $res $BigIntPowMod "1" "100" "99" "1" "One base modulo is one"]
-    :set res [$RunTestCase $res $BigIntPowMod "12345" "10" "1" "0" "Modulo one always returns zero"]
-    :set res [$RunTestCase $res $BigIntPowMod "10" "1" "10" "0" "Power of one modulo itself is zero"]
-    :set res [$RunTestCase $res $BigIntPowMod "10" "5" "10" "0" "Power modulo itself is zero"]
-    :set res [$RunTestCase $res $BigIntPowMod "7" "3" "7" "0" "Base equals modulo returns zero"]
-
-    # Fermat's Little Theorem with prime moduli
-    :set res [$RunTestCase $res $BigIntPowMod "2" "10" "11" "1" "Fermat prime mod eleven"]
-    :set res [$RunTestCase $res $BigIntPowMod "3" "16" "17" "1" "Fermat prime mod seventeen"]
-    :set res [$RunTestCase $res $BigIntPowMod "5" "6" "7" "1" "Fermat prime mod seven"]
-    :set res [$RunTestCase $res $BigIntPowMod "12" "22" "23" "1" "Fermat prime mod twenty three"]
-    :set res [$RunTestCase $res $BigIntPowMod "100" "96" "97" "1" "Fermat prime mod ninety seven"]
-
-    # Large numbers and properties of powers
-    :set res [$RunTestCase $res $BigIntPowMod "10" "2" "99" "1" "Hundred modulo ninety nine"]
-    :set res [$RunTestCase $res $BigIntPowMod "10" "4" "99" "1" "Ten thousand modulo ninety nine"]
-    :set res [$RunTestCase $res $BigIntPowMod "10" "6" "999" "1" "Million modulo nine hundred ninety nine"]
-    :set res [$RunTestCase $res $BigIntPowMod "10" "10" "99999" "1" "Power of ten boundary mod nines"]
-    :set res [$RunTestCase $res $BigIntPowMod "11" "10" "100" "1" "Eleven to tenth ends in zero one"]
-    :set res [$RunTestCase $res $BigIntPowMod "99" "99" "100" "99" "Ninety nine to odd power ends in ninety nine"]
-
-    # Negative base testing
-    :set res [$RunTestCase $res $BigIntPowMod "-2" "2" "5" "4" "Negative two square modulo five"]
-    :set res [$RunTestCase $res $BigIntPowMod "-2" "3" "5" "2" "Negative two cube modulo five"]
-    :set res [$RunTestCase $res $BigIntPowMod "-3" "3" "10" "3" "Negative three cube modulo ten"]
-    :set res [$RunTestCase $res $BigIntPowMod "-10" "3" "13" "1" "Negative ten cube modulo thirteen"]
-
-    # Automorphic numbers and cyclic properties
-    :set res [$RunTestCase $res $BigIntPowMod "5" "123" "10" "5" "Powers of five end in five"]
-    :set res [$RunTestCase $res $BigIntPowMod "6" "123" "10" "6" "Powers of six end in six"]
-    :set res [$RunTestCase $res $BigIntPowMod "25" "25" "100" "25" "Powers of twenty five end in twenty five"]
-    :set res [$RunTestCase $res $BigIntPowMod "76" "76" "100" "76" "Powers of seventy six end in seventy six"]
-
-    # Chunk boundaries and massive number simulations
-    :set res [$RunTestCase $res $BigIntPowMod "123456789" "2" "10" "1" "Large chunk squared modulo ten"]
-    :set res [$RunTestCase $res $BigIntPowMod "999999999" "2" "1000000000" "1" "Max chunk minus one squared modulo max chunk"]
-    :set res [$RunTestCase $res $BigIntPowMod "1000000000" "2" "999999999" "1" "Max chunk squared modulo max chunk minus one"]
-    :set res [$RunTestCase $res $BigIntPowMod "2" "100" "10" "6" "Two to hundredth power modulo ten"]
-    :set res [$RunTestCase $res $BigIntPowMod "3" "100" "10" "1" "Three to hundredth power modulo ten"]
-    :set res [$RunTestCase $res $BigIntPowMod "7" "100" "10" "1" "Seven to hundredth power modulo ten"]
-    :set res [$RunTestCase $res $BigIntPowMod "2" "30" "100" "24" "Two to thirtieth modulo hundred"]
-    :set res [$RunTestCase $res $BigIntPowMod "2" "20" "100" "76" "Two to twentieth modulo hundred"]
-
-    # Very big numbers
-    :set res [$RunTestCase $res $BigIntPowMod "2" "4096" "6555" "4501" "Modular exponentiation with power of two base"]
-    :set res [$RunTestCase $res $BigIntPowMod "7" "7684" "3743" "273" "Modular exponentiation with prime base and composite modulus"]
-    :set res [$RunTestCase $res $BigIntPowMod "3" "5345345" "653453455" "97594538" "Modular exponentiation with large exponent values"]
-    :set res [$RunTestCase $res $BigIntPowMod "345453453" "53" "1039565" "685728" "Modular exponentiation with large base and small exponent"]
-
-    # Basic positive exponents
-    :set res [$RunTestCase $res $BigIntPowMod "2" "3" "5" "3" "Python basic powmod"]
-    :set res [$RunTestCase $res $BigIntPowMod "5" "3" "7" "6" "Python basic powmod"]
-    :set res [$RunTestCase $res $BigIntPowMod "10" "5" "123" "1" "Python powmod yielding one"]
-    
-    # Edge cases with zeros and ones
-    :set res [$RunTestCase $res $BigIntPowMod "0" "0" "1" "0" "Python zero base zero exp mod one"]
-    :set res [$RunTestCase $res $BigIntPowMod "0" "0" "5" "1" "Python zero base zero exp mod five"]
-    :set res [$RunTestCase $res $BigIntPowMod "10" "0" "1" "0" "Python positive base zero exp mod one"]
-    :set res [$RunTestCase $res $BigIntPowMod "10" "0" "5" "1" "Python positive base zero exp mod five"]
-    :set res [$RunTestCase $res $BigIntPowMod "0" "5" "7" "0" "Python zero base positive exp"]
-    :set res [$RunTestCase $res $BigIntPowMod "1" "5" "7" "1" "Python one base positive exp"]
-    
-    # Negative base with Python modulo semantics
-    :set res [$RunTestCase $res $BigIntPowMod "-2" "3" "5" "2" "Python negative base odd exp"]
-    :set res [$RunTestCase $res $BigIntPowMod "-2" "2" "5" "4" "Python negative base even exp"]
-    :set res [$RunTestCase $res $BigIntPowMod "-5" "3" "7" "1" "Python negative base odd exp mod seven"]
-    :set res [$RunTestCase $res $BigIntPowMod "-5" "4" "7" "2" "Python negative base even exp mod seven"]
-    :set res [$RunTestCase $res $BigIntPowMod "-10" "5" "123" "122" "Python negative base resulting in large remainder"]
-    
-    # Negative exponent requiring modular inverse
-    :set res [$RunTestCase $res $BigIntPowMod "3" "-1" "11" "4" "Python simple modular inverse"]
-    :set res [$RunTestCase $res $BigIntPowMod "3" "-2" "11" "5" "Python negative exp power of two"]
-    :set res [$RunTestCase $res $BigIntPowMod "11" "-1" "13" "6" "Python modular inverse mod thirteen"]
-    :set res [$RunTestCase $res $BigIntPowMod "11" "-2" "13" "10" "Python negative exp power of two mod thirteen"]
-    :set res [$RunTestCase $res $BigIntPowMod "7" "-3" "17" "6" "Python negative odd exp mod seventeen"]
-    :set res [$RunTestCase $res $BigIntPowMod "2" "-10" "11" "1" "Python Fermat little theorem inverse"]
-    
-    # Combined negative base and negative exponent
-    :set res [$RunTestCase $res $BigIntPowMod "-3" "-1" "11" "7" "Python negative base and negative exp"]
-    :set res [$RunTestCase $res $BigIntPowMod "-3" "-2" "11" "5" "Python negative base and negative even exp"]
-    :set res [$RunTestCase $res $BigIntPowMod "-11" "-1" "13" "7" "Python large negative base and negative exp"]
-    :set res [$RunTestCase $res $BigIntPowMod "-11" "-2" "13" "10" "Python large negative base and negative even exp"]
-    
-    # Negative modulus
-    :set res [$RunTestCase $res $BigIntPowMod "2" "3" "-5" "-2" "Python positive base negative mod"]
-    :set res [$RunTestCase $res $BigIntPowMod "-2" "3" "-5" "-3" "Python negative base negative mod"]
-    :set res [$RunTestCase $res $BigIntPowMod "5" "2" "-7" "-3" "Python even power negative mod"]
-    :set res [$RunTestCase $res $BigIntPowMod "-5" "2" "-7" "-3" "Python negative base even power negative mod"]
-    
-    # Large values simulating BigInt operations
-    :set res [$RunTestCase $res $BigIntPowMod "12345" "3" "100000" "63625" "Python large base and mod"]
-    :set res [$RunTestCase $res $BigIntPowMod "999999" "2" "1000000" "1" "Python base minus one even exp"]
-    :set res [$RunTestCase $res $BigIntPowMod "999999" "3" "1000000" "999999" "Python base minus one odd exp"]
-    :set res [$RunTestCase $res $BigIntPowMod "999999" "-1" "1000000" "999999" "Python base minus one negative exp"]
-    :set res [$RunTestCase $res $BigIntPowMod "999999" "-2" "1000000" "1" "Python base minus one negative even exp"]
-
     # Basic small GCD tests
     :set res [$RunTestCase $res $BigIntGcd "12" "15" "nothing" "3" "GCD of twelve and fifteen"]
     :set res [$RunTestCase $res $BigIntGcd "24" "36" "nothing" "12" "GCD of twenty four and thirty six"]
@@ -273,29 +164,29 @@
     :set res [$RunTestCase $res $BigIntModInverse "5" "7" "nothing" "3" "Python basic mod inverse"]
     :set res [$RunTestCase $res $BigIntModInverse "17" "3120" "nothing" "2753" "Python larger mod inverse"]
     :set res [$RunTestCase $res $BigIntModInverse "99" "100" "nothing" "99" "Python base minus one inverse"]
-    
+
     # Edge cases where inverse does not exist
     # Python raises ValueError, script gracefully returns 0
     :set res [$RunTestCase $res $BigIntModInverse "2" "4" "nothing" "0" "Python non-coprime returns zero"]
     :set res [$RunTestCase $res $BigIntModInverse "3" "9" "nothing" "0" "Python non-coprime returns zero"]
     :set res [$RunTestCase $res $BigIntModInverse "0" "5" "nothing" "0" "Python zero base returns zero"]
     :set res [$RunTestCase $res $BigIntModInverse "5" "1" "nothing" "0" "Python mod one returns zero"]
-    
+
     # Edge cases with base 1 and -1
     :set res [$RunTestCase $res $BigIntModInverse "1" "5" "nothing" "1" "Python one base returns one"]
     :set res [$RunTestCase $res $BigIntModInverse "-1" "5" "nothing" "4" "Python negative one base"]
-    
+
     # Negative base a
     :set res [$RunTestCase $res $BigIntModInverse "-3" "11" "nothing" "7" "Python negative base mod inverse"]
     :set res [$RunTestCase $res $BigIntModInverse "-5" "7" "nothing" "4" "Python negative base mod inverse"]
     :set res [$RunTestCase $res $BigIntModInverse "-3" "10" "nothing" "3" "Python negative base even mod"]
     :set res [$RunTestCase $res $BigIntModInverse "-17" "3120" "nothing" "367" "Python large negative base"]
-    
+
     # Negative modulus m (Python supports this, result has the same sign as modulus)
     :set res [$RunTestCase $res $BigIntModInverse "3" "-11" "nothing" "-7" "Python negative mod"]
     :set res [$RunTestCase $res $BigIntModInverse "5" "-7" "nothing" "-4" "Python negative mod"]
     :set res [$RunTestCase $res $BigIntModInverse "17" "-3120" "nothing" "-367" "Python larger negative mod"]
-    
+
     # Combined negative base and negative modulus
     :set res [$RunTestCase $res $BigIntModInverse "-3" "-11" "nothing" "-4" "Python negative base and negative mod"]
     :set res [$RunTestCase $res $BigIntModInverse "-5" "-7" "nothing" "-3" "Python negative base and negative mod"]
@@ -807,22 +698,277 @@
     # Floor division when dividend absolute value is smaller than divisor
     :set res [$RunTestCase $res $BigIntDiv "-3" "7" "nothing" "-1" "Python floor div small negative dividend"]
     :set res [$RunTestCase $res $BigIntMod "-3" "7" "nothing" "4" "Python mod small negative dividend"]
-    
+
     :set res [$RunTestCase $res $BigIntDiv "3" "-7" "nothing" "-1" "Python floor div small negative divisor"]
     :set res [$RunTestCase $res $BigIntMod "3" "-7" "nothing" "-4" "Python mod small negative divisor"]
-    
+
     # Python math.gcd always returns positive result
     :set res [$RunTestCase $res $BigIntGcd "-12" "-18" "nothing" "6" "GCD of negative numbers is positive in Python"]
     :set res [$RunTestCase $res $BigIntGcd "-7" "0" "nothing" "7" "GCD of negative and zero is positive"]
-    
+
     # Python pow with negative exponent using modular inverse
     # pow(3, -2, 11) -> mod inverse of 3 mod 11 is 4 -> pow(4, 2, 11) = 5
     :set res [$RunTestCase $res $BigIntPowMod "3" "-2" "11" "5" "Python pow with negative exponent"]
-    
+
     # Zero base to zero exponent edge cases
     :set res [$RunTestCase $res $BigIntPow "0" "0" "nothing" "1" "Python pow zero to zero power"]
     :set res [$RunTestCase $res $BigIntPowMod "0" "0" "1" "0" "Python powmod zero to zero with modulus 1"]
     :set res [$RunTestCase $res $BigIntPowMod "0" "0" "5" "1" "Python powmod zero to zero with modulus 5"]
+
+    :set res [$RunTestCase $res $BigIntAdd \
+        [$BigIntSub "123456789123456789" "-987654321987654321"] \
+        "1111111111111111110" \
+        "nothing" \
+        "2222222222222222220" \
+        "Sub inverse positive-negative"]
+
+    :set res [$RunTestCase $res $BigIntAdd \
+        [$BigIntSub "-123456789123456789" "987654321987654321"] \
+        "-1111111111111111110" \
+        "nothing" \
+        "-2222222222222222220" \
+        "Sub inverse negative-positive"]
+
+    :set res [$RunTestCase $res $BigIntAdd \
+        [$BigIntSub "123456789123456789" "123456789123456789"] \
+        "0" \
+        "nothing" \
+        "0" \
+        "Sub self"]
+
+    :set res [$RunTestCase $res $BigIntAdd \
+        [$BigIntSub "123456789123456789" "0"] \
+        "123456789123456789" \
+        "nothing" \
+        "246913578246913578" \
+        "Sub zero"]
+
+    :set res [$RunTestCase $res $BigIntDiv \
+        [$BigIntMul "123456789" "-12345"] \
+        "-12345" \
+        "nothing" \
+        "123456789" \
+        "MulDiv exact negative"]
+
+    :set res [$RunTestCase $res $BigIntDiv \
+        [$BigIntMul "-123456789" "-12345"] \
+        "-12345" \
+        "nothing" \
+        "-123456789" \
+        "MulDiv exact both negative"]
+
+    :set res [$RunTestCase $res $BigIntDiv \
+        [$BigIntMul "987654321" "123456789"] \
+        "123456789" \
+        "nothing" \
+        "987654321" \
+        "MulDiv exact positive"]
+
+    :set res [$RunTestCase $res $BigIntAdd \
+        [$BigIntMul [$BigIntDiv "123456789123456789" "12345"] "12345"] \
+        [$BigIntMod "123456789123456789" "12345"] \
+        "nothing" \
+        "123456789123456789" \
+        "DivMod identity ++"]
+
+    :set res [$RunTestCase $res $BigIntAdd \
+        [$BigIntMul [$BigIntDiv "-123456789123456789" "12345"] "12345"] \
+        [$BigIntMod "-123456789123456789" "12345"] \
+        "nothing" \
+        "-123456789123456789" \
+        "DivMod identity -+"]
+
+    :set res [$RunTestCase $res $BigIntAdd \
+        [$BigIntMul [$BigIntDiv "123456789123456789" "-12345"] "-12345"] \
+        [$BigIntMod "123456789123456789" "-12345"] \
+        "nothing" \
+        "123456789123456789" \
+        "DivMod identity +-"]
+
+    :set res [$RunTestCase $res $BigIntAdd \
+        [$BigIntMul [$BigIntDiv "-123456789123456789" "-12345"] "-12345"] \
+        [$BigIntMod "-123456789123456789" "-12345"] \
+        "nothing" \
+        "-123456789123456789" \
+        "DivMod identity --"]
+
+    :set res [$RunTestCase $res $BigIntDiv \
+        "-1" "2" "nothing" "-1" \
+        "Floor -1/2"]
+
+    :set res [$RunTestCase $res $BigIntDiv \
+        "1" "-2" "nothing" "-1" \
+        "Floor 1/-2"]
+
+    :set res [$RunTestCase $res $BigIntDiv \
+        "-1" "-2" "nothing" "0" \
+        "Floor -1/-2"]
+
+    :set res [$RunTestCase $res $BigIntDiv \
+        "1" "2" "nothing" "0" \
+        "Floor 1/2"]
+
+    :set res [$RunTestCase $res $BigIntDiv \
+        "-10" "3" "nothing" "-4" \
+        "Floor -10/3"]
+
+    :set res [$RunTestCase $res $BigIntDiv \
+        "10" "-3" "nothing" "-4" \
+        "Floor 10/-3"]
+
+    :set res [$RunTestCase $res $BigIntDiv \
+        "-10" "-3" "nothing" "3" \
+        "Floor -10/-3"]
+
+    :set res [$RunTestCase $res $BigIntMod \
+        "-1" "2" "nothing" "1" \
+        "Mod -1/2"]
+
+    :set res [$RunTestCase $res $BigIntMod \
+        "1" "-2" "nothing" "-1" \
+        "Mod 1/-2"]
+
+    :set res [$RunTestCase $res $BigIntMod \
+        "-1" "-2" "nothing" "-1" \
+        "Mod -1/-2"]
+
+    :set res [$RunTestCase $res $BigIntMod \
+        "10" "-3" "nothing" "-2" \
+        "Mod 10/-3"]
+
+    :set res [$RunTestCase $res $BigIntMod \
+        "-10" "3" "nothing" "2" \
+        "Mod -10/3"]
+
+    :set res [$RunTestCase $res $BigIntMod \
+        "-10" "-3" "nothing" "-1" \
+        "Mod -10/-3"]
+
+    :set res [$RunTestCase $res $BigIntPow \
+        "123456789" "0" "nothing" "1" \
+        "Pow zero"]
+
+    :set res [$RunTestCase $res $BigIntPow \
+        "-12345" "1" "nothing" "-12345" \
+        "Pow one negative"]
+
+    :set res [$RunTestCase $res $BigIntPow \
+        "-12" "2" "nothing" "144" \
+        "Pow negative even"]
+
+    :set res [$RunTestCase $res $BigIntPow \
+        "-12" "3" "nothing" "-1728" \
+        "Pow negative odd"]
+
+    :set res [$RunTestCase $res $BigIntPow \
+        "12345" "4" "nothing" "23225462820950625" \
+        "Pow large"]
+
+    :set res [$RunTestCase $res $BigIntMod \
+        [$BigIntPow "12345" "7"] \
+        "97" \
+        "nothing" \
+        [$BigIntPowMod "12345" "7" "97"] \
+        "Pow versus PowMod"]
+
+    :set res [$RunTestCase $res $BigIntMod \
+        [$BigIntPow "-12345" "8"] \
+        "97" \
+        "nothing" \
+        [$BigIntPowMod "-12345" "8" "97"] \
+        "Pow versus PowMod negative even"]
+
+    :set res [$RunTestCase $res $BigIntMod \
+        [$BigIntPow "-12345" "9"] \
+        "97" \
+        "nothing" \
+        [$BigIntPowMod "-12345" "9" "97"] \
+        "Pow versus PowMod negative odd"]
+
+    :set res [$RunTestCase $res $BigIntMod \
+        "123456789123456789" \
+        [$BigIntGcd "123456789123456789" "987654321"] \
+        "nothing" \
+        "0" \
+        "GCD divides first"]
+
+    :set res [$RunTestCase $res $BigIntMod \
+        "987654321" \
+        [$BigIntGcd "123456789123456789" "987654321"] \
+        "nothing" \
+        "0" \
+        "GCD divides second"]
+
+    :set res [$RunTestCase $res $BigIntGcd \
+        "987654321" \
+        "123456789123456789" \
+        "nothing" \
+        [$BigIntGcd "123456789123456789" "987654321"] \
+        "GCD symmetry"]
+
+    :set res [$RunTestCase $res $BigIntGcd \
+        "123456789123456789" \
+        "987654321" \
+        "nothing" \
+        [$BigIntGcd "987654321" [$BigIntMod "123456789123456789" "987654321"]] \
+        "GCD Euclidean step"]
+
+    :set res [$RunTestCase $res $BigIntMod \
+        [$BigIntMul "17" [$BigIntModInverse "17" "3120"]] \
+        "3120" \
+        "nothing" \
+        "1" \
+        "ModInverse identity"]
+
+    :set res [$RunTestCase $res $BigIntMod \
+        [$BigIntMul "3" [$BigIntModInverse "3" "11"]] \
+        "11" \
+        "nothing" \
+        "1" \
+        "ModInverse 3/11"]
+
+    :set res [$RunTestCase $res $BigIntMod \
+        [$BigIntMul "1234567" [$BigIntModInverse "1234567" "10000019"]] \
+        "10000019" \
+        "nothing" \
+        "1" \
+        "ModInverse large"]
+
+    :set res [$RunTestCase $res $BigIntGcd \
+        "17" "3120" "nothing" "1" \
+        "Inverse GCD"]
+
+    :set res [$RunTestCase $res $BigIntGcd \
+        "12" "18" "nothing" "6" \
+        "Non-coprime GCD"]
+
+    :set res [$RunTestCase $res $BigIntAdd \
+        [$BigIntMul [$BigIntDiv "987654321987654321987654321" "123456789"] "123456789"] \
+        [$BigIntMod "987654321987654321987654321" "123456789"] \
+        "nothing" \
+        "987654321987654321987654321" \
+        "Large DivMod identity"]
+
+    :set res [$RunTestCase $res $BigIntAdd \
+        [$BigIntMul [$BigIntDiv "-987654321987654321987654321" "123456789"] "123456789"] \
+        [$BigIntMod "-987654321987654321987654321" "123456789"] \
+        "nothing" \
+        "-987654321987654321987654321" \
+        "Large DivMod identity negative"]
+
+    :set res [$RunTestCase $res $BigIntAdd \
+        [$BigIntMul [$BigIntDiv "987654321987654321987654321" "-123456789"] "-123456789"] \
+        [$BigIntMod "987654321987654321987654321" "-123456789"] \
+        "nothing" \
+        "987654321987654321987654321" \
+        "Large DivMod identity negative divisor"]
+
+    :set res [$RunTestCase $res $BigIntAdd \
+        [$BigIntMul [$BigIntDiv "-987654321987654321987654321" "-123456789"] "-123456789"] \
+        [$BigIntMod "-987654321987654321987654321" "-123456789"] \
+        "nothing" \
+        "-987654321987654321987654321" \
+        "Large DivMod identity both negative"]
 
     :put "Testing completed."
     :return $res

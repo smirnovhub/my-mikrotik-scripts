@@ -40,6 +40,13 @@
 :global BigIntModInverseArr
 :global BigIntCleanArr
 
+:global BigIntPowModMontArr
+:global BigIntMontDecodeArr
+:global BigIntMontEncodeArr
+:global BigIntMontMulArr
+:global BigIntMontInitArr
+:global BigIntMontInvRadixArr
+
 :global BigIntCmp
 :global BigIntAdd
 :global BigIntSub
@@ -799,6 +806,7 @@
     :global BigIntModInverseArr
     :global BigIntIsZeroArr
     :global BigIntIsOneArr
+    :global BigIntPowModMontArr
 
     :local baseObj $1
     :local expObj $2
@@ -823,18 +831,26 @@
         :return $oneObj
     }
 
+    # Use Montgomery multiplication when the modulus is coprime
+    # with the Montgomery radix 1000000000.
+    :local n0 (($modObj->"data")->0)
+    :if (($n0 % 2) != 0 && ($n0 % 5) != 0) do={
+        :return [$BigIntPowModMontArr $baseObj $expObj $modObj]
+    }
+
     :local currentResult $oneObj
     :local activeBase [$BigIntModArr $baseObj $modObj]
+    :local twoObj {"sign"=1; "data"=[:toarray 2]}
 
-    :while ([$BigIntCmpArr $expObj $zeroObj] = 1) do={
+    :while ([$BigIntIsZeroArr $expObj] = false) do={
         # If the lowest chunk is odd
         :if (((($expObj->"data")->0) % 2) != 0) do={
             :set currentResult [$BigIntModArr [$BigIntMulArr $currentResult $activeBase] $modObj]
         }
 
-        :set expObj [$BigIntDivArr $expObj ({"sign"=1; "data"=[:toarray 2]})]
+        :set expObj [$BigIntDivArr $expObj $twoObj]
 
-        :if ([$BigIntCmpArr $expObj $zeroObj] != 0) do={
+        :if ([$BigIntIsZeroArr $expObj] = false) do={
             :set activeBase [$BigIntModArr [$BigIntMulArr $activeBase $activeBase] $modObj]
         }
     }
@@ -870,7 +886,7 @@
     :local absB {"sign"=1; "data"=($bObj->"data")}
 
     # Euclidean algorithm loop
-    :while ([$BigIntCmpArr $absB $zeroObj] != 0) do={
+    :while ([$BigIntIsZeroArr $absB] = false) do={
         :local tempRem [$BigIntModArr $absA $absB]
         :set absA $absB
         :set absB $tempRem
@@ -959,7 +975,6 @@
     :local arrLen [:len $arr]
 
     :while ($arrLen > 1 && ($arr->($arrLen - 1)) = 0) do={
-        :set arr [:pick $arr 0 ($arrLen - 1)]
         :set arrLen ($arrLen - 1)
     }
 
@@ -967,7 +982,12 @@
         :return {"sign"=1; "data"=[:toarray 0]}
     }
 
-    :return {"sign"=($1->"sign"); "data"=$arr}
+    :local trimmed [:toarray ""]
+    :for i from=0 to=($arrLen - 1) do={
+        :set trimmed ($trimmed, ($arr->$i))
+    }
+
+    :return {"sign"=($1->"sign"); "data"=$trimmed}
 }
 
 # Purpose: Compare two BigInt string representations.
@@ -1121,4 +1141,252 @@
     :global BigIntModInverseArr
 
     :return [$ArrayToBigInt [$BigIntModInverseArr [$BigIntToArray $1] [$BigIntToArray $2]]]
+}
+
+# Purpose: Compute the negative modular inverse of the radix chunk for Montgomery arithmetic.
+# Parameters:
+#    $1 - Least significant chunk of the modulus array
+# Returns: Integer representing -a^(-1) mod radix
+# Example: :put [$BigIntMontInvRadixArr 17]
+# Output:
+#    294117647
+:set BigIntMontInvRadixArr do={
+    :local a $1
+
+    # Compute -a^(-1) mod 1000000000.
+    # Montgomery multiplication requires gcd(a, 1000000000) = 1.
+
+    :local radix 1000000000
+
+    :local oldR $a
+    :local r $radix
+    :local oldS 1
+    :local s 0
+
+    :while ($r != 0) do={
+        :local q ($oldR / $r)
+
+        :local tmpR $oldR
+        :set oldR $r
+        :set r ($tmpR - ($q * $r))
+
+        :local tmpS $oldS
+        :set oldS $s
+        :set s ($tmpS - ($q * $s))
+    }
+
+    :if ($oldR != 1) do={
+        :error "Montgomery radix is not coprime with modulus"
+    }
+
+    :local inv ($oldS % $radix)
+
+    :if ($inv < 0) do={
+        :set inv ($inv + $radix)
+    }
+
+    :return (($radix - $inv) % $radix)
+}
+
+# Purpose: Initialize the Montgomery context containing precomputed values for reduction and multiplication.
+# Parameters:
+#    $1 - Modulus BigInt object
+# Returns: Array context containing mod, k, n0Inv, rMod, and r2 elements
+:set BigIntMontInitArr do={
+    :global BigIntModArr
+    :global BigIntMulArr
+    :global BigIntMontInvRadixArr
+
+    :local k [:len ($1->"data")]
+    :local rDigits [:toarray ""]
+    :for i from=0 to=$k do={
+        :if ($i = $k) do={
+            :set rDigits ($rDigits, 1)
+        } else={
+            :set rDigits ($rDigits, 0)
+        }
+    }
+    
+    :local rModObj [$BigIntModArr ({"sign"=1; "data"=$rDigits}) $1]
+    :return {
+        "mod"=$1;
+        "k"=$k;
+        "n0Inv"=[$BigIntMontInvRadixArr (($1->"data")->0)];
+        "rMod"=$rModObj;
+        "r2"=[$BigIntModArr [$BigIntMulArr $rModObj $rModObj] $1]
+    }
+}
+
+# Purpose: Multiply two BigInt chunked arrays in the Montgomery domain.
+# Parameters:
+#    $1 - Montgomery context object created by BigIntMontInitArr
+#    $2 - First operand BigInt object
+#    $3 - Second operand BigInt object
+# Returns: BigInt object representing the Montgomery product result
+:set BigIntMontMulArr do={
+    :global BigIntCmpArr
+    :global BigIntSubArr
+
+    :local ctx $1
+    :local k ($ctx->"k")
+    :local n ($ctx->"mod"->"data")
+
+    # Pad arrays to completely remove bounds checking inside hot loops
+    :local a ($2->"data")
+    :while ([:len $a] < $k) do={ :set a ($a, 0) }
+
+    :local b ($3->"data")
+    :while ([:len $b] < $k) do={ :set b ($b, 0) }
+
+    # T array initialized with zeros
+    :local t [:toarray ""]
+    :for i from=0 to=($k + 1) do={ :set t ($t, 0) }
+
+    :local k1 ($k - 1)
+    :local n0Inv ($ctx->"n0Inv")
+
+    # Coarsely Integrated Operand Scanning loop integration
+    :for i from=0 to=$k1 do={
+        :local carry 0
+        :for j from=0 to=$k1 do={
+            :set carry (($t->$j) + (($a->$i) * ($b->$j)) + $carry)
+            :set ($t->$j) ($carry % 1000000000)
+            :set carry ($carry / 1000000000)
+        }
+        :set carry (($t->$k) + $carry)
+        :set ($t->$k) ($carry % 1000000000)
+        :set ($t->($k + 1)) ($carry / 1000000000)
+
+        :local m ((($t->0) * $n0Inv) % 1000000000)
+        :set carry (($t->0) + ($m * ($n->0)))
+        :set carry ($carry / 1000000000)
+
+        # Added condition to prevent negative step inference and out-of-bounds access
+        :if ($k1 >= 1) do={
+            :for j from=1 to=$k1 do={
+                :set carry (($t->$j) + ($m * ($n->$j)) + $carry)
+                :set ($t->($j - 1)) ($carry % 1000000000)
+                :set carry ($carry / 1000000000)
+            }
+        }
+
+        :set carry (($t->$k) + $carry)
+        :set ($t->($k - 1)) ($carry % 1000000000)
+        :set ($t->$k) (($t->($k + 1)) + ($carry / 1000000000))
+        :set ($t->($k + 1)) 0
+    }
+
+    # Clean leading zeros
+    :while ([:len $t] > 1 && ($t->([:len $t] - 1)) = 0) do={
+        :set t [:pick $t 0 ([:len $t] - 1)]
+    }
+    :local resultObj {"sign"=1; "data"=$t}
+
+    :if ([$BigIntCmpArr $resultObj ($ctx->"mod")] >= 0) do={
+        :set resultObj [$BigIntSubArr $resultObj ($ctx->"mod")]
+    }
+    :return $resultObj
+}
+
+# Purpose: Transform a standard BigInt value into the Montgomery domain representation.
+# Parameters:
+#    $1 - Montgomery context object
+#    $2 - BigInt value object to encode
+# Returns: BigInt object encoded in the Montgomery domain
+:set BigIntMontEncodeArr do={
+    :global BigIntMontMulArr
+
+    :local ctx $1
+    :local valueObj $2
+
+    # x * R mod N = MontMul(x, R^2).
+    :return [$BigIntMontMulArr $ctx $valueObj ($ctx->"r2")]
+}
+
+# Purpose: Transform a Montgomery domain value back to standard BigInt representation.
+# Parameters:
+#    $1 - Montgomery context object
+#    $2 - BigInt value object to decode
+# Returns: Decoded standard BigInt object
+:set BigIntMontDecodeArr do={
+    :global BigIntMontMulArr
+
+    :local ctx $1
+    :local valueObj $2
+
+    # x * R^-1 mod N = MontMul(x, 1).
+    :local oneObj {"sign"=1; "data"=[:toarray 1]}
+
+    :return [$BigIntMontMulArr $ctx $valueObj $oneObj]
+}
+
+# Purpose: Perform modular exponentiation using the Montgomery ladder algorithm.
+# Parameters:
+#    $1 - Base BigInt object
+#    $2 - Exponent BigInt object
+#    $3 - Modulus BigInt object
+# Returns: BigInt object containing the modular exponentiation result
+:set BigIntPowModMontArr do={
+    :global BigIntIsZeroArr
+    :global BigIntIsOneArr
+    :global BigIntModArr
+    :global BigIntDiv2Arr
+    :global BigIntMontInitArr
+    :global BigIntMontMulArr
+    :global BigIntMontEncodeArr
+    :global BigIntMontDecodeArr
+    :global BigIntModInverseArr
+    :global BigIntSubArr
+
+    :local baseObj $1
+    :local expObj $2
+    :local modObj $3
+
+    :local zeroObj {"sign"=1; "data"=[:toarray 0]}
+    :local oneObj {"sign"=1; "data"=[:toarray 1]}
+
+    :if (($expObj->"sign") = -1) do={
+        :set expObj {"sign"=1; "data"=($expObj->"data")}
+    }
+
+    # Modulo by 1 or 0 results in 0.
+    :if ([$BigIntIsOneArr $modObj] = true || [$BigIntIsZeroArr $modObj] = true) do={
+        :return $zeroObj
+    }
+
+    # Any base to the power of 0 is 1.
+    :if ([$BigIntIsZeroArr $expObj] = true) do={
+        :return $oneObj
+    }
+    :if ([$BigIntIsZeroArr $baseObj] = true) do={
+        :return $zeroObj
+    }
+
+    :local absModObj {"sign"=1; "data"=($modObj->"data")}
+    :local ctx [$BigIntMontInitArr $absModObj]
+    
+    :set baseObj [$BigIntModArr $baseObj $absModObj]
+    :if (($expObj->"sign") = -1) do={
+        :set baseObj [$BigIntModInverseArr $baseObj $modObj]
+    }
+
+    :local activeBase [$BigIntMontEncodeArr $ctx $baseObj]
+    :local currentResult [$BigIntMontEncodeArr $ctx ({"sign"=1; "data"=[:toarray 1]})]
+
+    :while ([$BigIntIsZeroArr $expObj] = false) do={
+        :if (((($expObj->"data")->0) % 2) != 0) do={
+            :set currentResult [$BigIntMontMulArr $ctx $currentResult $activeBase]
+        }
+        :set expObj [$BigIntDiv2Arr $expObj]
+        :if ([$BigIntIsZeroArr $expObj] = false) do={
+            :set activeBase [$BigIntMontMulArr $ctx $activeBase $activeBase]
+        }
+    }
+
+    :local finalResult [$BigIntMontDecodeArr $ctx $currentResult]
+    :if (($modObj->"sign") = -1 && !([$BigIntIsZeroArr $finalResult] = true)) do={
+        :set finalResult [$BigIntSubArr $absModObj $finalResult]
+        :set finalResult {"sign"=-1; "data"=($finalResult->"data")}
+    }
+    :return $finalResult
 }

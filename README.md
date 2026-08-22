@@ -12,6 +12,7 @@ The code features comprehensive test coverage, ensuring reliable, stable operati
 * [`global_functions.rsc`](global/global_functions.rsc)
 * [`global_functions_array_str.rsc`](global/global_functions_array_str.rsc)
 * [`global_functions_auto_update.rsc`](global/global_functions_auto_update.rsc)
+* [`global_functions_big_int.rsc`](global/global_functions_big_int.rsc)
 * [`global_functions_datetime.rsc`](global/global_functions_datetime.rsc)
 * [`global_functions_encoding.rsc`](global/global_functions_encoding.rsc)
 * [`global_functions_global_vars.rsc`](global/global_functions_global_vars.rsc)
@@ -146,7 +147,7 @@ All hash algorithms are highly optimized for RouterOS. Exact benchmarks for RB75
 
 ### Arbitrary-Precision Integer (BigInt) Utilities
 
-A suite of functions for performing mathematical operations on arbitrary-precision integers (BigInt) in RouterOS. This library bypasses native 64-bit integer size limits by processing numbers of arbitrary length using string representations and internal 9-digit chunked arrays, supporting basic arithmetic, comparisons, modular math, and cryptographic primitives.
+A suite of functions for performing mathematical operations on arbitrary-precision integers (BigInt) in RouterOS. This library bypasses native 64-bit integer size limits by processing numbers of arbitrary length using string representations and internal 9-digit chunked arrays, supporting basic arithmetic, comparisons, modular math, and cryptographic primitives. All division and modulo operations utilize floor division semantics, ensuring full mathematical compatibility with Python.
 
 #### Type Conversion Methods
 
@@ -522,11 +523,15 @@ Convert timestamps, format duration strings, or parse RouterOS/ISO date-time for
 * [`global_functions_array_str_tests_1.rsc`](global/tests/global_functions_array_str_tests_1.rsc)
 * [`global_functions_array_str_tests_2.rsc`](global/tests/global_functions_array_str_tests_2.rsc)
 * [`global_functions_array_str_tests_3.rsc`](global/tests/global_functions_array_str_tests_3.rsc)
+* [`global_functions_auto_update_tests.rsc`](global/tests/global_functions_auto_update_tests.rsc)
+* [`global_functions_big_int_tests_1.rsc`](global/tests/global_functions_big_int_tests_1.rsc)
+* [`global_functions_big_int_tests_2.rsc`](global/tests/global_functions_big_int_tests_2.rsc)
 * [`global_functions_datetime_tests_1.rsc`](global/tests/global_functions_datetime_tests_1.rsc)
 * [`global_functions_datetime_tests_2.rsc`](global/tests/global_functions_datetime_tests_2.rsc)
 * [`global_functions_encoding_tests.rsc`](global/tests/global_functions_encoding_tests.rsc)
 * [`global_functions_global_vars_tests.rsc`](global/tests/global_functions_global_vars_tests.rsc)
-* [`global_functions_hashes_tests.rsc`](global/tests/global_functions_hashes_tests.rsc)
+* [`global_functions_hashes_tests_1.rsc`](global/tests/global_functions_hashes_tests_1.rsc)
+* [`global_functions_hashes_tests_2.rsc`](global/tests/global_functions_hashes_tests_2.rsc)
 * [`global_functions_utils_tests.rsc`](global/tests/global_functions_utils_tests.rsc)
 
 ### Run All Test Suites

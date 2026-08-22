@@ -348,7 +348,7 @@
     :return [$BigIntCleanArr ({"sign"=$resultSign; "data"=$diffDigits})]
 }
 
-# Purpose: Multiply two BigInt chunked array objects.
+# Purpose: Multiply two BigInt chunked array objects using sequential convolution.
 # Parameters:
 #   $1 - Left BigInt object
 #   $2 - Right BigInt object
@@ -357,54 +357,61 @@
 # Output:
 #   100
 :set BigIntMulArr do={
-    :global BigIntAddArr
     :global BigIntIsZeroArr
 
     :local leftObj $1
     :local rightObj $2
-    :local leftSign ($leftObj->"sign")
-    :local rightSign ($rightObj->"sign")
-    :local leftDigits ($leftObj->"data")
-    :local rightDigits ($rightObj->"data")
 
     :if ([$BigIntIsZeroArr $leftObj] = true || [$BigIntIsZeroArr $rightObj] = true) do={
         :return {"sign"=1; "data"=[:toarray 0]}
     }
 
-    :local accumulatedProduct [:toarray 0]
-    :local rightLen [:len $rightDigits]
+    :local leftDigits ($leftObj->"data")
+    :local rightDigits ($rightObj->"data")
     :local leftLen [:len $leftDigits]
-
-    :for rightIndex from=0 to=($rightLen - 1) do={
-        :local multiplierChunk ($rightDigits->$rightIndex)
-        :if ($multiplierChunk > 0) do={
-            :local partialLevel [:toarray ""]
-            :if ($rightIndex > 0) do={
-                :for offset from=1 to=$rightIndex do={
-                    :set partialLevel ($partialLevel, 0)
-                }
-            }
-
-            :local carryVal 0
-            :for leftIndex from=0 to=($leftLen - 1) do={
-                :local productVal ((($leftDigits->$leftIndex) * $multiplierChunk) + $carryVal)
-                :set partialLevel ($partialLevel, ($productVal % 1000000000))
-                :set carryVal ($productVal / 1000000000)
-            }
-
-            :if ($carryVal > 0) do={
-                :set partialLevel ($partialLevel, $carryVal)
-            }
-
-            :local additionResult [$BigIntAddArr ({"sign"=1; "data"=$accumulatedProduct}) ({"sign"=1; "data"=$partialLevel})]
-            :set accumulatedProduct ($additionResult->"data")
+    :local rightLen [:len $rightDigits]
+    
+    :local prodDigits [:toarray ""]
+    :local carry 0
+    
+    :for k from=0 to=($leftLen + $rightLen - 2) do={
+        :local currentChunk $carry
+        :set carry 0
+        
+        :local minI 0
+        :if ($k >= $leftLen) do={
+            :set minI ($k - $leftLen + 1)
         }
+        
+        :local maxI $k
+        :if ($k >= $rightLen) do={
+            :set maxI ($rightLen - 1)
+        }
+        
+        :for i from=$minI to=$maxI do={
+            :local prod (($rightDigits->$i) * ($leftDigits->($k - $i)))
+            :set currentChunk ($currentChunk + ($prod % 1000000000))
+            :set carry ($carry + ($prod / 1000000000))
+        }
+        
+        :if ([:len $prodDigits] = 0) do={
+            :set prodDigits [:toarray ($currentChunk % 1000000000)]
+        } else={
+            :set prodDigits ($prodDigits, ($currentChunk % 1000000000))
+        }
+        
+        :set carry ($carry + ($currentChunk / 1000000000))
     }
-
-    :return {"sign"=($leftSign * $rightSign); "data"=$accumulatedProduct}
+    
+    :if ($carry > 0) do={
+        :set prodDigits ($prodDigits, $carry)
+    }
+    
+    :local finalSign ($leftObj->"sign" * $rightObj->"sign")
+    :return {"sign"=$finalSign; "data"=$prodDigits}
 }
 
-# Purpose: Calculate the remainder of division of two BigInt chunked array objects.
+# Purpose: Calculate the remainder of division of two BigInt chunked array objects using Knuth Algorithm D.
 # Parameters:
 #   $1 - Dividend BigInt object
 #   $2 - Divisor BigInt object
@@ -416,6 +423,7 @@
     :global BigIntCmpArr
     :global BigIntSubArr
     :global BigIntMulArr
+    :global BigIntDivArr
     :global BigIntIsZeroArr
 
     :local numObj $1
@@ -425,50 +433,111 @@
     :local numDigits ($numObj->"data")
     :local modDigits ($modObj->"data")
 
+    # Fast return for division by zero
     :if ([$BigIntIsZeroArr $modObj] = true) do={
         :return {"sign"=1; "data"=[:toarray 0]}
     }
 
+    # Zero dividend always produces zero remainder
+    :if ([$BigIntIsZeroArr $numObj] = true) do={
+        :return {"sign"=1; "data"=[:toarray 0]}
+    }
+
+    :local absNum {"sign"=1; "data"=$numDigits}
     :local absMod {"sign"=1; "data"=$modDigits}
-
+    
     :local remainderDigits [:toarray 0]
-    :local numLen [:len $numDigits]
-
-    :for chunkIndex from=($numLen - 1) to=0 step=-1 do={
-        :local nextChunkValue ($numDigits->$chunkIndex)
-
-        # Shift remainder left by one base-10^9 chunk and append next chunk.
-        :if ([:len $remainderDigits] = 1 && ($remainderDigits->0) = 0) do={
-            :set remainderDigits [:toarray $nextChunkValue]
+    :local comparisonState [$BigIntCmpArr $absNum $absMod]
+    
+    # Fast path: dividend is smaller than divisor
+    :if ($comparisonState = -1) do={
+        :set remainderDigits $numDigits
+    } else={
+        # Fast path: dividend equals divisor
+        :if ($comparisonState = 0) do={
+            :return {"sign"=1; "data"=[:toarray 0]}
         } else={
-            :local extendedRem [:toarray $nextChunkValue]
-            :local remLen [:len $remainderDigits]
+            # Knuth Algorithm D Normalization phase
+            :local modLen [:len $modDigits]
+            :local modTop ($modDigits->($modLen - 1))
+            :local normScale (1000000000 / ($modTop + 1))
 
-            :for remIndex from=0 to=($remLen - 1) do={
-                :set extendedRem ($extendedRem, ($remainderDigits->$remIndex))
+            :local normNumObj $absNum
+            :local normModObj $absMod
+
+            :if ($normScale > 1) do={
+                :local scaleObj {"sign"=1; "data"=[:toarray $normScale]}
+                :set normNumObj [$BigIntMulArr $absNum $scaleObj]
+                :set normModObj [$BigIntMulArr $absMod $scaleObj]
             }
 
-            :set remainderDigits $extendedRem
-        }
+            :local normNumData ($normNumObj->"data")
+            :local normModData ($normModObj->"data")
+            :local normModLen [:len $normModData]
+            :local normModTop ($normModData->($normModLen - 1))
 
-        :local searchLow 0
-        :local searchHigh 999999999
+            :local numLen [:len $normNumData]
 
-        :while ($searchLow <= $searchHigh) do={
-            :local midVal (($searchLow + $searchHigh) >> 1)
-            :local candidateProduct [$BigIntMulArr $absMod ({"sign"=1; "data"=[:toarray $midVal]})]
+            # Main modulo evaluation loop
+            :for chunkIndex from=($numLen - 1) to=0 step=-1 do={
+                :local nextChunkValue ($normNumData->$chunkIndex)
 
-            :if ([$BigIntCmpArr $candidateProduct ({"sign"=1; "data"=$remainderDigits})] = 1) do={
-                :set searchHigh ($midVal - 1)
-            } else={
-                :set searchLow ($midVal + 1)
+                # Shift remainder using native flat array concatenation
+                :if ([:len $remainderDigits] = 1 && ($remainderDigits->0) = 0) do={
+                    :set remainderDigits [:toarray $nextChunkValue]
+                } else={
+                    :set remainderDigits ([:toarray $nextChunkValue], $remainderDigits)
+                }
+
+                :local remLen [:len $remainderDigits]
+                :local qEst 0
+
+                # Estimate quotient chunk
+                :if ($remLen < $normModLen) do={
+                    :set qEst 0
+                } else={
+                    :if ($remLen = $normModLen) do={
+                        :set qEst (($remainderDigits->($remLen - 1)) / $normModTop)
+                    } else={
+                        # Combine top two remainder chunks in a 64-bit integer
+                        :local remTopHigh ($remainderDigits->($remLen - 1))
+                        :local remTopLow ($remainderDigits->($remLen - 2))
+                        :local combined (($remTopHigh * 1000000000) + $remTopLow)
+                        :set qEst ($combined / $normModTop)
+                        
+                        :if ($qEst > 999999999) do={
+                            :set qEst 999999999
+                        }
+                    }
+                }
+
+                # Apply and adjust the estimated quotient
+                :if ($qEst > 0) do={
+                    :local qCorrect false
+                    :local subtractionAmountObj {"sign"=1; "data"=[:toarray 0]}
+
+                    :while (!$qCorrect && $qEst > 0) do={
+                        :set subtractionAmountObj [$BigIntMulArr $normModObj ({"sign"=1; "data"=[:toarray $qEst]})]
+                        :if ([$BigIntCmpArr $subtractionAmountObj ({"sign"=1; "data"=$remainderDigits})] = 1) do={
+                            :set qEst ($qEst - 1)
+                        } else={
+                            :set qCorrect true
+                        }
+                    }
+
+                    :if ($qEst > 0) do={
+                        :local subtractionResult [$BigIntSubArr ({"sign"=1; "data"=$remainderDigits}) $subtractionAmountObj]
+                        :set remainderDigits ($subtractionResult->"data")
+                    }
+                }
             }
-        }
-
-        :if ($searchHigh > 0) do={
-            :local subtractionAmount [$BigIntMulArr $absMod ({"sign"=1; "data"=[:toarray $searchHigh]})]
-            :local subtractionResult [$BigIntSubArr ({"sign"=1; "data"=$remainderDigits}) $subtractionAmount]
-            :set remainderDigits ($subtractionResult->"data")
+            
+            # Denormalization phase to restore true remainder scale
+            :if ($normScale > 1) do={
+                :local scaleObj {"sign"=1; "data"=[:toarray $normScale]}
+                :local denormResult [$BigIntDivArr ({"sign"=1; "data"=$remainderDigits}) $scaleObj]
+                :set remainderDigits ($denormResult->"data")
+            }
         }
     }
 
@@ -477,17 +546,16 @@
         :return {"sign"=1; "data"=$remainderDigits}
     }
 
-    # Python floor-division remainder must have the divisor's sign.
+    # Python floor-division remainder must have the divisor's sign
     :if ($numSign != $modSign) do={
         :local adjustedRemainder [$BigIntSubArr $absMod ({"sign"=1; "data"=$remainderDigits})]
         :set remainderDigits ($adjustedRemainder->"data")
-        :return {"sign"=$modSign; "data"=$remainderDigits}
     }
 
     :return {"sign"=$modSign; "data"=$remainderDigits}
 }
 
-# Purpose: Divide one BigInt chunked array object by another.
+# Purpose: Divide one BigInt chunked array object by another using Knuth Algorithm D.
 # Parameters:
 #   $1 - Dividend BigInt object
 #   $2 - Divisor BigInt object
@@ -510,6 +578,7 @@
     :local numDigits ($numObj->"data")
     :local divDigits ($divObj->"data")
 
+    # Fast return for division by zero
     :if ([$BigIntIsZeroArr $divObj] = true) do={
         :return {"sign"=1; "data"=[:toarray 0]}
     }
@@ -528,6 +597,7 @@
     :local absDiv {"sign"=1; "data"=$divDigits}
     :local comparisonState [$BigIntCmpArr $absNum $absDiv]
 
+    # Dividend is strictly less than divisor
     :if ($comparisonState = -1) do={
         :if ($finalSign = -1) do={
             :return {"sign"=-1; "data"=[:toarray 1]}
@@ -535,66 +605,107 @@
         :return {"sign"=1; "data"=[:toarray 0]}
     }
 
+    # Dividend equals divisor
     :if ($comparisonState = 0) do={
         :return {"sign"=$finalSign; "data"=[:toarray 1]}
     }
 
+    # Knuth Algorithm D Normalization phase
+    # Scale numbers so the top chunk of divisor is >= 500000000
+    :local divLen [:len $divDigits]
+    :local divTop ($divDigits->($divLen - 1))
+    :local normScale (1000000000 / ($divTop + 1))
+
+    :local normNumObj $absNum
+    :local normDivObj $absDiv
+
+    :if ($normScale > 1) do={
+        :local scaleObj {"sign"=1; "data"=[:toarray $normScale]}
+        :set normNumObj [$BigIntMulArr $absNum $scaleObj]
+        :set normDivObj [$BigIntMulArr $absDiv $scaleObj]
+    }
+
+    :local normNumData ($normNumObj->"data")
+    :local normDivData ($normDivObj->"data")
+    :local normDivLen [:len $normDivData]
+    :local normDivTop ($normDivData->($normDivLen - 1))
+
     :local quotientDigits [:toarray ""]
+    :local quotientStarted false
     :local remainderDigits [:toarray 0]
-    :local numLen [:len $numDigits]
+    :local numLen [:len $normNumData]
 
+    # Main division loop
     :for chunkIndex from=($numLen - 1) to=0 step=-1 do={
-        :local nextChunkValue ($numDigits->$chunkIndex)
+        :local nextChunkValue ($normNumData->$chunkIndex)
 
-        # Shift remainder left by one base-10^9 chunk and append next chunk.
+        # Shift remainder using native flat array concatenation
         :if ([:len $remainderDigits] = 1 && ($remainderDigits->0) = 0) do={
             :set remainderDigits [:toarray $nextChunkValue]
         } else={
-            :local extendedRem [:toarray $nextChunkValue]
-            :local remLen [:len $remainderDigits]
-
-            :for remIndex from=0 to=($remLen - 1) do={
-                :set extendedRem ($extendedRem, ($remainderDigits->$remIndex))
-            }
-
-            :set remainderDigits $extendedRem
+            :set remainderDigits ([:toarray $nextChunkValue], $remainderDigits)
         }
 
-        :local searchLow 0
-        :local searchHigh 999999999
+        :local remLen [:len $remainderDigits]
+        :local qEst 0
 
-        :while ($searchLow <= $searchHigh) do={
-            :local midVal (($searchLow + $searchHigh) >> 1)
-            :local candidateProduct [$BigIntMulArr $absDiv ({"sign"=1; "data"=[:toarray $midVal]})]
-
-            :if ([$BigIntCmpArr $candidateProduct ({"sign"=1; "data"=$remainderDigits})] = 1) do={
-                :set searchHigh ($midVal - 1)
+        # Estimate quotient chunk
+        :if ($remLen < $normDivLen) do={
+            :set qEst 0
+        } else={
+            :if ($remLen = $normDivLen) do={
+                :set qEst (($remainderDigits->($remLen - 1)) / $normDivTop)
             } else={
-                :set searchLow ($midVal + 1)
+                # Combine top two remainder chunks in a 64-bit integer
+                :local remTopHigh ($remainderDigits->($remLen - 1))
+                :local remTopLow ($remainderDigits->($remLen - 2))
+                :local combined (($remTopHigh * 1000000000) + $remTopLow)
+                :set qEst ($combined / $normDivTop)
+                
+                :if ($qEst > 999999999) do={
+                    :set qEst 999999999
+                }
             }
         }
 
-        :if ($searchHigh > 0) do={
-            :local subtractionAmount [$BigIntMulArr $absDiv ({"sign"=1; "data"=[:toarray $searchHigh]})]
-            :local subtractionResult [$BigIntSubArr ({"sign"=1; "data"=$remainderDigits}) $subtractionAmount]
-            :set remainderDigits ($subtractionResult->"data")
-        }
+        # Apply and adjust the estimated quotient
+        :if ($qEst > 0) do={
+            :local qCorrect false
+            :local subtractionAmountObj {"sign"=1; "data"=[:toarray 0]}
 
-        :if ([:len $quotientDigits] > 0 || $searchHigh > 0) do={
-            :local updatedQuotient [:toarray $searchHigh]
-            :local quotLen [:len $quotientDigits]
-
-            :for quotIndex from=0 to=($quotLen - 1) do={
-                :set updatedQuotient ($updatedQuotient, ($quotientDigits->$quotIndex))
+            # Due to normalization this while loop executes at most 2 times
+            :while (!$qCorrect && $qEst > 0) do={
+                :set subtractionAmountObj [$BigIntMulArr $normDivObj ({"sign"=1; "data"=[:toarray $qEst]})]
+                :if ([$BigIntCmpArr $subtractionAmountObj ({"sign"=1; "data"=$remainderDigits})] = 1) do={
+                    :set qEst ($qEst - 1)
+                } else={
+                    :set qCorrect true
+                }
             }
 
-            :set quotientDigits $updatedQuotient
+            :if ($qEst > 0) do={
+                :local subtractionResult [$BigIntSubArr ({"sign"=1; "data"=$remainderDigits}) $subtractionAmountObj]
+                :set remainderDigits ($subtractionResult->"data")
+            }
+        }
+
+        # Prepend to quotient array using native comma operator
+        :if ($quotientStarted || $qEst > 0) do={
+            :if (!$quotientStarted) do={
+                :set quotientDigits [:toarray $qEst]
+                :set quotientStarted true
+            } else={
+                :set quotientDigits ([:toarray $qEst], $quotientDigits)
+            }
         }
     }
 
-    # Floor division adjustment.
-    # For a negative result with a non-zero remainder,
-    # floor(x / y) is one less than truncation toward zero.
+    # Handle fully zero result
+    :if (!$quotientStarted) do={
+        :set quotientDigits [:toarray 0]
+    }
+
+    # Floor division adjustment for negative quotients with non-zero remainder
     :if ($finalSign = -1 && !([:len $remainderDigits] = 1 && ($remainderDigits->0) = 0)) do={
         :local incrementedQuotient [$BigIntAddArr ({"sign"=1; "data"=$quotientDigits}) ({"sign"=1; "data"=[:toarray 1]})]
         :set quotientDigits ($incrementedQuotient->"data")
@@ -805,6 +916,7 @@
     :local rObj $absMObj
     :local newRObj [$BigIntModArr $aObj $absMObj]
 
+    # Extended Euclidean Algorithm
     :while ([$BigIntIsZeroArr $newRObj] = false) do={
         :local quotient [$BigIntDivArr $rObj $newRObj]
         :local temp $newRObj
@@ -817,7 +929,7 @@
         :set tObj $temp
     }
 
-    # If r is not one then greatest common divisor is not one and inverse does not exist
+    # If r is not one, then greatest common divisor is not one and inverse does not exist
     :if ([$BigIntIsOneArr $rObj] = false) do={
         :return $zeroObj
     }

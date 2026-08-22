@@ -34,6 +34,7 @@
 :global BigIntMulArr
 :global BigIntModArr
 :global BigIntDivArr
+:global BigIntDiv2Arr
 :global BigIntPowArr
 :global BigIntPowModArr
 :global BigIntGcdArr
@@ -721,6 +722,33 @@
     :return {"sign"=$finalSign; "data"=$quotientDigits}
 }
 
+# Purpose: Divide a BigInt chunked array object by 2.
+# Parameters:
+#    $1 - BigInt object to divide
+# Returns: BigInt object containing the division result
+# Example: :put [$ArrayToBigInt [$BigIntDiv2Arr [$BigIntToArray "10"]]]
+# Output:
+#    5
+:set BigIntDiv2Arr do={
+    :local res [:toarray ""]
+    :local carry 0
+
+    :for i from=([:len ($1->"data")] - 1) to=0 step=-1 do={
+        :set res ([:toarray ((($carry * 1000000000) + (($1->"data")->$i)) >> 1)], $res)
+        :set carry ((($carry * 1000000000) + (($1->"data")->$i)) % 2)
+    }
+
+    :while ([:len $res] > 1 && ($res->([:len $res] - 1)) = 0) do={
+        :set res [:pick $res 0 ([:len $res] - 1)]
+    }
+
+    :if ([:len $res] = 0) do={
+        :set res [:toarray 0]
+    }
+
+    :return {"sign"=($1->"sign"); "data"=$res}
+}
+
 # Purpose: Raise a BigInt chunked array object to a specific power.
 # Parameters:
 #   $1 - Base BigInt object
@@ -731,7 +759,7 @@
 #   256
 :set BigIntPowArr do={
     :global BigIntMulArr
-    :global BigIntDivArr
+    :global BigIntDiv2Arr
     :global BigIntIsZeroArr
     :global BigIntIsOneArr
 
@@ -778,7 +806,7 @@
             :set currentResult [$BigIntMulArr $currentResult $activeBase]
         }
 
-        :set activeExp [$BigIntDivArr $activeExp ({"sign"=1; "data"=[:toarray 2]})]
+        :set activeExp [$BigIntDiv2Arr $activeExp]
 
         # If exponent is still not zero, square the base
         :if ([$BigIntIsZeroArr $activeExp] = false) do={
@@ -800,7 +828,7 @@
 #   24
 :set BigIntPowModArr do={
     :global BigIntMulArr
-    :global BigIntDivArr
+    :global BigIntDiv2Arr
     :global BigIntModArr
     :global BigIntCmpArr
     :global BigIntModInverseArr
@@ -840,7 +868,6 @@
 
     :local currentResult $oneObj
     :local activeBase [$BigIntModArr $baseObj $modObj]
-    :local twoObj {"sign"=1; "data"=[:toarray 2]}
 
     :while ([$BigIntIsZeroArr $expObj] = false) do={
         # If the lowest chunk is odd
@@ -848,7 +875,7 @@
             :set currentResult [$BigIntModArr [$BigIntMulArr $currentResult $activeBase] $modObj]
         }
 
-        :set expObj [$BigIntDivArr $expObj $twoObj]
+        :set expObj [$BigIntDiv2Arr $expObj]
 
         :if ([$BigIntIsZeroArr $expObj] = false) do={
             :set activeBase [$BigIntModArr [$BigIntMulArr $activeBase $activeBase] $modObj]

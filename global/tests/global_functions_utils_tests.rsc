@@ -125,13 +125,7 @@
     :if (($sampleMap->"strTrue") != "true") do={ :set modified true }
     :if (($sampleMap->"strFalse") != "false") do={ :set modified true }
 
-    :if ($modified = true) do={
-        :set ($res->"failed") (($res->"failed") + 1)
-        :put "  \1B[31m[FAIL]\1B[0m Source argument map was modified"
-    } else={
-        :set ($res->"passed") (($res->"passed") + 1)
-        :put "  \1B[32m[PASS]\1B[0m Source argument map remains unchanged"
-    }
+    :set res [$RunTestCase $res [:tostr $modified] "nothing" "nothing" "nothing" "false" "Source argument map remains unchanged"]
 
     :put "Testing completed."
     :return $res
@@ -225,13 +219,7 @@
     :if (($sampleMap->"strTrue") != "true") do={ :set modified true }
     :if (($sampleMap->"strFalse") != "false") do={ :set modified true }
 
-    :if ($modified = true) do={
-        :set ($res->"failed") (($res->"failed") + 1)
-        :put "  \1B[31m[FAIL]\1B[0m Source argument map was modified"
-    } else={
-        :set ($res->"passed") (($res->"passed") + 1)
-        :put "  \1B[32m[PASS]\1B[0m Source argument map remains unchanged"
-    }
+    :set res [$RunTestCase $res [:tostr $modified] "nothing" "nothing" "nothing" "false" "Source argument map remains unchanged"]
 
     :put "Testing completed."
     :return $res
@@ -307,13 +295,7 @@
     :if (($targetMap->"dead") != "198.51.100.254") do={ :set modified true }
     :if (($targetMap->"badhost") != "broken..ip") do={ :set modified true }
 
-    :if ($modified = true) do={
-        :set ($res->"failed") (($res->"failed") + 1)
-        :put "  \1B[31m[FAIL]\1B[0m Source host dictionary was modified during execution"
-    } else={
-        :set ($res->"passed") (($res->"passed") + 1)
-        :put "  \1B[32m[PASS]\1B[0m Source host dictionary remains unchanged"
-    }
+    :set res [$RunTestCase $res [:tostr $modified] "nothing" "nothing" "nothing" "false" "Source host dictionary remains unchanged"]
 
     :put "Testing completed."
     :return $res

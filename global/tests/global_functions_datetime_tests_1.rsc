@@ -108,6 +108,7 @@
 
 :set GetCurrentDateTimeTest do={
     :global InitTestCaseState
+    :global RunTestCase
     :global GetCurrentDateTime
     :global FromUnixTimestamp
     :global ToUnixTimestamp
@@ -121,21 +122,9 @@
     :local ts1 [$ToUnixTimestamp $date1]
     :local date2 [$FromUnixTimestamp $ts1]
 
-    :if ([:typeof $ts1] = "num" && $ts1 > 1783628648) do={
-        :set ($res->"passed") (($res->"passed") + 1)
-        :put ("  \1B[32m[PASS]\1B[0m Live system date/time fetched successfully: " . $date1)
-    } else={
-        :set ($res->"failed") (($res->"failed") + 1)
-        :put ("  \1B[31m[FAIL]\1B[0m Live system date/time fetch resulted in invalid structure: " . [:tostr $date1])
-    }
-
-    :if ($date1 = $date2 && $ts1 > 1783628648) do={
-        :set ($res->"passed") (($res->"passed") + 1)
-        :put ("  \1B[32m[PASS]\1B[0m Conversion to timestamp successful: " . $ts1)
-    } else={
-        :set ($res->"failed") (($res->"failed") + 1)
-        :put ("  \1B[31m[FAIL]\1B[0m Conversion to timestamp failed: " . [:tostr $ts1])
-    }
+    :set res [$RunTestCase $res [:tostr ([:typeof $ts1] = "num")] "nothing" "nothing" "nothing" "true" "Time type is num"]
+    :set res [$RunTestCase $res [:tostr ($ts1 > 1783628648)] "nothing" "nothing" "nothing" "true" "Timestamp is correct"]
+    :set res [$RunTestCase $res [:tostr ($date1 = $date2)] "nothing" "nothing" "nothing" "true" "Dates round-trip"]
 
     :put "Testing completed."
     :return $res
@@ -370,6 +359,7 @@
 
 :set GetUnixTimestampTest do={
     :global InitTestCaseState
+    :global RunTestCase
     :global GetUnixTimestamp
     :global FromUnixTimestamp
     :global ToUnixTimestamp
@@ -383,21 +373,9 @@
     :local date [$FromUnixTimestamp $ts1]
     :local ts2 [$ToUnixTimestamp $date]
 
-    :if ([:typeof $ts1] = "num" && $ts1 > 1783628648) do={
-        :set ($res->"passed") (($res->"passed") + 1)
-        :put ("  \1B[32m[PASS]\1B[0m Live system timestamp fetched successfully: " . $ts1)
-    } else={
-        :set ($res->"failed") (($res->"failed") + 1)
-        :put ("  \1B[31m[FAIL]\1B[0m Live system timestamp fetch resulted in invalid structure: " . [:tostr $ts1])
-    }
-
-    :if ($ts1 = $ts2 && $ts1 > 1783628648) do={
-        :set ($res->"passed") (($res->"passed") + 1)
-        :put ("  \1B[32m[PASS]\1B[0m Conversion to date successful: " . $date)
-    } else={
-        :set ($res->"failed") (($res->"failed") + 1)
-        :put ("  \1B[31m[FAIL]\1B[0m Conversion to date failed: " . [:tostr $date])
-    }
+    :set res [$RunTestCase $res [:tostr ([:typeof $ts1] = "num")] "nothing" "nothing" "nothing" "true" "Time type is num"]
+    :set res [$RunTestCase $res [:tostr ($ts1 > 1783628648)] "nothing" "nothing" "nothing" "true" "Timestamp is correct"]
+    :set res [$RunTestCase $res [:tostr ($ts1 = $ts2)] "nothing" "nothing" "nothing" "true" "Timestamps are equal"]
 
     :put "Testing completed."
     :return $res

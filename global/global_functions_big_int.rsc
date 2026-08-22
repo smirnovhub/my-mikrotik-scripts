@@ -27,6 +27,8 @@
 :global ArrayToBigInt
 
 :global BigIntCmpArr
+:global BigIntIsZeroArr
+:global BigIntIsOneArr
 :global BigIntAddArr
 :global BigIntSubArr
 :global BigIntMulArr
@@ -157,7 +159,7 @@
         :if ($leftLen > $rightLen) do={
             :return $leftSign
         } else={
-            :return ($leftSign * -1)
+            :return (-$leftSign)
         }
     }
 
@@ -169,12 +171,59 @@
             :if ($leftChunk > $rightChunk) do={
                 :return $leftSign
             } else={
-                :return ($leftSign * -1)
+                :return (-$leftSign)
             }
         }
     }
 
     :return 0
+}
+
+# Purpose: Check if a BigInt chunked array object is equal to zero.
+# Parameters:
+#   $1 - BigInt object to check
+# Returns: true if the value is 0, false otherwise
+# Example: :put [$BigIntIsZeroArr ({"sign"=1; "data"=[:toarray 0]})]
+# Output:
+#   true
+:set BigIntIsZeroArr do={
+    :local digits ($1->"data")
+
+    # Check if array is empty
+    :if ([:len $digits] = 0) do={
+        :return true
+    }
+
+    # Check if the only element is 0
+    :if ([:len $digits] = 1 && ($digits->0) = 0) do={
+        :return true
+    }
+
+    :return false
+}
+
+# Purpose: Check if a BigInt chunked array object is equal to one.
+# Parameters:
+#   $1 - BigInt object to check
+# Returns: true if the value is 1, false otherwise
+# Example: :put [$BigIntIsOneArr ({"sign"=1; "data"=[:toarray 1]})]
+# Output:
+#   true
+:set BigIntIsOneArr do={
+    :local numObj $1
+
+    # Check if sign is positive
+    :if (($numObj->"sign") != 1) do={
+        :return false
+    }
+
+    # Check if data contains only 1
+    :local digits ($numObj->"data")
+    :if ([:len $digits] = 1 && ($digits->0) = 1) do={
+        :return true
+    }
+
+    :return false
 }
 
 # Purpose: Add two BigInt chunked array objects.
@@ -196,7 +245,7 @@
     :local rightDigits ($rightObj->"data")
 
     :if ($leftSign != $rightSign) do={
-        :local invertedRight {"sign"=($rightSign * -1); "data"=$rightDigits}
+        :local invertedRight {"sign"=(-$rightSign); "data"=$rightDigits}
         :return [$BigIntSubArr $leftObj $invertedRight]
     }
 
@@ -253,7 +302,7 @@
     :local rightDigits ($rightObj->"data")
 
     :if ($leftSign != $rightSign) do={
-        :local invertedRight {"sign"=($rightSign * -1); "data"=$rightDigits}
+        :local invertedRight {"sign"=(-$rightSign); "data"=$rightDigits}
         :return [$BigIntAddArr $leftObj $invertedRight]
     }
 
@@ -272,7 +321,7 @@
     :if ($comparisonResult = -1) do={
         :set largerDigits $rightDigits
         :set smallerDigits $leftDigits
-        :set resultSign ($leftSign * -1)
+        :set resultSign (-$leftSign)
     }
 
     :local diffDigits [:toarray ""]
@@ -309,6 +358,7 @@
 #   100
 :set BigIntMulArr do={
     :global BigIntAddArr
+    :global BigIntIsZeroArr
 
     :local leftObj $1
     :local rightObj $2
@@ -317,7 +367,7 @@
     :local leftDigits ($leftObj->"data")
     :local rightDigits ($rightObj->"data")
 
-    :if (([:len $leftDigits] = 1 && ($leftDigits->0) = 0) || ([:len $rightDigits] = 1 && ($rightDigits->0) = 0)) do={
+    :if ([$BigIntIsZeroArr $leftObj] = true || [$BigIntIsZeroArr $rightObj] = true) do={
         :return {"sign"=1; "data"=[:toarray 0]}
     }
 
@@ -366,6 +416,7 @@
     :global BigIntCmpArr
     :global BigIntSubArr
     :global BigIntMulArr
+    :global BigIntIsZeroArr
 
     :local numObj $1
     :local modObj $2
@@ -374,7 +425,7 @@
     :local numDigits ($numObj->"data")
     :local modDigits ($modObj->"data")
 
-    :if ([:len $modDigits] = 1 && ($modDigits->0) = 0) do={
+    :if ([$BigIntIsZeroArr $modObj] = true) do={
         :return {"sign"=1; "data"=[:toarray 0]}
     }
 
@@ -449,20 +500,22 @@
     :global BigIntSubArr
     :global BigIntMulArr
     :global BigIntAddArr
+    :global BigIntIsZeroArr
 
     :local numObj $1
     :local divObj $2
+
     :local numSign ($numObj->"sign")
     :local divSign ($divObj->"sign")
     :local numDigits ($numObj->"data")
     :local divDigits ($divObj->"data")
 
-    :if ([:len $divDigits] = 1 && ($divDigits->0) = 0) do={
+    :if ([$BigIntIsZeroArr $divObj] = true) do={
         :return {"sign"=1; "data"=[:toarray 0]}
     }
 
-    # Zero dividend always produces zero.
-    :if ([:len $numDigits] = 1 && ($numDigits->0) = 0) do={
+    # Zero dividend always produces zero
+    :if ([$BigIntIsZeroArr $numObj] = true) do={
         :return {"sign"=1; "data"=[:toarray 0]}
     }
 
@@ -561,12 +614,14 @@
 :set BigIntPowArr do={
     :global BigIntMulArr
     :global BigIntDivArr
-    :global BigIntCmpArr
+    :global BigIntIsZeroArr
+    :global BigIntIsOneArr
 
     :local baseObj $1
     :local expObj $2
     :local expSign ($expObj->"sign")
 
+    # Handle negative exponent case
     :if ($expSign = -1) do={
         :return {"sign"=1; "data"=[:toarray 0]}
     }
@@ -574,19 +629,20 @@
     :local zeroObj {"sign"=1; "data"=[:toarray 0]}
     :local oneObj {"sign"=1; "data"=[:toarray 1]}
 
-    :if ([$BigIntCmpArr $expObj $zeroObj] = 0) do={
+    # Use optimized checks instead of comparing with full object
+    :if ([$BigIntIsZeroArr $expObj] = true) do={
         :return $oneObj
     }
 
-    :if ([$BigIntCmpArr $expObj $oneObj] = 0) do={
+    :if ([$BigIntIsOneArr $expObj] = true) do={
         :return $baseObj
     }
 
-    :if ([$BigIntCmpArr $baseObj $zeroObj] = 0) do={
+    :if ([$BigIntIsZeroArr $baseObj] = true) do={
         :return $zeroObj
     }
 
-    :if ([$BigIntCmpArr $baseObj $oneObj] = 0) do={
+    :if ([$BigIntIsOneArr $baseObj] = true) do={
         :return $oneObj
     }
 
@@ -594,16 +650,20 @@
     :local activeBase $baseObj
     :local activeExp $expObj
 
-    :while ([$BigIntCmpArr $activeExp $zeroObj] = 1) do={
+    # Loop while activeExp is not zero
+    :while ([$BigIntIsZeroArr $activeExp] = false) do={
         :local expDigits ($activeExp->"data")
         :local lowestExpChunk ($expDigits->0)
+
+        # Check if exponent is odd
         :if (($lowestExpChunk % 2) != 0) do={
             :set currentResult [$BigIntMulArr $currentResult $activeBase]
         }
 
         :set activeExp [$BigIntDivArr $activeExp ({"sign"=1; "data"=[:toarray 2]})]
 
-        :if ([$BigIntCmpArr $activeExp $zeroObj] != 0) do={
+        # If exponent is still not zero, square the base
+        :if ([$BigIntIsZeroArr $activeExp] = false) do={
             :set activeBase [$BigIntMulArr $activeBase $activeBase]
         }
     }
@@ -626,6 +686,8 @@
     :global BigIntModArr
     :global BigIntCmpArr
     :global BigIntModInverseArr
+    :global BigIntIsZeroArr
+    :global BigIntIsOneArr
 
     :local baseObj $1
     :local expObj $2
@@ -641,12 +703,12 @@
     :local oneObj {"sign"=1; "data"=[:toarray 1]}
 
     # Modulo by 1 or 0 results in 0
-    :if ([$BigIntCmpArr $modObj $oneObj] = 0 || [$BigIntCmpArr $modObj $zeroObj] = 0) do={
+    :if ([$BigIntIsOneArr $modObj] = true || [$BigIntIsZeroArr $modObj] = true) do={
         :return $zeroObj
     }
 
     # Any base to the power of 0 is 1
-    :if ([$BigIntCmpArr $expObj $zeroObj] = 0) do={
+    :if ([$BigIntIsZeroArr $expObj] = true) do={
         :return $oneObj
     }
 
@@ -680,6 +742,7 @@
 :set BigIntGcdArr do={
     :global BigIntModArr
     :global BigIntCmpArr
+    :global BigIntIsZeroArr
 
     :local aObj $1
     :local bObj $2
@@ -687,7 +750,7 @@
     :local zeroObj {"sign"=1; "data"=[:toarray 0]}
 
     # If both numbers are zero, return zero
-    :if ([$BigIntCmpArr $aObj $zeroObj] = 0 && [$BigIntCmpArr $bObj $zeroObj] = 0) do={
+    :if ([$BigIntIsZeroArr $aObj] = true && [$BigIntIsZeroArr $bObj] = true) do={
         :return $zeroObj
     }
 
@@ -720,6 +783,8 @@
     :global BigIntSubArr
     :global BigIntAddArr
     :global BigIntCmpArr
+    :global BigIntIsZeroArr
+    :global BigIntIsOneArr
 
     :local aObj $1
     :local mObj $2
@@ -731,7 +796,7 @@
     :local absMObj {"sign"=1; "data"=($mObj->"data")}
 
     # Guard against absolute modulus less than or equal to one
-    :if ([$BigIntCmpArr $absMObj $oneObj] != 1) do={
+    :if ([$BigIntIsZeroArr $absMObj] = true || [$BigIntIsOneArr $absMObj] = true) do={
         :return $zeroObj
     }
 
@@ -740,13 +805,10 @@
     :local rObj $absMObj
     :local newRObj [$BigIntModArr $aObj $absMObj]
 
-    :local quotient $zeroObj
-    :local temp $zeroObj
+    :while ([$BigIntIsZeroArr $newRObj] = false) do={
+        :local quotient [$BigIntDivArr $rObj $newRObj]
+        :local temp $newRObj
 
-    :while ([$BigIntCmpArr $newRObj $zeroObj] != 0) do={
-        :set quotient [$BigIntDivArr $rObj $newRObj]
-
-        :set temp $newRObj
         :set newRObj [$BigIntSubArr $rObj [$BigIntMulArr $quotient $newRObj]]
         :set rObj $temp
 
@@ -756,7 +818,7 @@
     }
 
     # If r is not one then greatest common divisor is not one and inverse does not exist
-    :if ([$BigIntCmpArr $rObj $oneObj] != 0) do={
+    :if ([$BigIntIsOneArr $rObj] = false) do={
         :return $zeroObj
     }
 
@@ -766,7 +828,7 @@
     }
 
     # Shift result to negative space if original modulus was negative
-    :if ($originalMSign = -1 && [$BigIntCmpArr $tObj $zeroObj] != 0) do={
+    :if ($originalMSign = -1 && [$BigIntIsZeroArr $tObj] = false) do={
         :set tObj [$BigIntSubArr $tObj $absMObj]
     }
 

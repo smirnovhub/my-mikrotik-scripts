@@ -12,6 +12,7 @@ The code features comprehensive test coverage, ensuring reliable, stable operati
 * [`global_functions.rsc`](global/global_functions.rsc)
 * [`global_functions_array_str.rsc`](global/global_functions_array_str.rsc)
 * [`global_functions_auto_update.rsc`](global/global_functions_auto_update.rsc)
+* [`global_functions_big_int.rsc`](global/global_functions_big_int.rsc)
 * [`global_functions_datetime.rsc`](global/global_functions_datetime.rsc)
 * [`global_functions_encoding.rsc`](global/global_functions_encoding.rsc)
 * [`global_functions_global_vars.rsc`](global/global_functions_global_vars.rsc)
@@ -143,6 +144,48 @@ All hash algorithms are highly optimized for RouterOS. Exact benchmarks for RB75
 - **GetSha1Sum**: 1.35x slower than CRC32
 - **GetSha256Sum**: 3.0x slower than CRC32
 - **GetSha512Sum**: 2.24x slower than CRC32
+
+### Arbitrary-Precision Integer (BigInt) Utilities
+
+A suite of functions for performing mathematical operations on arbitrary-precision integers (BigInt) in RouterOS. This library bypasses native 64-bit integer size limits by processing numbers of arbitrary length using string representations and internal 9-digit chunked arrays, supporting basic arithmetic, comparisons, modular math, and cryptographic primitives. All division and modulo operations utilize floor division semantics, ensuring full mathematical compatibility with Python.
+
+#### Type Conversion Methods
+
+These functions handle the translation between standard text strings and the internal dictionary objects used for calculations. You should use these when you need to manually prepare data for batch processing or when extracting a final readable result from a raw array object.
+
+- **ArrayToBigInt**: Convert a signed chunked array object back into a BigInt string.
+- **BigIntToArray**: Parse a BigInt string representation into a signed 9-digit chunked array object.
+
+#### Internal Array Operations
+
+Methods with the `*Arr` suffix operate directly on the internal chunked array representations. These are designed for performance and should be used when chaining multiple sequential operations together, as they prevent the overhead of repeatedly parsing and serializing strings between each mathematical step.
+
+- **BigIntAddArr**: Add two BigInt chunked array objects.
+- **BigIntCleanArr**: Normalize a BigInt chunked array object by removing trailing zero chunks.
+- **BigIntCmpArr**: Compare two BigInt chunked array objects (-1 if left < right, 0 if equal, 1 if left > right).
+- **BigIntDivArr**: Divide one BigInt chunked array object by another (integer quotient).
+- **BigIntGcdArr**: Calculate the Greatest Common Divisor (GCD) of two BigInt chunked array objects.
+- **BigIntModArr**: Calculate the remainder (modulo) of division of two BigInt chunked array objects.
+- **BigIntModInverseArr**: Calculate the modular multiplicative inverse of a BigInt chunked array object.
+- **BigIntMulArr**: Multiply two BigInt chunked array objects.
+- **BigIntPowArr**: Raise a BigInt chunked array object to a specified power.
+- **BigIntPowModArr**: Perform modular exponentiation (`(base ^ exp) % mod`) using BigInt chunked array objects.
+- **BigIntSubArr**: Subtract one BigInt chunked array object from another.
+
+#### Standard String Operations
+
+These are the primary, user-friendly methods. They accept standard strings as inputs and return string results, handling all internal array conversions automatically. Use these for straightforward, single-step calculations where maximum execution speed is not critical.
+
+- **BigIntAdd**: Add two BigInt string representations.
+- **BigIntCmp**: Compare two BigInt string representations (-1 if left < right, 0 if equal, 1 if left > right).
+- **BigIntDiv**: Divide one BigInt string representation by another (integer quotient).
+- **BigIntGcd**: Calculate the Greatest Common Divisor (GCD) of two BigInt string representations.
+- **BigIntMod**: Calculate the remainder (modulo) of division of two BigInt string representations.
+- **BigIntModInverse**: Calculate the modular multiplicative inverse of a BigInt string representation.
+- **BigIntMul**: Multiply two BigInt string representations.
+- **BigIntPow**: Raise a BigInt string representation to a specified power.
+- **BigIntPowMod**: Perform modular exponentiation (`(base ^ exp) % mod`) using BigInt string representations.
+- **BigIntSub**: Subtract one BigInt string representation from another.
 
 ### File & Script Utilities
 
@@ -298,6 +341,63 @@ Encode and decode strings using Standard/URL-safe Base64 alphabets or URL percen
 # Output: URL Decoded: search?q=test&a=1
 ```
 
+### BigInt Examples
+
+Arbitrary-precision integers examples:
+
+```routeros
+:global BigIntAdd
+:global BigIntSub
+:global BigIntMul
+:global BigIntDiv
+:global BigIntMod
+:global BigIntPow
+:global BigIntPowMod
+:global BigIntGcd
+:global BigIntModInverse
+:global BigIntCmp
+
+# Add two arbitrary-precision integers
+:put ("Add: " . [$BigIntAdd "9223372036854775807" "1000000000000000000"])
+# Output: Add: 10223372036854775807
+
+# Subtract two arbitrary-precision integers
+:put ("Sub: " . [$BigIntSub "100000000000000000000" "1"])
+# Output: Sub: 99999999999999999999
+
+# Multiply two arbitrary-precision integers
+:put ("Mul: " . [$BigIntMul "1234567890123456789" "9876543210987654321"])
+# Output: Mul: 12193263113702179522374638011112635269
+
+# Divide two arbitrary-precision integers (integer quotient)
+:put ("Div: " . [$BigIntDiv "100000000000000000000" "3"])
+# Output: Div: 33333333333333333333
+
+# Calculate remainder of division (modulo)
+:put ("Mod: " . [$BigIntMod "1234567890123456789" "1000000000"])
+# Output: Mod: 123456789
+
+# Raise a base to a power
+:put ("Pow: " . [$BigIntPow "2" "128"])
+# Output: Pow: 340282366920938463463374607431768211456
+
+# Perform modular exponentiation ((base ^ exp) % mod)
+:put ("PowMod: " . [$BigIntPowMod "2" "100" "1000"])
+# Output: PowMod: 376
+
+# Find the Greatest Common Divisor
+:put ("GCD: " . [$BigIntGcd "27000000000000000000" "18000000000000000000"])
+# Output: GCD: 9000000000000000000
+
+# Calculate modular multiplicative inverse
+:put ("ModInverse: " . [$BigIntModInverse "7" "1000000007"])
+# Output: ModInverse: 142857144
+
+# Compare two arbitrary-precision integers (-1, 0, or 1)
+:put ("Cmp: " . [$BigIntCmp "10000000000000000000" "2000000000000000000"])
+# Output: Cmp: 1
+```
+
 ### Network and Utility Functions
 
 ```routeros
@@ -423,11 +523,15 @@ Convert timestamps, format duration strings, or parse RouterOS/ISO date-time for
 * [`global_functions_array_str_tests_1.rsc`](global/tests/global_functions_array_str_tests_1.rsc)
 * [`global_functions_array_str_tests_2.rsc`](global/tests/global_functions_array_str_tests_2.rsc)
 * [`global_functions_array_str_tests_3.rsc`](global/tests/global_functions_array_str_tests_3.rsc)
+* [`global_functions_auto_update_tests.rsc`](global/tests/global_functions_auto_update_tests.rsc)
+* [`global_functions_big_int_tests_1.rsc`](global/tests/global_functions_big_int_tests_1.rsc)
+* [`global_functions_big_int_tests_2.rsc`](global/tests/global_functions_big_int_tests_2.rsc)
 * [`global_functions_datetime_tests_1.rsc`](global/tests/global_functions_datetime_tests_1.rsc)
 * [`global_functions_datetime_tests_2.rsc`](global/tests/global_functions_datetime_tests_2.rsc)
 * [`global_functions_encoding_tests.rsc`](global/tests/global_functions_encoding_tests.rsc)
 * [`global_functions_global_vars_tests.rsc`](global/tests/global_functions_global_vars_tests.rsc)
-* [`global_functions_hashes_tests.rsc`](global/tests/global_functions_hashes_tests.rsc)
+* [`global_functions_hashes_tests_1.rsc`](global/tests/global_functions_hashes_tests_1.rsc)
+* [`global_functions_hashes_tests_2.rsc`](global/tests/global_functions_hashes_tests_2.rsc)
 * [`global_functions_utils_tests.rsc`](global/tests/global_functions_utils_tests.rsc)
 
 ### Run All Test Suites

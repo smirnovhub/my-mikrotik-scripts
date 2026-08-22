@@ -33,8 +33,6 @@
 :global LogAndExit
 :global GetArgOrDefault
 :global GetArgOrExit
-:global GetHttpFileContent
-:global GetHttpFileContentWithRetry
 :global SilentPing
 :global RunScript
 :global ExportConfiguration

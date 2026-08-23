@@ -382,43 +382,43 @@
     :local rightDigits ($rightObj->"data")
     :local leftLen [:len $leftDigits]
     :local rightLen [:len $rightDigits]
-    
+
     :local prodDigits [:toarray ""]
     :local carry 0
-    
+
     :for k from=0 to=($leftLen + $rightLen - 2) do={
         :local currentChunk $carry
         :set carry 0
-        
+
         :local minI 0
         :if ($k >= $leftLen) do={
             :set minI ($k - $leftLen + 1)
         }
-        
+
         :local maxI $k
         :if ($k >= $rightLen) do={
             :set maxI ($rightLen - 1)
         }
-        
+
         :for i from=$minI to=$maxI do={
             :local prod (($rightDigits->$i) * ($leftDigits->($k - $i)))
             :set currentChunk ($currentChunk + ($prod % 1000000000))
             :set carry ($carry + ($prod / 1000000000))
         }
-        
+
         :if ([:len $prodDigits] = 0) do={
             :set prodDigits [:toarray ($currentChunk % 1000000000)]
         } else={
             :set prodDigits ($prodDigits, ($currentChunk % 1000000000))
         }
-        
+
         :set carry ($carry + ($currentChunk / 1000000000))
     }
-    
+
     :if ($carry > 0) do={
         :set prodDigits ($prodDigits, $carry)
     }
-    
+
     :local finalSign ($leftObj->"sign" * $rightObj->"sign")
     :return {"sign"=$finalSign; "data"=$prodDigits}
 }
@@ -457,10 +457,10 @@
 
     :local absNum {"sign"=1; "data"=$numDigits}
     :local absMod {"sign"=1; "data"=$modDigits}
-    
+
     :local remainderDigits [:toarray 0]
     :local comparisonState [$BigIntCmpArr $absNum $absMod]
-    
+
     # Fast path: dividend is smaller than divisor
     :if ($comparisonState = -1) do={
         :set remainderDigits $numDigits
@@ -516,7 +516,7 @@
                         :local remTopLow ($remainderDigits->($remLen - 2))
                         :local combined (($remTopHigh * 1000000000) + $remTopLow)
                         :set qEst ($combined / $normModTop)
-                        
+
                         :if ($qEst > 999999999) do={
                             :set qEst 999999999
                         }
@@ -543,7 +543,7 @@
                     }
                 }
             }
-            
+
             # Denormalization phase to restore true remainder scale
             :if ($normScale > 1) do={
                 :local scaleObj {"sign"=1; "data"=[:toarray $normScale]}
@@ -673,7 +673,7 @@
                 :local remTopLow ($remainderDigits->($remLen - 2))
                 :local combined (($remTopHigh * 1000000000) + $remTopLow)
                 :set qEst ($combined / $normDivTop)
-                
+
                 :if ($qEst > 999999999) do={
                     :set qEst 999999999
                 }
@@ -1237,7 +1237,7 @@
             :set rDigits ($rDigits, 0)
         }
     }
-    
+
     :local rModObj [$BigIntModArr ({"sign"=1; "data"=$rDigits}) $1]
     :return {
         "mod"=$1;
@@ -1395,7 +1395,7 @@
 
     :local absModObj {"sign"=1; "data"=($modObj->"data")}
     :local ctx [$BigIntMontInitArr $absModObj]
-    
+
     :set baseObj [$BigIntModArr $baseObj $absModObj]
     :if (($expObj->"sign") = -1) do={
         :set baseObj [$BigIntModInverseArr $baseObj $modObj]

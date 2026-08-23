@@ -34,6 +34,7 @@
 :global GetRandom20CharHex
 :global GetRandomNumber
 :global HexToNum
+:global HexToDecStr
 :global MapArray
 :global JoinArray
 :global SplitStr
@@ -197,6 +198,68 @@
 # Returns: Numeric value corresponding to the input hex string (e.g. 26, 255)
 :set HexToNum do={
     :return [:tonum ("0x" . $1)]
+}
+
+# Purpose: Converts a hexadecimal string of any length into a decimal representation string
+#          by processing chunks of 4 bytes using tonum.
+# Parameters:
+#    $1 - Hexadecimal string to be converted (e.g., "0xFFFFFFFF" or "1A2B3C")
+# Returns: A string containing the decimal representation of the hex number
+# Example: :put [$HexToDecStr "ABCDEF0123456789"]
+# Output:
+#    12379813738877118345
+:set HexToDecStr do={
+    :local hexStr [:tostr $1]
+    :local lenHexStr [:len $hexStr]
+
+    # Return zero if string is empty
+    :if ($lenHexStr = 0) do={
+        :return "0"
+    }
+
+    # Pad with leading zeros to make length a multiple of eight
+    :local rem ($lenHexStr % 8)
+    :if ($rem > 0) do={
+        :set hexStr ([:pick "00000000" 0 (8 - $rem)] . $hexStr)
+        :set lenHexStr ($lenHexStr + (8 - $rem))
+    }
+
+    # Arrays and math limits
+    :local decArray [:toarray "0"]
+    :local baseNum 1000000000
+    :local multNum 4294967296
+
+    # Process hex string in chunks of four bytes
+    :for i from=0 to=($lenHexStr - 1) step=8 do={
+        :local chunkNum [:tonum ("0x" . [:pick $hexStr $i ($i + 8)])]
+        :local newArray [:toarray ""]
+
+        # Multiply existing decimal structure and add new chunk
+        :for j from=0 to=([:len $decArray] - 1) do={
+            :local prod ((($decArray->$j) * $multNum) + $chunkNum)
+            :set $chunkNum ($prod / $baseNum)
+            :set newArray ($newArray, ($prod - ($chunkNum * $baseNum)))
+        }
+
+        # Process remaining chunkNum
+        :while ($chunkNum > 0) do={
+            :set newArray ($newArray, ($chunkNum % $baseNum))
+            :set chunkNum ($chunkNum / $baseNum)
+        }
+
+        :set decArray $newArray
+    }
+
+    # Format array into final decimal string
+    :local res [:tostr ($decArray->([:len $decArray] - 1))]
+
+    :for j from=([:len $decArray] - 2) to=0 step=-1 do={
+        :local blockStr [:tostr ($decArray->$j)]
+        # Pad inner blocks with zeros to maintain alignment
+        :set res ($res . [:pick "000000000" 0 (9 - [:len $blockStr])] . $blockStr)
+    }
+
+    :return $res
 }
 
 # Purpose: Apply a transformation function to each element of an associative array (map)

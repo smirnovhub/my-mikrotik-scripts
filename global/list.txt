@@ -5,7 +5,7 @@
 # $DownloadAndImportScriptsFromList https://github.com/smirnovhub/my-mikrotik-scripts/raw/refs/heads/master/global/list.txt true
 
 f16ffc6002d598945c368b506c8a8424 https://github.com/smirnovhub/my-mikrotik-scripts/raw/refs/heads/master/global/global_functions.rsc
-554c5756b97c352f5fab47f49b68fac1 https://github.com/smirnovhub/my-mikrotik-scripts/raw/refs/heads/master/global/global_functions_array_str.rsc
+1b6996b41d5bc966ed476845d493a553 https://github.com/smirnovhub/my-mikrotik-scripts/raw/refs/heads/master/global/global_functions_array_str.rsc
 65b6dac6d8a881a91278197666e33c3b https://github.com/smirnovhub/my-mikrotik-scripts/raw/refs/heads/master/global/global_functions_auto_update.rsc
 165000e7b39ea112ae6467da10309774 https://github.com/smirnovhub/my-mikrotik-scripts/raw/refs/heads/master/global/global_functions_big_int.rsc
 8b0e45abd21aee48bbf8327ebe653390 https://github.com/smirnovhub/my-mikrotik-scripts/raw/refs/heads/master/global/global_functions_datetime.rsc

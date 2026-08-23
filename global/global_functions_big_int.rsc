@@ -26,6 +26,7 @@
 :global BigIntToArray
 :global ArrayToBigInt
 :global BigIntHexToDec
+:global BigIntDecToHex
 
 :global BigIntCmpArr
 :global BigIntIsZeroArr
@@ -144,9 +145,9 @@
 # Purpose: Converts a hexadecimal string of any length into a decimal representation string
 #          by processing chunks of 4 bytes using tonum.
 # Parameters:
-#    $1 - Hexadecimal string to be converted (e.g., "0xFFFFFFFF" or "1A2B3C")
+#    $1 - Hexadecimal string to be converted (e.g., "FFFFFFFF" or "1a2b3c")
 # Returns: A string containing the decimal representation of the hex number
-# Example: :put [$BigIntHexToDec "ABCDEF0123456789"]
+# Example: :put [$BigIntHexToDec "abcdef0123456789"]
 # Output:
 #    12379813738877118345
 :set BigIntHexToDec do={
@@ -198,6 +199,89 @@
         :local blockStr [:tostr ($decArray->$j)]
         # Pad inner blocks with zeros to maintain alignment
         :set res ($res . [:pick "000000000" 0 (9 - [:len $blockStr])] . $blockStr)
+    }
+
+    :return $res
+}
+
+# Purpose: Converts a large decimal string into a hexadecimal representation string
+#          by repeatedly dividing the number by 2^32 using base-1e9 chunks.
+# Parameters:
+#    $1 - Decimal string to be converted (e.g., "12379813738877118345" or "1000")
+# Returns: A string containing the hexadecimal representation of the number
+# Example: :put [$BigIntDecToHex "12379813738877118345"]
+# Output:
+#    abcdef0123456789
+:set BigIntDecToHex do={
+    :global hexByteTable
+
+    :local decStr [:tostr $1]
+    :local lenDecStr [:len $decStr]
+
+    :if ($lenDecStr = 0 || $decStr = "0") do={
+        :return "0"
+    }
+
+    :local baseNum 1000000000
+    :local divNum 4294967296
+
+    # Convert decimal string to base-1e9 chunks.
+    :local decArray [:toarray ""]
+    :local lenDecStr [:len $decStr]
+    :local firstLen ($lenDecStr % 9)
+
+    :if ($firstLen = 0) do={
+        :set firstLen 9
+    }
+
+    :set decArray ($decArray, [:tonum [:pick $decStr 0 $firstLen]])
+
+    :local pos $firstLen
+
+    :while ($pos < $lenDecStr) do={
+        :set decArray ($decArray, [:tonum [:pick $decStr $pos ($pos + 9)]])
+        :set pos ($pos + 9)
+    }
+
+    :local hexArray [:toarray ""]
+
+    # Repeatedly divide the big integer by 2^32.
+    :while (([:len $decArray] > 1) || (($decArray->0) > 0)) do={
+        :local quotient [:toarray ""]
+        :local carry 0
+
+        :for i from=0 to=([:len $decArray] - 1) do={
+            :local cur (($carry * $baseNum) + ($decArray->$i))
+            :local q ($cur / $divNum)
+            :set carry ($cur - ($q * $divNum))
+
+            :if (([:len $quotient] > 0) || ($q > 0)) do={
+                :set quotient ($quotient, $q)
+            }
+        }
+
+        # Convert 32-bit remainder to four hexadecimal bytes.
+        :set hexArray ($hexArray, \
+            (($hexByteTable->(($carry >> 24) & 0xFF)) . \
+            ($hexByteTable->(($carry >> 16) & 0xFF)) . \
+            ($hexByteTable->(($carry >> 8) & 0xFF)) . \
+            ($hexByteTable->($carry & 0xFF))))
+
+        :set decArray $quotient
+    }
+
+    # Reassemble chunks in reverse order.
+    :local chunk ($hexArray->([:len $hexArray] - 1))
+    :local j 0
+
+    :while (($j < 7) && ([:pick $chunk $j ($j + 1)] = "0")) do={
+        :set j ($j + 1)
+    }
+
+    :local res [:pick $chunk $j 8]
+
+    :for i from=([:len $hexArray] - 2) to=0 step=-1 do={
+        :set res ($res . ($hexArray->$i))
     }
 
     :return $res

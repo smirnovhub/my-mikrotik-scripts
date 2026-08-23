@@ -88,7 +88,7 @@ if ($weekday = $ignoredWeekday) do={
 # Define variable names
 :local hostStr [$ReplaceStr $host "." "-"]
 :local pingsVarName ($hostStr . "-ping")
-:local stateVarname ($hostStr . "-state")
+:local stateVarName ($hostStr . "-state")
 :local updStateVarName ($hostStr . "-upd-state")
 :local pingSuccessVarName ($hostStr . "-ping-success-count")
 :local pingFailVarName ($hostStr . "-ping-fail-count")
@@ -154,7 +154,7 @@ $SetGlobalVar $lastPingTimeVarName [$GetUnixTimestamp]
 $SetGlobalVar $pingsVarName $current
 
 # Load state
-:local state [$GetGlobalVar $stateVarname ""]
+:local state [$GetGlobalVar $stateVarName "empty"]
 
 # ===== DECISION =====
 :if ($percent >= $hostUpThresholdPercent) do={
@@ -172,8 +172,11 @@ $SetGlobalVar $pingsVarName $current
         :log info ($scriptName . ": " . $hostName . " " . $host . " is up")
         #$SendPrivateTelegramMessage $upMessageText
         # Save up state
-        $SetGlobalVar $stateVarname "up"
-        $SetGlobalVar $updStateVarName "up"
+        $SetGlobalVar $stateVarName "up"
+
+        :if ($state != "empty") do={
+            $SetGlobalVar $updStateVarName "up"
+        }
     }
 } else={
     :if ($percent < $hostDownThresholdPercent) do={
@@ -191,8 +194,11 @@ $SetGlobalVar $pingsVarName $current
             :log info ($scriptName . ": " . $hostName . " " . $host . " is down")
             #$SendPrivateTelegramMessage $downMessageText
             # Save down state
-            $SetGlobalVar $stateVarname "down"
-            $SetGlobalVar $updStateVarName "down"
+            $SetGlobalVar $stateVarName "down"
+
+            :if ($state != "empty") do={
+                $SetGlobalVar $updStateVarName "down"
+            }
         }
     } else={
         # ===== UNSTABLE ACTION =====
@@ -210,8 +216,11 @@ $SetGlobalVar $pingsVarName $current
                 :log info ($scriptName . ": " . $hostName . " " . $host . " is unstable")
                 #$SendPrivateTelegramMessage $unstableMessageText
                 # Save unstable state
-                $SetGlobalVar $stateVarname "unstable"
-                $SetGlobalVar $updStateVarName "unstable"
+                $SetGlobalVar $stateVarName "unstable"
+
+                :if ($state != "empty") do={
+                    $SetGlobalVar $updStateVarName "unstable"
+                }
             }
         } else={
             :if ($printLog = true) do={

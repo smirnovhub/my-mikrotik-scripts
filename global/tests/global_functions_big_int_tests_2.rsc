@@ -739,7 +739,6 @@
         [$BigIntPow "-3" [$BigIntMul "4" "5"]] \
         "Power of a power negative base"]
 
-
     :return $res
 }
 

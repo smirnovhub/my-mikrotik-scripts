@@ -20,6 +20,11 @@
     :global InitTestCaseState
     :global RunTestCase
     :global BigIntHexToDec
+    :global BigIntDecToHex
+    :global GetRandom20CharHex
+    :global GetSha1Sum
+    :global GetSha256Sum
+    :global GetSha512Sum
 
     :local res [$InitTestCaseState $1]
 
@@ -150,6 +155,35 @@
         "nothing" "nothing" \
         "100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000" \
         "Filling with zeros"]
+
+    :for i from=1 to=35 do={
+        :local originalHex [$GetRandom20CharHex]
+
+        :if (($i % 2) = 0) do={
+            :put "SHA1"
+            :set originalHex [$GetSha1Sum $originalHex]
+        } else={
+            :if (($i % 3) = 0) do={
+                :put "SHA512"
+                :set originalHex [$GetSha512Sum $originalHex]
+            } else={
+                :if (($i % 5) = 0) do={
+                    :put "SHA256"
+                    :set originalHex [$GetSha256Sum $originalHex]
+                }
+            }
+        }
+
+        # Strip leading zeros because BigIntDecToHex and BigIntHexToDec
+        # work with numeric values and do not preserve fixed-width padding
+        :local cleanHex $originalHex
+        :while ([:len $cleanHex] > 1 && [:pick $cleanHex 0 1] = "0") do={
+            :set cleanHex [:pick $cleanHex 1 [:len $cleanHex]]
+        }
+
+        :local decimalValue [$BigIntHexToDec $cleanHex]
+        :set res [$RunTestCase $res [$BigIntDecToHex $decimalValue] $originalHex "nothing" "nothing" $cleanHex ("Roundtrip test iteration " . $i)]
+    }
 
     :put "Testing completed."
     :return $res

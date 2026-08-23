@@ -1,6 +1,7 @@
 :global GetGlobalVar
 :global SetGlobalVar
 :global ReplaceStr
+:global IsFullyConnected
 :global SendPrivateTelegramMessage
 :global ToUpperCase
 
@@ -11,7 +12,14 @@
 :global backhandIndexPointingLeftEmoji
 :global nbsp
 
+:local scriptName "my_netwatch_changes"
 :local deviceName [/system identity get name]
+
+# Check for fully connected
+if ([$IsFullyConnected] = false) do={
+    :log warning "$scriptName: skip processing because system is not fully connected"
+    :return 0
+}
 
 # --- Initialize message list for Telegram ---
 # Start the message with deviceName on a separate line
@@ -29,7 +37,6 @@
 :local updCount 0
 
 :foreach i in=[/system scheduler find where disabled=no] do={
-
     # --- Check if scheduler name contains at least 1 dot (position >= 0) ---
     # Using :find returns the position of the first "." in the scheduler name.
     # If a dot exists (position >= 0), we consider this scheduler as containing an IP.

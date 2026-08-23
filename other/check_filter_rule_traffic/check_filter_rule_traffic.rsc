@@ -39,6 +39,7 @@
 :global FormatSecondsShort
 :global GetGlobalVar
 :global SetGlobalVar
+:global IsFullyConnected
 :global SendPrivateTelegramMessage
 
 :global largeGreenCircleEmoji
@@ -72,6 +73,12 @@
 
 # Initialize a message with a header
 :local deviceName [/system identity get name]
+
+# Check for fully connected
+if ([$IsFullyConnected] = false) do={
+    :log warning "$scriptName: skip processing because system is not fully connected"
+    :return 0
+}
 
 # Get the initial output of the bridge filter statistics as key-value pairs
 :local output1 [/interface bridge filter print stats as-value where disabled=no]

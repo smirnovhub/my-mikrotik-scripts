@@ -40,6 +40,7 @@
 :global WaitDefaultRouteReachable
 :global TimeIsSync
 :global WaitTimeSync
+:global IsFullyConnected
 :global WaitFullyConnected
 
 # check if DNS is resolving
@@ -130,6 +131,16 @@
 
   # return total wait time
   :return ($attempts * $delay)
+}
+
+:set IsFullyConnected do={
+    :global DNSIsResolving
+    :global DefaultRouteIsReachable
+    :global TimeIsSync
+
+    :return ([$DefaultRouteIsReachable] = true && \
+             [$DNSIsResolving] = true && \
+             [$TimeIsSync] = true)
 }
 
 # wait to be fully connected (default route is reachable, time is sync, DNS resolves)

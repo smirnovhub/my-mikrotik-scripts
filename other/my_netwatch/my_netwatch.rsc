@@ -30,6 +30,7 @@
 :global GetArgOrExit
 :global ParseKeyValueStore
 :global GetUnixTimestamp
+:global IsFullyConnected
 :global SendPrivateTelegramMessage
 :global GetGlobalVar
 :global SetGlobalVar
@@ -74,6 +75,12 @@
 :local upMessageText "$upEmoji $deviceName: <b>$hostName</b> $host is up"
 :local downMessageText "$downEmoji $deviceName: <b>$hostName</b> $host is down"
 :local unstableMessageText "$unstableEmoji $deviceName: <b>$hostName</b> $host is unstable"
+
+# Check for fully connected
+if ([$IsFullyConnected] = false) do={
+    :log warning "$scriptName: skip processing for $hostName $host because system is not fully connected"
+    :return 0
+}
 
 # Check ignoring time
 :local weekday [$GetWeekday [$GetUnixTimestamp]]

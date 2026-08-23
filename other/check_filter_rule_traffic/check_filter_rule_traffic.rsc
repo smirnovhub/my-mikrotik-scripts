@@ -259,7 +259,7 @@ $SetGlobalVar $bytesVarName $currentBytes
 $SetGlobalVar $lastUpdateVarName [$GetUnixTimestamp]
 
 # Load state
-:local state [$GetGlobalVar $stateVarName ""]
+:local state [$GetGlobalVar $stateVarName "empty"]
 
 :local upMessageText "$upEmoji $deviceName: seems registrator for <b>$ruleName</b> works properly."
 :local downMessageText "$downEmoji $deviceName: seems registrator for <b>$ruleName</b> doesn't work."
@@ -300,7 +300,10 @@ $SetGlobalVar $lastUpdateVarName [$GetUnixTimestamp]
         }
     } else={
         :log info ("Traffic between " . $srcIP . " <-> " . $dstIP . " is up")
-        $SendPrivateTelegramMessage ($upMessageText . "%0A" . $srcPingStatus . "%0A" . $dstPingStatus . "%0A" . $lastUpdateSecondsText)
+
+        :if ($state != "empty") do={
+            $SendPrivateTelegramMessage ($upMessageText . "%0A" . $srcPingStatus . "%0A" . $dstPingStatus . "%0A" . $lastUpdateSecondsText)
+        }
 
         # Save up state
         $SetGlobalVar $stateVarName "up"
@@ -323,7 +326,10 @@ $SetGlobalVar $lastUpdateVarName [$GetUnixTimestamp]
             $tryToSendNotification $message $lastNotificationVarName $notificationInterval
         } else={
             :log info ("Traffic between " . $srcIP . " <-> " . $dstIP . " is down")
-            $SendPrivateTelegramMessage $message
+
+            :if ($state != "empty") do={
+                $SendPrivateTelegramMessage $message
+            }
 
             # Save down state
             $SetGlobalVar $stateVarName "down"
@@ -346,7 +352,10 @@ $SetGlobalVar $lastUpdateVarName [$GetUnixTimestamp]
                 $tryToSendNotification $message $lastNotificationVarName $notificationInterval
             } else={
                 :log info ("Traffic between " . $srcIP . " <-> " . $dstIP . " is unstable")
-                $SendPrivateTelegramMessage $message
+
+                :if ($state != "empty") do={
+                    $SendPrivateTelegramMessage $message
+                }
 
                 # Save unstable state
                 $SetGlobalVar $stateVarName "unstable"

@@ -1,40 +1,50 @@
 :global RunAllBigIntTests2
-:global BigIntTest2
+:global BigIntGcdTest
+:global BigIntModInverseTest
+:global BigIntSymmetryTest
+:global BigIntFloorDivisionTest
+:global BigIntPowTest
+:global BigIntCombined1Test
+:global BigIntCombined2Test
+:global BigIntDifferentTest
 
 :set RunAllBigIntTests2 do={
     :global InitTestCaseState
-    :global BigIntTest2
+    :global BigIntGcdTest
+    :global BigIntModInverseTest
+    :global BigIntSymmetryTest
+    :global BigIntFloorDivisionTest
+    :global BigIntPowTest
+    :global BigIntCombined1Test
+    :global BigIntCombined2Test
+    :global BigIntDifferentTest
 
     :local res [$InitTestCaseState $1]
 
     :put "\1B[35m=== STARTING ALL BIG INT 2 TESTS ===\1B[0m"
 
-    :set res [$BigIntTest2 $res]
+    :set res [$BigIntGcdTest $res]
+    :set res [$BigIntModInverseTest $res]
+    :set res [$BigIntSymmetryTest $res]
+    :set res [$BigIntFloorDivisionTest $res]
+    :set res [$BigIntPowTest $res]
+    :set res [$BigIntCombined1Test $res]
+    :set res [$BigIntCombined2Test $res]
+    :set res [$BigIntDifferentTest $res]
 
     :put "\1B[35m=== ALL BIG INT 2 TESTS COMPLETED ===\1B[0m"
 
     :return $res
 }
 
-:set BigIntTest2 do={
+:set BigIntGcdTest do={
     :global InitTestCaseState
     :global RunTestCase
-    :global BigIntToArray
-    :global ArrayToBigInt
-    :global BigIntCmp
-    :global BigIntAdd
-    :global BigIntSub
+    :global BigIntGcd
     :global BigIntMul
     :global BigIntMod
-    :global BigIntDiv
-    :global BigIntPow
-    :global BigIntPowMod
-    :global BigIntGcd
-    :global BigIntModInverse
 
     :local res [$InitTestCaseState $1]
-
-    :put "Starting BigInt tests..."
 
     # Basic small GCD tests
     :set res [$RunTestCase $res $BigIntGcd "12" "15" "nothing" "3" "GCD of twelve and fifteen"]
@@ -78,7 +88,94 @@
     :set res [$RunTestCase $res $BigIntGcd "999999999999999999999" "111111111111111111111" "nothing" "111111111111111111111" "GCD of repeated digit massive numbers"]
     :set res [$RunTestCase $res $BigIntGcd "1000000000000" "999999999999" "nothing" "1" "GCD of numbers differing by one"]
 
-# Basic small modular inverse tests
+    # ------------------------------------------
+    # BigIntGcd properties
+    # ------------------------------------------
+
+    :set res [$RunTestCase $res $BigIntGcd "123456789123456789" "987654321987654321" "nothing" [$BigIntGcd "987654321987654321" "123456789123456789"] "GCD commutativity"]
+
+    :set res [$RunTestCase $res $BigIntGcd "-123456789123456789" "987654321987654321" "nothing" [$BigIntGcd "987654321987654321" "-123456789123456789"] "GCD commutativity mixed signs"]
+
+    :set res [$RunTestCase $res $BigIntGcd "-123456789123456789" "-987654321987654321" "nothing" [$BigIntGcd "-987654321987654321" "-123456789123456789"] "GCD commutativity negative numbers"]
+
+    # ------------------------------------------
+    # Euclidean GCD identity
+    # gcd(a,b) = gcd(b,a mod b)
+    # ------------------------------------------
+
+    :set res [$RunTestCase $res $BigIntGcd \
+        "123456789123456789" \
+        "987654321" \
+        "nothing" \
+        [$BigIntGcd "987654321" [$BigIntMod "123456789123456789" "987654321"]] \
+        "GCD Euclidean identity"]
+
+    :set res [$RunTestCase $res $BigIntGcd \
+        "-123456789123456789" \
+        "987654321" \
+        "nothing" \
+        [$BigIntGcd "987654321" [$BigIntMod "-123456789123456789" "987654321"]] \
+        "GCD Euclidean identity negative dividend"]
+
+    # ------------------------------------------
+    # GCD divides both operands
+    # ------------------------------------------
+
+    :set res [$RunTestCase $res $BigIntMod \
+        "123456789123456789" \
+        [$BigIntGcd "123456789123456789" "987654321987654321"] \
+        "nothing" \
+        "0" \
+        "GCD divides first operand"]
+
+    :set res [$RunTestCase $res $BigIntMod \
+        "987654321987654321" \
+        [$BigIntGcd "123456789123456789" "987654321987654321"] \
+        "nothing" \
+        "0" \
+        "GCD divides second operand"]
+
+    :set res [$RunTestCase $res $BigIntMod \
+        "-123456789123456789" \
+        [$BigIntGcd "-123456789123456789" "987654321987654321"] \
+        "nothing" \
+        "0" \
+        "GCD divides negative first operand"]
+
+    # ------------------------------------------
+    # GCD scaling property
+    # gcd(k*a, k*b) = |k| * gcd(a,b)
+    # ------------------------------------------
+
+    :set res [$RunTestCase $res $BigIntGcd \
+        [$BigIntMul "37" "123456"] \
+        [$BigIntMul "37" "789012"] \
+        "nothing" \
+        [$BigIntMul "37" [$BigIntGcd "123456" "789012"]] \
+        "GCD scaling property"]
+
+    :set res [$RunTestCase $res $BigIntGcd \
+        [$BigIntMul "-37" "123456"] \
+        [$BigIntMul "-37" "789012"] \
+        "nothing" \
+        [$BigIntMul "37" [$BigIntGcd "123456" "789012"]] \
+        "GCD scaling property negative scale"]
+
+    # Python math.gcd always returns positive result
+    :set res [$RunTestCase $res $BigIntGcd "-12" "-18" "nothing" "6" "GCD of negative numbers is positive in Python"]
+    :set res [$RunTestCase $res $BigIntGcd "-7" "0" "nothing" "7" "GCD of negative and zero is positive"]
+
+    :return $res
+}
+
+:set BigIntModInverseTest do={
+    :global InitTestCaseState
+    :global RunTestCase
+    :global BigIntModInverse
+
+    :local res [$InitTestCaseState $1]
+
+    # Basic small modular inverse tests
     :set res [$RunTestCase $res $BigIntModInverse "3" "11" "nothing" "4" "Modular inverse of three modulo eleven"]
     :set res [$RunTestCase $res $BigIntModInverse "2" "7" "nothing" "4" "Modular inverse of two modulo seven"]
     :set res [$RunTestCase $res $BigIntModInverse "3" "7" "nothing" "5" "Modular inverse of three modulo seven"]
@@ -190,6 +287,21 @@
     # Combined negative base and negative modulus
     :set res [$RunTestCase $res $BigIntModInverse "-3" "-11" "nothing" "-4" "Python negative base and negative mod"]
     :set res [$RunTestCase $res $BigIntModInverse "-5" "-7" "nothing" "-3" "Python negative base and negative mod"]
+
+    :return $res
+}
+
+:set BigIntSymmetryTest do={
+    :global InitTestCaseState
+    :global RunTestCase
+    :global BigIntSub
+    :global BigIntAdd
+    :global BigIntMul
+    :global BigIntMod
+    :global BigIntDiv
+    :global BigIntCmp
+
+    :local res [$InitTestCaseState $1]
 
     # ------------------------------------------
     # BigIntAdd / BigIntSub inverse properties
@@ -311,6 +423,20 @@
     :set res [$RunTestCase $res $BigIntCmp [$BigIntMod "123456789123456789" "-12345"] "12345" "nothing" "-1" "Modulo result is less than absolute negative divisor"]
     :set res [$RunTestCase $res $BigIntCmp [$BigIntMod "-123456789123456789" "-12345"] "12345" "nothing" "-1" "Negative modulo result is less than absolute negative divisor"]
 
+    :return $res
+}
+
+:set BigIntFloorDivisionTest do={
+    :global InitTestCaseState
+    :global RunTestCase
+    :global BigIntSub
+    :global BigIntAdd
+    :global BigIntMul
+    :global BigIntMod
+    :global BigIntDiv
+
+    :local res [$InitTestCaseState $1]
+
     # ------------------------------------------
     # BigIntDiv & BigIntMod Floor Division (Python-style)
     # ------------------------------------------
@@ -361,6 +487,22 @@
     :set res [$RunTestCase $res $BigIntDiv "0" "-5" "nothing" "0" "Floor div zero dividend negative divisor"]
     :set res [$RunTestCase $res $BigIntMod "0" "-5" "nothing" "0" "Modulo zero dividend negative divisor"]
 
+    :return $res
+}
+
+:set BigIntPowTest do={
+    :global InitTestCaseState
+    :global RunTestCase
+    :global BigIntSub
+    :global BigIntAdd
+    :global BigIntMul
+    :global BigIntMod
+    :global BigIntDiv
+    :global BigIntPow
+    :global BigIntPowMod
+
+    :local res [$InitTestCaseState $1]
+
     # ------------------------------------------
     # BigIntPow algebraic properties
     # ------------------------------------------
@@ -391,6 +533,24 @@
     :set res [$RunTestCase $res $BigIntPowMod "12345" "6" "1000003" [$BigIntMod [$BigIntPow "12345" "6"] "1000003"] "PowMod large base equals Pow modulo"]
     :set res [$RunTestCase $res $BigIntPowMod "2" "20" "1000" [$BigIntMod [$BigIntPow "2" "20"] "1000"] "PowMod exact cross check"]
 
+    :return $res
+}
+
+:set BigIntCombined1Test do={
+    :global InitTestCaseState
+    :global RunTestCase
+    :global BigIntSub
+    :global BigIntAdd
+    :global BigIntMul
+    :global BigIntMod
+    :global BigIntDiv
+    :global BigIntPow
+    :global BigIntPowMod
+    :global BigIntModInverse
+    :global BigIntCmp
+
+    :local res [$InitTestCaseState $1]
+
     # ------------------------------------------
     # BigIntPowMod recurrence
     # ------------------------------------------
@@ -408,79 +568,6 @@
         "nothing" \
         [$BigIntPowMod "-7" "11" "1000003"] \
         "PowMod recurrence negative base"]
-
-    # ------------------------------------------
-    # BigIntGcd properties
-    # ------------------------------------------
-
-    :set res [$RunTestCase $res $BigIntGcd "123456789123456789" "987654321987654321" "nothing" [$BigIntGcd "987654321987654321" "123456789123456789"] "GCD commutativity"]
-
-    :set res [$RunTestCase $res $BigIntGcd "-123456789123456789" "987654321987654321" "nothing" [$BigIntGcd "987654321987654321" "-123456789123456789"] "GCD commutativity mixed signs"]
-
-    :set res [$RunTestCase $res $BigIntGcd "-123456789123456789" "-987654321987654321" "nothing" [$BigIntGcd "-987654321987654321" "-123456789123456789"] "GCD commutativity negative numbers"]
-
-    # ------------------------------------------
-    # Euclidean GCD identity
-    # gcd(a,b) = gcd(b,a mod b)
-    # ------------------------------------------
-
-    :set res [$RunTestCase $res $BigIntGcd \
-        "123456789123456789" \
-        "987654321" \
-        "nothing" \
-        [$BigIntGcd "987654321" [$BigIntMod "123456789123456789" "987654321"]] \
-        "GCD Euclidean identity"]
-
-    :set res [$RunTestCase $res $BigIntGcd \
-        "-123456789123456789" \
-        "987654321" \
-        "nothing" \
-        [$BigIntGcd "987654321" [$BigIntMod "-123456789123456789" "987654321"]] \
-        "GCD Euclidean identity negative dividend"]
-
-    # ------------------------------------------
-    # GCD divides both operands
-    # ------------------------------------------
-
-    :set res [$RunTestCase $res $BigIntMod \
-        "123456789123456789" \
-        [$BigIntGcd "123456789123456789" "987654321987654321"] \
-        "nothing" \
-        "0" \
-        "GCD divides first operand"]
-
-    :set res [$RunTestCase $res $BigIntMod \
-        "987654321987654321" \
-        [$BigIntGcd "123456789123456789" "987654321987654321"] \
-        "nothing" \
-        "0" \
-        "GCD divides second operand"]
-
-    :set res [$RunTestCase $res $BigIntMod \
-        "-123456789123456789" \
-        [$BigIntGcd "-123456789123456789" "987654321987654321"] \
-        "nothing" \
-        "0" \
-        "GCD divides negative first operand"]
-
-    # ------------------------------------------
-    # GCD scaling property
-    # gcd(k*a, k*b) = |k| * gcd(a,b)
-    # ------------------------------------------
-
-    :set res [$RunTestCase $res $BigIntGcd \
-        [$BigIntMul "37" "123456"] \
-        [$BigIntMul "37" "789012"] \
-        "nothing" \
-        [$BigIntMul "37" [$BigIntGcd "123456" "789012"]] \
-        "GCD scaling property"]
-
-    :set res [$RunTestCase $res $BigIntGcd \
-        [$BigIntMul "-37" "123456"] \
-        [$BigIntMul "-37" "789012"] \
-        "nothing" \
-        [$BigIntMul "37" [$BigIntGcd "123456" "789012"]] \
-        "GCD scaling property negative scale"]
 
     # ------------------------------------------
     # BigIntModInverse invariant
@@ -534,17 +621,6 @@
     :set res [$RunTestCase $res $BigIntCmp [$BigIntModInverse "123" "1000"] "1000" "nothing" "-1" "Large ModInverse result less than modulus"]
 
     # ------------------------------------------
-    # Conversion round-trip boundary tests
-    # ------------------------------------------
-
-    :set res [$RunTestCase $res $ArrayToBigInt [$BigIntToArray "999999999"] "nothing" "nothing" "999999999" "Round-trip max single chunk"]
-    :set res [$RunTestCase $res $ArrayToBigInt [$BigIntToArray "1000000000"] "nothing" "nothing" "1000000000" "Round-trip first multi-chunk value"]
-    :set res [$RunTestCase $res $ArrayToBigInt [$BigIntToArray "999999999999999999"] "nothing" "nothing" "999999999999999999" "Round-trip max two chunks"]
-    :set res [$RunTestCase $res $ArrayToBigInt [$BigIntToArray "1000000000000000000"] "nothing" "nothing" "1000000000000000000" "Round-trip first three-chunk boundary"]
-    :set res [$RunTestCase $res $ArrayToBigInt [$BigIntToArray "999999999999999999999999999"] "nothing" "nothing" "999999999999999999999999999" "Round-trip large chunk boundary"]
-    :set res [$RunTestCase $res $ArrayToBigInt [$BigIntToArray "-999999999999999999999999999"] "nothing" "nothing" "-999999999999999999999999999" "Round-trip negative large chunk boundary"]
-
-    # ------------------------------------------
     # Additional chunk-boundary arithmetic tests
     # ------------------------------------------
 
@@ -586,18 +662,6 @@
         "nothing" \
         [$BigIntMul "789" [$BigIntSub "123456" "654321"]] \
         "Multiplication over subtraction identity"]
-
-    # ------------------------------------------
-    # Comparison consistency
-    # ------------------------------------------
-
-    :set res [$RunTestCase $res $BigIntCmp "123456789123456789" "987654321987654321" "nothing" "-1" "Comparison ordered large values"]
-    :set res [$RunTestCase $res $BigIntCmp "987654321987654321" "123456789123456789" "nothing" "1" "Comparison reverse ordered large values"]
-
-    :set res [$RunTestCase $res $BigIntCmp "-987654321987654321" "-123456789123456789" "nothing" "-1" "Comparison ordered negative values"]
-    :set res [$RunTestCase $res $BigIntCmp "-123456789123456789" "-987654321987654321" "nothing" "1" "Comparison reverse ordered negative values"]
-
-    :set res [$RunTestCase $res $BigIntCmp "123456789123456789" "123456789123456789" "nothing" "0" "Comparison identical large values"]
 
     # ------------------------------------------
     # Associativity of addition
@@ -675,6 +739,25 @@
         [$BigIntPow "-3" [$BigIntMul "4" "5"]] \
         "Power of a power negative base"]
 
+
+    :return $res
+}
+
+:set BigIntCombined2Test do={
+    :global InitTestCaseState
+    :global RunTestCase
+    :global BigIntSub
+    :global BigIntAdd
+    :global BigIntMul
+    :global BigIntMod
+    :global BigIntDiv
+    :global BigIntPow
+    :global BigIntPowMod
+    :global BigIntModInverse
+    :global BigIntCmp
+
+    :local res [$InitTestCaseState $1]
+
     # ------------------------------------------
     # PowMod exponent decomposition
     # a^(m+n) mod p =
@@ -701,10 +784,6 @@
 
     :set res [$RunTestCase $res $BigIntDiv "3" "-7" "nothing" "-1" "Python floor div small negative divisor"]
     :set res [$RunTestCase $res $BigIntMod "3" "-7" "nothing" "-4" "Python mod small negative divisor"]
-
-    # Python math.gcd always returns positive result
-    :set res [$RunTestCase $res $BigIntGcd "-12" "-18" "nothing" "6" "GCD of negative numbers is positive in Python"]
-    :set res [$RunTestCase $res $BigIntGcd "-7" "0" "nothing" "7" "GCD of negative and zero is positive"]
 
     # Python pow with negative exponent using modular inverse
     # pow(3, -2, 11) -> mod inverse of 3 mod 11 is 4 -> pow(4, 2, 11) = 5
@@ -843,6 +922,25 @@
     :set res [$RunTestCase $res $BigIntMod \
         "-10" "-3" "nothing" "-1" \
         "Mod -10/-3"]
+
+    :return $res
+}
+
+:set BigIntDifferentTest do={
+    :global InitTestCaseState
+    :global RunTestCase
+    :global BigIntSub
+    :global BigIntAdd
+    :global BigIntMul
+    :global BigIntMod
+    :global BigIntDiv
+    :global BigIntGcd
+    :global BigIntPow
+    :global BigIntPowMod
+    :global BigIntModInverse
+    :global BigIntCmp
+
+    :local res [$InitTestCaseState $1]
 
     :set res [$RunTestCase $res $BigIntPow \
         "123456789" "0" "nothing" "1" \

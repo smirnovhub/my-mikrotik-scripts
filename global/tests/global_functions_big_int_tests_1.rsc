@@ -1,39 +1,57 @@
 :global RunAllBigIntTests1
-:global BigIntTest1
+:global TestBigIntConversion
+:global TestBigIntCleanArr
+:global TestBigIntCmp
+:global TestBigIntAdd
+:global TestBigIntSub
+:global TestBigIntMul
+:global TestBigIntMod
+:global TestBigIntDiv
+:global TestBigIntPow
+:global TestBigIntPowMod
 
 :set RunAllBigIntTests1 do={
     :global InitTestCaseState
-    :global BigIntTest1
+    :global TestBigIntConversion
+    :global TestBigIntCleanArr
+    :global TestBigIntCmp
+    :global TestBigIntAdd
+    :global TestBigIntSub
+    :global TestBigIntMul
+    :global TestBigIntMod
+    :global TestBigIntDiv
+    :global TestBigIntPow
+    :global TestBigIntPowMod
 
     :local res [$InitTestCaseState $1]
 
     :put "\1B[35m=== STARTING ALL BIG INT 1 TESTS ===\1B[0m"
+    :put "Starting BigInt tests..."
 
-    :set res [$BigIntTest1 $res]
+    :set res [$TestBigIntConversion $res]
+    :set res [$TestBigIntCleanArr $res]
+    :set res [$TestBigIntCmp $res]
+    :set res [$TestBigIntAdd $res]
+    :set res [$TestBigIntSub $res]
+    :set res [$TestBigIntMul $res]
+    :set res [$TestBigIntMod $res]
+    :set res [$TestBigIntDiv $res]
+    :set res [$TestBigIntPow $res]
+    :set res [$TestBigIntPowMod $res]
 
+    :put "Testing completed."
     :put "\1B[35m=== ALL BIG INT 1 TESTS COMPLETED ===\1B[0m"
 
     :return $res
 }
 
-:set BigIntTest1 do={
+:set TestBigIntConversion do={
     :global InitTestCaseState
     :global RunTestCase
     :global BigIntToArray
     :global ArrayToBigInt
-    :global BigIntCleanArr
-    :global BigIntCmp
-    :global BigIntAdd
-    :global BigIntSub
-    :global BigIntMul
-    :global BigIntMod
-    :global BigIntDiv
-    :global BigIntPow
-    :global BigIntPowMod
 
     :local res [$InitTestCaseState $1]
-
-    :put "Starting BigInt tests..."
 
     # ==========================================
     # Conversion Test Cases
@@ -113,6 +131,24 @@
     :set res [$RunTestCase $res $ArrayToBigInt [$BigIntToArray "999888777666555444333222111000999888777666555"] "nothing" "nothing" "999888777666555444333222111000999888777666555" "Round-trip five-chunk positive number"]
     :set res [$RunTestCase $res $ArrayToBigInt [$BigIntToArray "-999888777666555444333222111000999888777666555"] "nothing" "nothing" "-999888777666555444333222111000999888777666555" "Round-trip five-chunk negative number"]
 
+    # Conversion round-trip boundary tests
+    :set res [$RunTestCase $res $ArrayToBigInt [$BigIntToArray "999999999"] "nothing" "nothing" "999999999" "Round-trip max single chunk"]
+    :set res [$RunTestCase $res $ArrayToBigInt [$BigIntToArray "1000000000"] "nothing" "nothing" "1000000000" "Round-trip first multi-chunk value"]
+    :set res [$RunTestCase $res $ArrayToBigInt [$BigIntToArray "999999999999999999"] "nothing" "nothing" "999999999999999999" "Round-trip max two chunks"]
+    :set res [$RunTestCase $res $ArrayToBigInt [$BigIntToArray "1000000000000000000"] "nothing" "nothing" "1000000000000000000" "Round-trip first three-chunk boundary"]
+    :set res [$RunTestCase $res $ArrayToBigInt [$BigIntToArray "999999999999999999999999999"] "nothing" "nothing" "999999999999999999999999999" "Round-trip large chunk boundary"]
+    :set res [$RunTestCase $res $ArrayToBigInt [$BigIntToArray "-999999999999999999999999999"] "nothing" "nothing" "-999999999999999999999999999" "Round-trip negative large chunk boundary"]
+
+    :return $res
+}
+
+:set TestBigIntCleanArr do={
+    :global InitTestCaseState
+    :global RunTestCase
+    :global BigIntCleanArr
+
+    :local res [$InitTestCaseState $1]
+
     # ==========================================
     # BigIntCleanArr Test Cases
     # ==========================================
@@ -154,6 +190,16 @@
 
     # Clean array with max chunk boundaries
     :set res [$RunTestCase $res $BigIntCleanArr ({"sign"=1; "data"=(999999999, 0)}) "nothing" "nothing" ({"sign"=1; "data"=[:toarray 999999999]}) "Max chunk size with trailing zero"]
+
+    :return $res
+}
+
+:set TestBigIntCmp do={
+    :global InitTestCaseState
+    :global RunTestCase
+    :global BigIntCmp
+
+    :local res [$InitTestCaseState $1]
 
     # ==========================================
     # BigIntCmp Test Cases
@@ -210,6 +256,24 @@
     :set res [$RunTestCase $res $BigIntCmp "000987" "000986" "nothing" "1" "Compare padded close numbers greater"]
     :set res [$RunTestCase $res $BigIntCmp "-000987" "-000986" "nothing" "-1" "Compare padded close negative numbers"]
 
+    # Comparison consistency
+    :set res [$RunTestCase $res $BigIntCmp "123456789123456789" "987654321987654321" "nothing" "-1" "Comparison ordered large values"]
+    :set res [$RunTestCase $res $BigIntCmp "987654321987654321" "123456789123456789" "nothing" "1" "Comparison reverse ordered large values"]
+    :set res [$RunTestCase $res $BigIntCmp "-987654321987654321" "-123456789123456789" "nothing" "-1" "Comparison ordered negative values"]
+    :set res [$RunTestCase $res $BigIntCmp "-123456789123456789" "-987654321987654321" "nothing" "1" "Comparison reverse ordered negative values"]
+    :set res [$RunTestCase $res $BigIntCmp "123456789123456789" "123456789123456789" "nothing" "0" "Comparison identical large values"]
+
+    :return $res
+}
+
+:set TestBigIntAdd do={
+    :global InitTestCaseState
+    :global RunTestCase
+    :global BigIntAdd
+    :global BigIntSub
+
+    :local res [$InitTestCaseState $1]
+
     # ==========================================
     # BigIntAdd Test Cases
     # ==========================================
@@ -265,6 +329,12 @@
     :set res [$RunTestCase $res $BigIntAdd "1005" "2005" "nothing" "3010" "Add numbers with inner zeros"]
     :set res [$RunTestCase $res $BigIntAdd "123456789123456789" "-123456789123456788" "nothing" "1" "Leading zero test"]
 
+    # Addition operations with padded inputs testing clean output propagation
+    :set res [$RunTestCase $res $BigIntAdd "005" "000" "nothing" "5" "Addition padded zero with single digit"]
+    :set res [$RunTestCase $res $BigIntAdd "000" "005" "nothing" "5" "Addition zero with padded single digit"]
+    :set res [$RunTestCase $res $BigIntAdd "009" "001" "nothing" "10" "Addition clean boundary tens"]
+    :set res [$RunTestCase $res $BigIntAdd "00099" "00001" "nothing" "100" "Addition clean heavy padded boundary"]
+
     # Extreme big numbers
     :set res [$RunTestCase $res $BigIntAdd \
         "78467056652122474322352994821898150938468142257513328624" \
@@ -272,6 +342,16 @@
         "nothing" \
         "78467212468240190863035009153864628121560601439984458611" \
         "Extreme big numbers add"]
+
+    :return $res
+}
+
+:set TestBigIntSub do={
+    :global InitTestCaseState
+    :global RunTestCase
+    :global BigIntSub
+
+    :local res [$InitTestCaseState $1]
 
     # ==========================================
     # BigIntSub Test Cases
@@ -331,6 +411,13 @@
     :set res [$RunTestCase $res $BigIntSub "-99999" "-99998" "nothing" "-1" "Adjacent negative boundary subtraction"]
     :set res [$RunTestCase $res $BigIntSub "123456789123456789" "123456789123456788" "nothing" "1" "Massive string adjacent difference"]
 
+    # Subtraction operations prone to uncleaned leading zeros during borrow chains
+    :set res [$RunTestCase $res $BigIntSub "1000" "995" "nothing" "5" "Subtraction borrow chain resulting in single digit"]
+    :set res [$RunTestCase $res $BigIntSub "10005" "10000" "nothing" "5" "Subtraction large borrow chain single digit"]
+    :set res [$RunTestCase $res $BigIntSub "100000" "99991" "nothing" "9" "Subtraction multi-zero borrow resulting in nine"]
+    :set res [$RunTestCase $res $BigIntSub "100" "98" "nothing" "2" "Subtraction small bounds single digit"]
+    :set res [$RunTestCase $res $BigIntSub "1000000" "999991" "nothing" "9" "Subtraction heavy zero crossing"]
+
     # Extreme big numbers
     :set res [$RunTestCase $res $BigIntSub \
         "78467056652122474322352994821898150938468142257513328624" \
@@ -338,6 +425,16 @@
         "nothing" \
         "78466900836004757781670980489931673755375683075042198637" \
         "Extreme big numbers sub"]
+
+    :return $res
+}
+
+:set TestBigIntMul do={
+    :global InitTestCaseState
+    :global RunTestCase
+    :global BigIntMul
+
+    :local res [$InitTestCaseState $1]
 
     # ==========================================
     # BigIntMul Test Cases
@@ -414,6 +511,16 @@
         "456356542200200488365402686644775650889764882652723412037979516785810588924372587279215304497564042160" \
         "Extreme big numbers mult"]
 
+    :return $res
+}
+
+:set TestBigIntMod do={
+    :global InitTestCaseState
+    :global RunTestCase
+    :global BigIntMod
+
+    :local res [$InitTestCaseState $1]
+
     # ==========================================
     # BigIntMod Test Cases
     # ==========================================
@@ -444,19 +551,6 @@
     :set res [$RunTestCase $res $BigIntMod "10001" "1000" "nothing" "1" "Modulo large scale single digit remainder"]
     :set res [$RunTestCase $res $BigIntMod "100005" "100000" "nothing" "5" "Modulo massive scale single digit remainder"]
     :set res [$RunTestCase $res $BigIntMod "2008" "2000" "nothing" "8" "Modulo inner zero offset remainder"]
-
-    # Subtraction operations prone to uncleaned leading zeros during borrow chains
-    :set res [$RunTestCase $res $BigIntSub "1000" "995" "nothing" "5" "Subtraction borrow chain resulting in single digit"]
-    :set res [$RunTestCase $res $BigIntSub "10005" "10000" "nothing" "5" "Subtraction large borrow chain single digit"]
-    :set res [$RunTestCase $res $BigIntSub "100000" "99991" "nothing" "9" "Subtraction multi-zero borrow resulting in nine"]
-    :set res [$RunTestCase $res $BigIntSub "100" "98" "nothing" "2" "Subtraction small bounds single digit"]
-    :set res [$RunTestCase $res $BigIntSub "1000000" "999991" "nothing" "9" "Subtraction heavy zero crossing"]
-
-    # Addition operations with padded inputs testing clean output propagation
-    :set res [$RunTestCase $res $BigIntAdd "005" "000" "nothing" "5" "Addition padded zero with single digit"]
-    :set res [$RunTestCase $res $BigIntAdd "000" "005" "nothing" "5" "Addition zero with padded single digit"]
-    :set res [$RunTestCase $res $BigIntAdd "009" "001" "nothing" "10" "Addition clean boundary tens"]
-    :set res [$RunTestCase $res $BigIntAdd "00099" "00001" "nothing" "100" "Addition clean heavy padded boundary"]
 
     # Large numbers and multi-digit remainders
     :set res [$RunTestCase $res $BigIntMod "1005" "100" "nothing" "5" "Modulo large numbers with inner zero"]
@@ -492,6 +586,16 @@
         "nothing" \
         "85379602901888801602819552948956225819168576565255" \
         "Extreme big numbers mod 2"]
+
+    :return $res
+}
+
+:set TestBigIntDiv do={
+    :global InitTestCaseState
+    :global RunTestCase
+    :global BigIntDiv
+
+    :local res [$InitTestCaseState $1]
 
     # Basic positive division and exact division
     :set res [$RunTestCase $res $BigIntDiv "10" "2" "nothing" "5" "Divide small positive even"]
@@ -536,6 +640,16 @@
     :set res [$RunTestCase $res $BigIntDiv "9876543210" "123456789" "nothing" "80" "Divide large distinct scale"]
     :set res [$RunTestCase $res $BigIntDiv "1000000000000000000" "1000000000" "nothing" "1000000000" "Divide quintillion by billion"]
     :set res [$RunTestCase $res $BigIntDiv "-9876543210" "123456789" "nothing" "-81" "Divide large negative distinct scale"]
+
+    :return $res
+}
+
+:set TestBigIntPow do={
+    :global InitTestCaseState
+    :global RunTestCase
+    :global BigIntPow
+
+    :local res [$InitTestCaseState $1]
 
     # Zero and one boundary rules
     :set res [$RunTestCase $res $BigIntPow "5" "0" "nothing" "1" "Power of zero returns one"]
@@ -605,6 +719,16 @@
         "nothing" \
         "478094999421155150422985667277310426143689613841376402956943893710007433030697521627089424034492049170903669577619543090049379379551666773377947115329000" \
         "781936345870195933245368379441061400465076853022090 pow 3"]
+
+    :return $res
+}
+
+:set TestBigIntPowMod do={
+    :global InitTestCaseState
+    :global RunTestCase
+    :global BigIntPowMod
+
+    :local res [$InitTestCaseState $1]
 
     # Basic small modular arithmetic
     :set res [$RunTestCase $res $BigIntPowMod "2" "2" "3" "1" "Square of two modulo three"]
@@ -715,6 +839,5 @@
     :set res [$RunTestCase $res $BigIntPowMod "999999" "-1" "1000000" "999999" "Python base minus one negative exp"]
     :set res [$RunTestCase $res $BigIntPowMod "999999" "-2" "1000000" "1" "Python base minus one negative even exp"]
 
-    :put "Testing completed."
     :return $res
 }

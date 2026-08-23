@@ -7,6 +7,7 @@
     :global RunAllAutoUpdateTests
     :global RunAllBigIntTests1
     :global RunAllBigIntTests2
+    :global RunAllBigIntTests3
     :global RunAllDateTimeTests1
     :global RunAllDateTimeTests2
     :global RunAllEncodingTests
@@ -57,6 +58,7 @@
     :set res [$RunTestSuite $res "AutoUpdate" $RunAllAutoUpdateTests]
     :set res [$RunTestSuite $res "BigInt1" $RunAllBigIntTests1]
     :set res [$RunTestSuite $res "BigInt2" $RunAllBigIntTests2]
+    :set res [$RunTestSuite $res "BigInt3" $RunAllBigIntTests3]
     :set res [$RunTestSuite $res "DateTime1" $RunAllDateTimeTests1]
     :set res [$RunTestSuite $res "DateTime2" $RunAllDateTimeTests2]
     :set res [$RunTestSuite $res "Encoding" $RunAllEncodingTests]

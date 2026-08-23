@@ -25,6 +25,8 @@
 # global functions
 :global BigIntToArray
 :global ArrayToBigInt
+:global BigIntHexToDec
+:global BigIntDecToHex
 
 :global BigIntCmpArr
 :global BigIntIsZeroArr
@@ -34,11 +36,19 @@
 :global BigIntMulArr
 :global BigIntModArr
 :global BigIntDivArr
+:global BigIntDiv2Arr
 :global BigIntPowArr
 :global BigIntPowModArr
 :global BigIntGcdArr
 :global BigIntModInverseArr
 :global BigIntCleanArr
+
+:global BigIntPowModMontArr
+:global BigIntMontDecodeArr
+:global BigIntMontEncodeArr
+:global BigIntMontMulArr
+:global BigIntMontInitArr
+:global BigIntMontInvRadixArr
 
 :global BigIntCmp
 :global BigIntAdd
@@ -74,13 +84,15 @@
     :local len [:len $str]
     :local dataArr [:toarray ""]
     :local signVal 1
+    :local radix 1000000000
+    :local radixDigits ([:len $radix] - 1)
 
     :if ($isNeg) do={
         :set signVal -1
     }
 
     :while ($len > 0) do={
-        :local start ($len - 9)
+        :local start ($len - $radixDigits)
 
         :if ($start < 0) do={
             :set start 0
@@ -107,12 +119,14 @@
     :local len [:len $arr]
     :local i ($len - 1)
     :local str ""
+    :local radix 1000000000
+    :local radixDigits ([:len $radix] - 1)
 
     :while ($i >= 0) do={
         :local chunk [:tostr ($arr->$i)]
 
         :if ($i < ($len - 1)) do={
-            :while ([:len $chunk] < 9) do={
+            :while ([:len $chunk] < $radixDigits) do={
                 :set chunk ("0" . $chunk)
             }
         }
@@ -126,6 +140,151 @@
     }
 
     :return $str
+}
+
+# Purpose: Converts a hexadecimal string of any length into a decimal representation string
+#          by processing chunks of 4 bytes using tonum.
+# Parameters:
+#    $1 - Hexadecimal string to be converted (e.g., "FFFFFFFF" or "1a2b3c")
+# Returns: A string containing the decimal representation of the hex number
+# Example: :put [$BigIntHexToDec "abcdef0123456789"]
+# Output:
+#    12379813738877118345
+:set BigIntHexToDec do={
+    :local hexStr [:tostr $1]
+    :local lenHexStr [:len $hexStr]
+
+    # Return zero if string is empty
+    :if ($lenHexStr = 0) do={
+        :return "0"
+    }
+
+    # Pad with leading zeros to make length a multiple of eight
+    :local rem ($lenHexStr % 8)
+    :if ($rem > 0) do={
+        :set hexStr ([:pick "00000000" 0 (8 - $rem)] . $hexStr)
+        :set lenHexStr ($lenHexStr + (8 - $rem))
+    }
+
+    # Arrays and math limits
+    :local decArray [:toarray "0"]
+    :local baseNum 1000000000
+    :local multNum 4294967296
+
+    # Process hex string in chunks of four bytes
+    :for i from=0 to=($lenHexStr - 1) step=8 do={
+        :local chunkNum [:tonum ("0x" . [:pick $hexStr $i ($i + 8)])]
+        :local newArray [:toarray ""]
+
+        # Multiply existing decimal structure and add new chunk
+        :for j from=0 to=([:len $decArray] - 1) do={
+            :local prod ((($decArray->$j) * $multNum) + $chunkNum)
+            :set $chunkNum ($prod / $baseNum)
+            :set newArray ($newArray, ($prod - ($chunkNum * $baseNum)))
+        }
+
+        # Process remaining chunkNum
+        :while ($chunkNum > 0) do={
+            :set newArray ($newArray, ($chunkNum % $baseNum))
+            :set chunkNum ($chunkNum / $baseNum)
+        }
+
+        :set decArray $newArray
+    }
+
+    # Format array into final decimal string
+    :local res [:tostr ($decArray->([:len $decArray] - 1))]
+
+    :for j from=([:len $decArray] - 2) to=0 step=-1 do={
+        :local blockStr [:tostr ($decArray->$j)]
+        # Pad inner blocks with zeros to maintain alignment
+        :set res ($res . [:pick "000000000" 0 (9 - [:len $blockStr])] . $blockStr)
+    }
+
+    :return $res
+}
+
+# Purpose: Converts a large decimal string into a hexadecimal representation string
+#          by repeatedly dividing the number by 2^32 using base-1e9 chunks.
+# Parameters:
+#    $1 - Decimal string to be converted (e.g., "12379813738877118345" or "1000")
+# Returns: A string containing the hexadecimal representation of the number
+# Example: :put [$BigIntDecToHex "12379813738877118345"]
+# Output:
+#    abcdef0123456789
+:set BigIntDecToHex do={
+    :global hexByteTable
+
+    :local decStr [:tostr $1]
+    :local lenDecStr [:len $decStr]
+
+    :if ($lenDecStr = 0 || $decStr = "0") do={
+        :return "0"
+    }
+
+    :local baseNum 1000000000
+    :local divNum 4294967296
+
+    # Convert decimal string to base-1e9 chunks.
+    :local decArray [:toarray ""]
+    :local lenDecStr [:len $decStr]
+    :local firstLen ($lenDecStr % 9)
+
+    :if ($firstLen = 0) do={
+        :set firstLen 9
+    }
+
+    :set decArray ($decArray, [:tonum [:pick $decStr 0 $firstLen]])
+
+    :local pos $firstLen
+
+    :while ($pos < $lenDecStr) do={
+        :set decArray ($decArray, [:tonum [:pick $decStr $pos ($pos + 9)]])
+        :set pos ($pos + 9)
+    }
+
+    :local hexArray [:toarray ""]
+
+    # Repeatedly divide the big integer by 2^32.
+    :while (([:len $decArray] > 1) || (($decArray->0) > 0)) do={
+        :local quotient [:toarray ""]
+        :local carry 0
+
+        :for i from=0 to=([:len $decArray] - 1) do={
+            :local cur (($carry * $baseNum) + ($decArray->$i))
+            :local q ($cur / $divNum)
+            :set carry ($cur - ($q * $divNum))
+
+            :if (([:len $quotient] > 0) || ($q > 0)) do={
+                :set quotient ($quotient, $q)
+            }
+        }
+
+        # Convert 32-bit remainder to four hexadecimal bytes.
+        :set hexArray ($hexArray, \
+            (($hexByteTable->(($carry >> 24) & 0xFF)) . \
+            ($hexByteTable->(($carry >> 16) & 0xFF)) . \
+            ($hexByteTable->(($carry >> 8) & 0xFF)) . \
+            ($hexByteTable->($carry & 0xFF))))
+
+        :set decArray $quotient
+    }
+
+    # Reassemble chunks in reverse order.
+    :local chunk ($hexArray->([:len $hexArray] - 1))
+    :local j 0
+
+    :while (($j < 7) && ([:pick $chunk $j ($j + 1)] = "0")) do={
+        :set j ($j + 1)
+    }
+
+    :local res [:pick $chunk $j 8]
+
+    :for i from=([:len $hexArray] - 2) to=0 step=-1 do={
+        :set res ($res . ($hexArray->$i))
+    }
+
+    :return $res
 }
 
 # Purpose: Compare two BigInt chunked array objects.
@@ -370,43 +529,43 @@
     :local rightDigits ($rightObj->"data")
     :local leftLen [:len $leftDigits]
     :local rightLen [:len $rightDigits]
-    
+
     :local prodDigits [:toarray ""]
     :local carry 0
-    
+
     :for k from=0 to=($leftLen + $rightLen - 2) do={
         :local currentChunk $carry
         :set carry 0
-        
+
         :local minI 0
         :if ($k >= $leftLen) do={
             :set minI ($k - $leftLen + 1)
         }
-        
+
         :local maxI $k
         :if ($k >= $rightLen) do={
             :set maxI ($rightLen - 1)
         }
-        
+
         :for i from=$minI to=$maxI do={
             :local prod (($rightDigits->$i) * ($leftDigits->($k - $i)))
             :set currentChunk ($currentChunk + ($prod % 1000000000))
             :set carry ($carry + ($prod / 1000000000))
         }
-        
+
         :if ([:len $prodDigits] = 0) do={
             :set prodDigits [:toarray ($currentChunk % 1000000000)]
         } else={
             :set prodDigits ($prodDigits, ($currentChunk % 1000000000))
         }
-        
+
         :set carry ($carry + ($currentChunk / 1000000000))
     }
-    
+
     :if ($carry > 0) do={
         :set prodDigits ($prodDigits, $carry)
     }
-    
+
     :local finalSign ($leftObj->"sign" * $rightObj->"sign")
     :return {"sign"=$finalSign; "data"=$prodDigits}
 }
@@ -445,10 +604,10 @@
 
     :local absNum {"sign"=1; "data"=$numDigits}
     :local absMod {"sign"=1; "data"=$modDigits}
-    
+
     :local remainderDigits [:toarray 0]
     :local comparisonState [$BigIntCmpArr $absNum $absMod]
-    
+
     # Fast path: dividend is smaller than divisor
     :if ($comparisonState = -1) do={
         :set remainderDigits $numDigits
@@ -486,7 +645,7 @@
                 :if ([:len $remainderDigits] = 1 && ($remainderDigits->0) = 0) do={
                     :set remainderDigits [:toarray $nextChunkValue]
                 } else={
-                    :set remainderDigits ([:toarray $nextChunkValue], $remainderDigits)
+                    :set remainderDigits ($nextChunkValue, $remainderDigits)
                 }
 
                 :local remLen [:len $remainderDigits]
@@ -504,7 +663,7 @@
                         :local remTopLow ($remainderDigits->($remLen - 2))
                         :local combined (($remTopHigh * 1000000000) + $remTopLow)
                         :set qEst ($combined / $normModTop)
-                        
+
                         :if ($qEst > 999999999) do={
                             :set qEst 999999999
                         }
@@ -531,7 +690,7 @@
                     }
                 }
             }
-            
+
             # Denormalization phase to restore true remainder scale
             :if ($normScale > 1) do={
                 :local scaleObj {"sign"=1; "data"=[:toarray $normScale]}
@@ -643,7 +802,7 @@
         :if ([:len $remainderDigits] = 1 && ($remainderDigits->0) = 0) do={
             :set remainderDigits [:toarray $nextChunkValue]
         } else={
-            :set remainderDigits ([:toarray $nextChunkValue], $remainderDigits)
+            :set remainderDigits ($nextChunkValue, $remainderDigits)
         }
 
         :local remLen [:len $remainderDigits]
@@ -661,7 +820,7 @@
                 :local remTopLow ($remainderDigits->($remLen - 2))
                 :local combined (($remTopHigh * 1000000000) + $remTopLow)
                 :set qEst ($combined / $normDivTop)
-                
+
                 :if ($qEst > 999999999) do={
                     :set qEst 999999999
                 }
@@ -714,6 +873,33 @@
     :return {"sign"=$finalSign; "data"=$quotientDigits}
 }
 
+# Purpose: Divide a BigInt chunked array object by 2.
+# Parameters:
+#    $1 - BigInt object to divide
+# Returns: BigInt object containing the division result
+# Example: :put [$ArrayToBigInt [$BigIntDiv2Arr [$BigIntToArray "10"]]]
+# Output:
+#    5
+:set BigIntDiv2Arr do={
+    :local res [:toarray ""]
+    :local carry 0
+
+    :for i from=([:len ($1->"data")] - 1) to=0 step=-1 do={
+        :set res ([:toarray ((($carry * 1000000000) + (($1->"data")->$i)) >> 1)], $res)
+        :set carry ((($carry * 1000000000) + (($1->"data")->$i)) % 2)
+    }
+
+    :while ([:len $res] > 1 && ($res->([:len $res] - 1)) = 0) do={
+        :set res [:pick $res 0 ([:len $res] - 1)]
+    }
+
+    :if ([:len $res] = 0) do={
+        :set res [:toarray 0]
+    }
+
+    :return {"sign"=($1->"sign"); "data"=$res}
+}
+
 # Purpose: Raise a BigInt chunked array object to a specific power.
 # Parameters:
 #   $1 - Base BigInt object
@@ -724,7 +910,7 @@
 #   256
 :set BigIntPowArr do={
     :global BigIntMulArr
-    :global BigIntDivArr
+    :global BigIntDiv2Arr
     :global BigIntIsZeroArr
     :global BigIntIsOneArr
 
@@ -771,7 +957,7 @@
             :set currentResult [$BigIntMulArr $currentResult $activeBase]
         }
 
-        :set activeExp [$BigIntDivArr $activeExp ({"sign"=1; "data"=[:toarray 2]})]
+        :set activeExp [$BigIntDiv2Arr $activeExp]
 
         # If exponent is still not zero, square the base
         :if ([$BigIntIsZeroArr $activeExp] = false) do={
@@ -793,12 +979,13 @@
 #   24
 :set BigIntPowModArr do={
     :global BigIntMulArr
-    :global BigIntDivArr
+    :global BigIntDiv2Arr
     :global BigIntModArr
     :global BigIntCmpArr
     :global BigIntModInverseArr
     :global BigIntIsZeroArr
     :global BigIntIsOneArr
+    :global BigIntPowModMontArr
 
     :local baseObj $1
     :local expObj $2
@@ -823,18 +1010,25 @@
         :return $oneObj
     }
 
+    # Use Montgomery multiplication when the modulus is coprime
+    # with the Montgomery radix 1000000000.
+    :local n0 (($modObj->"data")->0)
+    :if (($n0 % 2) != 0 && ($n0 % 5) != 0) do={
+        :return [$BigIntPowModMontArr $baseObj $expObj $modObj]
+    }
+
     :local currentResult $oneObj
     :local activeBase [$BigIntModArr $baseObj $modObj]
 
-    :while ([$BigIntCmpArr $expObj $zeroObj] = 1) do={
+    :while ([$BigIntIsZeroArr $expObj] = false) do={
         # If the lowest chunk is odd
         :if (((($expObj->"data")->0) % 2) != 0) do={
             :set currentResult [$BigIntModArr [$BigIntMulArr $currentResult $activeBase] $modObj]
         }
 
-        :set expObj [$BigIntDivArr $expObj ({"sign"=1; "data"=[:toarray 2]})]
+        :set expObj [$BigIntDiv2Arr $expObj]
 
-        :if ([$BigIntCmpArr $expObj $zeroObj] != 0) do={
+        :if ([$BigIntIsZeroArr $expObj] = false) do={
             :set activeBase [$BigIntModArr [$BigIntMulArr $activeBase $activeBase] $modObj]
         }
     }
@@ -870,7 +1064,7 @@
     :local absB {"sign"=1; "data"=($bObj->"data")}
 
     # Euclidean algorithm loop
-    :while ([$BigIntCmpArr $absB $zeroObj] != 0) do={
+    :while ([$BigIntIsZeroArr $absB] = false) do={
         :local tempRem [$BigIntModArr $absA $absB]
         :set absA $absB
         :set absB $tempRem
@@ -959,7 +1153,6 @@
     :local arrLen [:len $arr]
 
     :while ($arrLen > 1 && ($arr->($arrLen - 1)) = 0) do={
-        :set arr [:pick $arr 0 ($arrLen - 1)]
         :set arrLen ($arrLen - 1)
     }
 
@@ -967,7 +1160,12 @@
         :return {"sign"=1; "data"=[:toarray 0]}
     }
 
-    :return {"sign"=($1->"sign"); "data"=$arr}
+    :local trimmed [:toarray ""]
+    :for i from=0 to=($arrLen - 1) do={
+        :set trimmed ($trimmed, ($arr->$i))
+    }
+
+    :return {"sign"=($1->"sign"); "data"=$trimmed}
 }
 
 # Purpose: Compare two BigInt string representations.
@@ -1121,4 +1319,252 @@
     :global BigIntModInverseArr
 
     :return [$ArrayToBigInt [$BigIntModInverseArr [$BigIntToArray $1] [$BigIntToArray $2]]]
+}
+
+# Purpose: Compute the negative modular inverse of the radix chunk for Montgomery arithmetic.
+# Parameters:
+#    $1 - Least significant chunk of the modulus array
+# Returns: Integer representing -a^(-1) mod radix
+# Example: :put [$BigIntMontInvRadixArr 17]
+# Output:
+#    294117647
+:set BigIntMontInvRadixArr do={
+    :local a $1
+
+    # Compute -a^(-1) mod 1000000000.
+    # Montgomery multiplication requires gcd(a, 1000000000) = 1.
+
+    :local radix 1000000000
+
+    :local oldR $a
+    :local r $radix
+    :local oldS 1
+    :local s 0
+
+    :while ($r != 0) do={
+        :local q ($oldR / $r)
+
+        :local tmpR $oldR
+        :set oldR $r
+        :set r ($tmpR - ($q * $r))
+
+        :local tmpS $oldS
+        :set oldS $s
+        :set s ($tmpS - ($q * $s))
+    }
+
+    :if ($oldR != 1) do={
+        :error "Montgomery radix is not coprime with modulus"
+    }
+
+    :local inv ($oldS % $radix)
+
+    :if ($inv < 0) do={
+        :set inv ($inv + $radix)
+    }
+
+    :return (($radix - $inv) % $radix)
+}
+
+# Purpose: Initialize the Montgomery context containing precomputed values for reduction and multiplication.
+# Parameters:
+#    $1 - Modulus BigInt object
+# Returns: Array context containing mod, k, n0Inv, rMod, and r2 elements
+:set BigIntMontInitArr do={
+    :global BigIntModArr
+    :global BigIntMulArr
+    :global BigIntMontInvRadixArr
+
+    :local k [:len ($1->"data")]
+    :local rDigits [:toarray ""]
+    :for i from=0 to=$k do={
+        :if ($i = $k) do={
+            :set rDigits ($rDigits, 1)
+        } else={
+            :set rDigits ($rDigits, 0)
+        }
+    }
+
+    :local rModObj [$BigIntModArr ({"sign"=1; "data"=$rDigits}) $1]
+    :return {
+        "mod"=$1;
+        "k"=$k;
+        "n0Inv"=[$BigIntMontInvRadixArr (($1->"data")->0)];
+        "rMod"=$rModObj;
+        "r2"=[$BigIntModArr [$BigIntMulArr $rModObj $rModObj] $1]
+    }
+}
+
+# Purpose: Multiply two BigInt chunked arrays in the Montgomery domain.
+# Parameters:
+#    $1 - Montgomery context object created by BigIntMontInitArr
+#    $2 - First operand BigInt object
+#    $3 - Second operand BigInt object
+# Returns: BigInt object representing the Montgomery product result
+:set BigIntMontMulArr do={
+    :global BigIntCmpArr
+    :global BigIntSubArr
+
+    :local ctx $1
+    :local k ($ctx->"k")
+    :local n ($ctx->"mod"->"data")
+
+    # Pad arrays to completely remove bounds checking inside hot loops
+    :local a ($2->"data")
+    :while ([:len $a] < $k) do={ :set a ($a, 0) }
+
+    :local b ($3->"data")
+    :while ([:len $b] < $k) do={ :set b ($b, 0) }
+
+    # T array initialized with zeros
+    :local t [:toarray ""]
+    :for i from=0 to=($k + 1) do={ :set t ($t, 0) }
+
+    :local k1 ($k - 1)
+    :local n0Inv ($ctx->"n0Inv")
+
+    # Coarsely Integrated Operand Scanning loop integration
+    :for i from=0 to=$k1 do={
+        :local carry 0
+        :for j from=0 to=$k1 do={
+            :set carry (($t->$j) + (($a->$i) * ($b->$j)) + $carry)
+            :set ($t->$j) ($carry % 1000000000)
+            :set carry ($carry / 1000000000)
+        }
+        :set carry (($t->$k) + $carry)
+        :set ($t->$k) ($carry % 1000000000)
+        :set ($t->($k + 1)) ($carry / 1000000000)
+
+        :local m ((($t->0) * $n0Inv) % 1000000000)
+        :set carry (($t->0) + ($m * ($n->0)))
+        :set carry ($carry / 1000000000)
+
+        # Added condition to prevent negative step inference and out-of-bounds access
+        :if ($k1 >= 1) do={
+            :for j from=1 to=$k1 do={
+                :set carry (($t->$j) + ($m * ($n->$j)) + $carry)
+                :set ($t->($j - 1)) ($carry % 1000000000)
+                :set carry ($carry / 1000000000)
+            }
+        }
+
+        :set carry (($t->$k) + $carry)
+        :set ($t->($k - 1)) ($carry % 1000000000)
+        :set ($t->$k) (($t->($k + 1)) + ($carry / 1000000000))
+        :set ($t->($k + 1)) 0
+    }
+
+    # Clean leading zeros
+    :while ([:len $t] > 1 && ($t->([:len $t] - 1)) = 0) do={
+        :set t [:pick $t 0 ([:len $t] - 1)]
+    }
+    :local resultObj {"sign"=1; "data"=$t}
+
+    :if ([$BigIntCmpArr $resultObj ($ctx->"mod")] >= 0) do={
+        :set resultObj [$BigIntSubArr $resultObj ($ctx->"mod")]
+    }
+    :return $resultObj
+}
+
+# Purpose: Transform a standard BigInt value into the Montgomery domain representation.
+# Parameters:
+#    $1 - Montgomery context object
+#    $2 - BigInt value object to encode
+# Returns: BigInt object encoded in the Montgomery domain
+:set BigIntMontEncodeArr do={
+    :global BigIntMontMulArr
+
+    :local ctx $1
+    :local valueObj $2
+
+    # x * R mod N = MontMul(x, R^2).
+    :return [$BigIntMontMulArr $ctx $valueObj ($ctx->"r2")]
+}
+
+# Purpose: Transform a Montgomery domain value back to standard BigInt representation.
+# Parameters:
+#    $1 - Montgomery context object
+#    $2 - BigInt value object to decode
+# Returns: Decoded standard BigInt object
+:set BigIntMontDecodeArr do={
+    :global BigIntMontMulArr
+
+    :local ctx $1
+    :local valueObj $2
+
+    # x * R^-1 mod N = MontMul(x, 1).
+    :local oneObj {"sign"=1; "data"=[:toarray 1]}
+
+    :return [$BigIntMontMulArr $ctx $valueObj $oneObj]
+}
+
+# Purpose: Perform modular exponentiation using the Montgomery ladder algorithm.
+# Parameters:
+#    $1 - Base BigInt object
+#    $2 - Exponent BigInt object
+#    $3 - Modulus BigInt object
+# Returns: BigInt object containing the modular exponentiation result
+:set BigIntPowModMontArr do={
+    :global BigIntIsZeroArr
+    :global BigIntIsOneArr
+    :global BigIntModArr
+    :global BigIntDiv2Arr
+    :global BigIntMontInitArr
+    :global BigIntMontMulArr
+    :global BigIntMontEncodeArr
+    :global BigIntMontDecodeArr
+    :global BigIntModInverseArr
+    :global BigIntSubArr
+
+    :local baseObj $1
+    :local expObj $2
+    :local modObj $3
+
+    :local zeroObj {"sign"=1; "data"=[:toarray 0]}
+    :local oneObj {"sign"=1; "data"=[:toarray 1]}
+
+    :if (($expObj->"sign") = -1) do={
+        :set expObj {"sign"=1; "data"=($expObj->"data")}
+    }
+
+    # Modulo by 1 or 0 results in 0.
+    :if ([$BigIntIsOneArr $modObj] = true || [$BigIntIsZeroArr $modObj] = true) do={
+        :return $zeroObj
+    }
+
+    # Any base to the power of 0 is 1.
+    :if ([$BigIntIsZeroArr $expObj] = true) do={
+        :return $oneObj
+    }
+    :if ([$BigIntIsZeroArr $baseObj] = true) do={
+        :return $zeroObj
+    }
+
+    :local absModObj {"sign"=1; "data"=($modObj->"data")}
+    :local ctx [$BigIntMontInitArr $absModObj]
+
+    :set baseObj [$BigIntModArr $baseObj $absModObj]
+    :if (($expObj->"sign") = -1) do={
+        :set baseObj [$BigIntModInverseArr $baseObj $modObj]
+    }
+
+    :local activeBase [$BigIntMontEncodeArr $ctx $baseObj]
+    :local currentResult [$BigIntMontEncodeArr $ctx ({"sign"=1; "data"=[:toarray 1]})]
+
+    :while ([$BigIntIsZeroArr $expObj] = false) do={
+        :if (((($expObj->"data")->0) % 2) != 0) do={
+            :set currentResult [$BigIntMontMulArr $ctx $currentResult $activeBase]
+        }
+        :set expObj [$BigIntDiv2Arr $expObj]
+        :if ([$BigIntIsZeroArr $expObj] = false) do={
+            :set activeBase [$BigIntMontMulArr $ctx $activeBase $activeBase]
+        }
+    }
+
+    :local finalResult [$BigIntMontDecodeArr $ctx $currentResult]
+    :if (($modObj->"sign") = -1 && !([$BigIntIsZeroArr $finalResult] = true)) do={
+        :set finalResult [$BigIntSubArr $absModObj $finalResult]
+        :set finalResult {"sign"=-1; "data"=($finalResult->"data")}
+    }
+    :return $finalResult
 }

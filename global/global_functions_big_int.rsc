@@ -82,13 +82,15 @@
     :local len [:len $str]
     :local dataArr [:toarray ""]
     :local signVal 1
+    :local radix 1000000000
+    :local radixDigits ([:len $radix] - 1)
 
     :if ($isNeg) do={
         :set signVal -1
     }
 
     :while ($len > 0) do={
-        :local start ($len - 9)
+        :local start ($len - $radixDigits)
 
         :if ($start < 0) do={
             :set start 0
@@ -115,12 +117,14 @@
     :local len [:len $arr]
     :local i ($len - 1)
     :local str ""
+    :local radix 1000000000
+    :local radixDigits ([:len $radix] - 1)
 
     :while ($i >= 0) do={
         :local chunk [:tostr ($arr->$i)]
 
         :if ($i < ($len - 1)) do={
-            :while ([:len $chunk] < 9) do={
+            :while ([:len $chunk] < $radixDigits) do={
                 :set chunk ("0" . $chunk)
             }
         }
@@ -494,7 +498,7 @@
                 :if ([:len $remainderDigits] = 1 && ($remainderDigits->0) = 0) do={
                     :set remainderDigits [:toarray $nextChunkValue]
                 } else={
-                    :set remainderDigits ([:toarray $nextChunkValue], $remainderDigits)
+                    :set remainderDigits ($nextChunkValue, $remainderDigits)
                 }
 
                 :local remLen [:len $remainderDigits]
@@ -651,7 +655,7 @@
         :if ([:len $remainderDigits] = 1 && ($remainderDigits->0) = 0) do={
             :set remainderDigits [:toarray $nextChunkValue]
         } else={
-            :set remainderDigits ([:toarray $nextChunkValue], $remainderDigits)
+            :set remainderDigits ($nextChunkValue, $remainderDigits)
         }
 
         :local remLen [:len $remainderDigits]

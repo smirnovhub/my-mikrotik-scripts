@@ -437,6 +437,7 @@
 #          Optionally executes imported and up-to-date scripts after downloading.
 # Parameters:
 #   $1 - URL to the text file (must end with .txt) containing lines formatted as: "<hash> <script_url>"
+#   $2 - (Optional) Boolean flag ("true"/"false"). If true, don't send messages to Telegram.
 # Returns: Array with execution state:
 #   - "error": Boolean indicating whether a critical list fetch error occurred
 #   - "updated": Array of script names that were successfully updated/imported
@@ -496,7 +497,7 @@
     }
 
     :local sendMessage true
-    :if ([:tostr $3] = "false") do={
+    :if ([:tostr $2] = "false") do={
         :set sendMessage false
     }
 

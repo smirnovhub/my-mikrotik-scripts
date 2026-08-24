@@ -124,7 +124,7 @@
         }
 
         :local total ($successCount + $failCount)
-        
+
         :local successfulPingPercent -1
         :if ($total > 0) do={
             :set successfulPingPercent [$DivideIntAndRound ($successCount * 100) $total "0"]

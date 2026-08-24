@@ -122,7 +122,7 @@ $SetGlobalVar $ignoredTimeEndVarName $ignoredTimeEnd
   # Check ignoring time
   :local currentTime [/system clock get time]
   :local ignore false
-  
+
   :if ($ignoredTimeStart != $ignoredTimeEnd) do={
     # Normal interval (e.g. 08:00:00-18:00:00)
     :if ($ignoredTimeStart < $ignoredTimeEnd) do={
@@ -153,7 +153,7 @@ $SetGlobalVar $ignoredTimeEndVarName $ignoredTimeEnd
     $SetGlobalVar $dynamicCountVar 0
     :set lastSavedDate $currentDate
   }
-  
+
   # If the state has actually changed, process the event
   :if ($currentState != $lastKnownState) do={
     $SetGlobalVar $dynamicStateVar $currentState
@@ -169,10 +169,10 @@ $SetGlobalVar $ignoredTimeEndVarName $ignoredTimeEnd
         # Increment the Down counter
         :set currentCount ($currentCount + 1)
         $SetGlobalVar $dynamicCountVar $currentCount
-        
+
         /log warning "$deviceName: interface $ifaceName is DOWN"
         # Put your DOWN actions here
-        
+
         # Check if the down count exceeds the defined threshold
         :if ($currentCount > $threshold) do={
           /log warning "Interface $ifaceName dropped $currentCount times today!"

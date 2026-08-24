@@ -117,10 +117,10 @@
         # Variables to hold IP addresses
         :local srcIP ""
         :local dstIP ""
-       
+
         # Retrieve terse bridge filter rules as key-value objects
         :local terseOutput [/interface bridge filter print terse as-value where disabled=no]
-       
+
         # Search for the same comment substring in terse output
         :foreach rule in=$terseOutput do={
             :if ([:typeof ($rule->"comment")] != "nil") do={
@@ -136,7 +136,7 @@
                 }
             }
         }
-       
+
         # Function to perform 3 pings and return true if any is successful
         :local pingSuccess do={
             :global SilentPing
@@ -148,12 +148,12 @@
             }
             :return false
         }
-       
+
         :local topEmoji $unknownEmoji
         :local srcIPText ""
         :local dstIPText ""
         :local stateText "maybe works."
-       
+
         if ($state = "up") do={
             :set topEmoji $upEmoji
             :set stateText "works properly."
@@ -168,20 +168,20 @@
                 } 
             }
         }
-       
+
         # If both addresses were not found at all - exit early
         :if (($srcIP != "") && ($dstIP != "")) do={
             # Strip /32 if present
             :set srcIP [$ReplaceStr $srcIP "/32" ""]
             :set dstIP [$ReplaceStr $dstIP "/32" ""]
-       
+
             # Test srcIP
             :if ([$pingSuccess $srcIP]) do={
                 :set srcIPText "$upEmoji $srcIP is up"
             } else={
                 :set srcIPText "$downEmoji $srcIP is down"
             }
-       
+
             # Test dstIP
             :if ([$pingSuccess $dstIP]) do={
                 :set dstIPText "$upEmoji $dstIP is up"

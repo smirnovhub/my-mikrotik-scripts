@@ -34,7 +34,7 @@
     "global_functions_global_vars";
     "global_functions_hashes";
     "global_functions_testing";
-    "global_functions_utils";
+    "global_functions_utils"
 }
 
 # Iterate through the array and run each script with error handling

@@ -2,8 +2,9 @@
 
 :global WaitFullyConnected
 :global SendPrivateTelegramMessage
+
 :global globalFunctionsReady
-:global squaredUpWithExclamationMark
+:global largeGreenCircleEmoji
 
 :local attempts 0
 :local maxAttempts 30
@@ -31,5 +32,5 @@
 
 :log info "Send startup message..."
 :local deviceName [/system identity get name]
-:local message "$squaredUpWithExclamationMark $deviceName: The system is started up"
+:local message "$largeGreenCircleEmoji $deviceName: The system is started up"
 $SendPrivateTelegramMessage $message

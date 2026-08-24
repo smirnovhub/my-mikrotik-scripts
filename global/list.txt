@@ -2,11 +2,11 @@
 # and install all of following scripts
 #
 # :global DownloadAndImportScriptsFromList
-# $DownloadAndImportScriptsFromList https://github.com/smirnovhub/my-mikrotik-scripts/raw/refs/heads/master/global/list.txt true
+# $DownloadAndImportScriptsFromList https://github.com/smirnovhub/my-mikrotik-scripts/raw/refs/heads/master/global/list.txt
 
 f83aef627be8e5f1a1406cf04390c4ad https://github.com/smirnovhub/my-mikrotik-scripts/raw/refs/heads/master/global/global_functions.rsc
 554c5756b97c352f5fab47f49b68fac1 https://github.com/smirnovhub/my-mikrotik-scripts/raw/refs/heads/master/global/global_functions_array_str.rsc
-8b124e08f20bcd36dabd149c09023c71 https://github.com/smirnovhub/my-mikrotik-scripts/raw/refs/heads/master/global/global_functions_auto_update.rsc
+3c544b38d22e6a389cee687eaf9c4f8e https://github.com/smirnovhub/my-mikrotik-scripts/raw/refs/heads/master/global/global_functions_auto_update.rsc
 2f17ddfeb71258287b09afd3c6a00de5 https://github.com/smirnovhub/my-mikrotik-scripts/raw/refs/heads/master/global/global_functions_big_int.rsc
 8b0e45abd21aee48bbf8327ebe653390 https://github.com/smirnovhub/my-mikrotik-scripts/raw/refs/heads/master/global/global_functions_datetime.rsc
 21fb1241542b826727fd6f7974859aff https://github.com/smirnovhub/my-mikrotik-scripts/raw/refs/heads/master/global/global_functions_encoding.rsc
@@ -14,4 +14,4 @@ f83aef627be8e5f1a1406cf04390c4ad https://github.com/smirnovhub/my-mikrotik-scrip
 54ddeb5fd52426c56380720b6181729f https://github.com/smirnovhub/my-mikrotik-scripts/raw/refs/heads/master/global/global_functions_hashes.rsc
 8a301648a9695f5c1746dcb688f0bd9c https://github.com/smirnovhub/my-mikrotik-scripts/raw/refs/heads/master/global/global_functions_testing.rsc
 a251542662ffad541b5303bf0e1bf68f https://github.com/smirnovhub/my-mikrotik-scripts/raw/refs/heads/master/global/global_functions_utils.rsc
-57946d68b714f86f21988e8be45e1826 https://github.com/smirnovhub/my-mikrotik-scripts/raw/refs/heads/master/global/global_setup.rsc
+33a833813c0f9bd0ae13ea1927e559c7 https://github.com/smirnovhub/my-mikrotik-scripts/raw/refs/heads/master/global/global_setup.rsc

@@ -19,22 +19,26 @@
 # YOU NEED TO RUN THIS SCRIPT AT SYSTEM START!
 # OR IF YOU CHANGED SOMETHING IN THIS FILE!
 #
-# Add script named global_setup and then add call to startup script:
-# /system script run global_setup
+# Add script named global_setup_tests and then add call to startup script:
+# /system script run global_setup_tests
 
 # Define the list of startup scripts
 :local startupScripts {
-    "global_config";
-    "global_functions";
-    "global_functions_array_str";
-    "global_functions_auto_update";
-    "global_functions_big_int";
-    "global_functions_datetime";
-    "global_functions_encoding";
-    "global_functions_global_vars";
-    "global_functions_hashes";
-    "global_functions_testing";
-    "global_functions_utils"
+    "global_functions_all_tests";
+    "global_functions_array_str_tests_1";
+    "global_functions_array_str_tests_2";
+    "global_functions_array_str_tests_3";
+    "global_functions_auto_update_tests";
+    "global_functions_big_int_tests_1";
+    "global_functions_big_int_tests_2";
+    "global_functions_big_int_tests_3";
+    "global_functions_datetime_tests_1";
+    "global_functions_datetime_tests_2";
+    "global_functions_encoding_tests";
+    "global_functions_global_vars_tests";
+    "global_functions_hashes_tests_1";
+    "global_functions_hashes_tests_2";
+    "global_functions_utils_tests"
 }
 
 # Iterate through the array and run each script with error handling

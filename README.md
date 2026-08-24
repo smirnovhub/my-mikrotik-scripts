@@ -154,6 +154,8 @@ A suite of functions for performing mathematical operations on arbitrary-precisi
 These functions handle the translation between standard text strings and the internal dictionary objects used for calculations. You should use these when you need to manually prepare data for batch processing or when extracting a final readable result from a raw array object.
 
 - **ArrayToBigInt**: Convert a signed chunked array object back into a BigInt string.
+- **BigIntDecToHex**: Convert a decimal string of any length into a hexadecimal representation string.
+- **BigIntHexToDec**: Convert a hexadecimal string of any length into a decimal representation string.
 - **BigIntToArray**: Parse a BigInt string representation into a signed 9-digit chunked array object.
 
 #### Internal Array Operations

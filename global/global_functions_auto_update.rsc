@@ -437,15 +437,11 @@
 #          Optionally executes imported and up-to-date scripts after downloading.
 # Parameters:
 #   $1 - URL to the text file (must end with .txt) containing lines formatted as: "<hash> <script_url>"
-#   $2 - (Optional) Boolean flag ("true"/"false"). If true, runs all imported/up-to-date
-#        scripts sequentially after processing (default: false)
 # Returns: Array with execution state:
 #   - "error": Boolean indicating whether a critical list fetch error occurred
 #   - "updated": Array of script names that were successfully updated/imported
 #   - "uptodate": Array of script names that were already up-to-date
 #   - "failedtoupdate": Array of script names that failed to download or import
-#   - "runned": Array of script names that executed successfully
-#   - "failedtorun": Array of script names that failed during execution
 # Example: $DownloadAndImportScriptsFromList "https://example.com/scripts/list.txt" true
 :set DownloadAndImportScriptsFromList do={
     :global EndsWithStr
@@ -471,8 +467,6 @@
     :set ($result->"updated") [:toarray ""]
     :set ($result->"failedtoupdate") [:toarray ""]
     :set ($result->"uptodate") [:toarray ""]
-    :set ($result->"runned") [:toarray ""]
-    :set ($result->"failedtorun") [:toarray ""]
 
     # Workaround for the MikroTik RouterOS interpreter bug (phantom execution)
     :if ([:len $0] = 0) do={
@@ -499,11 +493,6 @@
         :log error "$prefix File name should end with .txt"
         $SendPrivateTelegramMessage ("$failEmoji <b>$deviceName:</b> File name should end with .txt")
         :return $result
-    }
-
-    :local runScripts false
-    :if ([:tostr $2] = "true") do={
-        :set runScripts true
     }
 
     :local sendMessage true
@@ -611,35 +600,6 @@
         }
     }
 
-    :if ($runScripts) do={
-        :delay 1s
-
-        # Execute all successfully imported scripts
-        :foreach scriptName in=$importedScripts do={
-            :local hashVarName [$GetHashGlobalVarName $scriptName]
-
-            :if ([:len [/system script find name=$scriptName]] > 0) do={
-                :log info ("$prefix Running script " . $scriptName)
-                :do {
-                    /system script run $scriptName
-                    :set ($result->"runned") (($result->"runned"), $scriptName)
-                } on-error={
-                    :log error ("$prefix Error running " . $scriptName)
-                    :set ($result->"failedtorun") (($result->"failedtorun"), $scriptName)
-
-                    # Reset stored hash so the script is retried on next run
-                    $SetGlobalVar $hashVarName ""
-                }
-            } else={
-                :log error "Script not found for execution: $scriptName"
-                :set ($result->"failedtorun") (($result->"failedtorun"), $scriptName)
-
-                # Reset stored hash so the script is retried on next run
-                $SetGlobalVar $hashVarName ""
-            }
-        }
-    }
-
     :local duration ([$GetUnixTimestamp] - $startTs)
     :log info ("$prefix Finished in " . [$FormatSecondsLong $duration])
 
@@ -649,7 +609,7 @@
     }
 
     # There are no updates to report, so exit early
-    :if ([:len ($result->"updated")] = 0 && [:len ($result->"failedtoupdate")] = 0 && [:len ($result->"failedtorun")] = 0) do={
+    :if ([:len ($result->"updated")] = 0 && [:len ($result->"failedtoupdate")] = 0) do={
         :return $result
     }
 
@@ -681,10 +641,6 @@
 
     :if ([:len ($result->"failedtoupdate")] > 0) do={
         :set msg ($msg . "$failEmoji <b>Failed to update:</b>%0A" . [$FormatList ($result->"failedtoupdate")] . "%0A")
-    }
-
-    :if ([:len ($result->"failedtorun")] > 0) do={
-        :set msg ($msg . "$failEmoji <b>Failed to run:</b>%0A" . [$FormatList ($result->"failedtorun")] . "%0A")
     }
 
     :set msg ($msg . "<i>Source: $listUrl</i>")

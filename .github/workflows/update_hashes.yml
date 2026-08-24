@@ -55,6 +55,7 @@ jobs:
 
             echo "Local state reset."
 
+            # Update global setup files
             echo "Updating global setup..."
 
             python update_setup.py global/global_setup.rsc
@@ -62,31 +63,40 @@ jobs:
 
             echo "Global setup update completed."
 
+            # Stage and commit global setup changes if any
+            git add "*.rsc"
+            if ! git diff --cached --quiet; then
+              echo "Creating commit for global setup..."
+              git commit -m "update global setup"
+            else
+              echo "No changes in global setup."
+            fi
+
+            # Update hash files
             echo "Updating hashes..."
 
             python update_hashes.py --config hash_config.json
 
             echo "Hash update completed."
 
-            echo "Staging changes..."
+            # Stage and commit hash changes if any
+            git add "*.txt"
+            if ! git diff --cached --quiet; then
+              echo "Creating commit for hashes..."
+              git commit -m "update hashes"
+            else
+              echo "No changes in hashes."
+            fi
 
-            git add "*.txt" "*.rsc"
-
-            if git diff --cached --quiet; then
-              echo "No changes to commit. Done."
+            # Check if there is anything to push at all
+            if git diff --quiet origin/"$BRANCH" HEAD; then
+              echo "No changes to push. Done."
               exit 0
             fi
 
-            echo "Changes detected. Creating commit..."
-
-            git commit -m "update hashes"
-
-            echo "Commit created."
-
             echo "Pushing changes..."
-
             if git push origin HEAD:"$BRANCH"; then
-              echo "Successfully pushed updated hashes."
+              echo "Successfully pushed updates."
               exit 0
             else
               echo "Push failed. Retrying..."
@@ -96,5 +106,5 @@ jobs:
             sleep "$RETRY_DELAY"
           done
 
-          echo "Error: Max attempts reached for updating hashes."
+          echo "Error: Max attempts reached for updating repository."
           exit 1

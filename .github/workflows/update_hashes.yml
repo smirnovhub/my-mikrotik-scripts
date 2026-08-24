@@ -61,9 +61,16 @@ jobs:
 
             echo "Hash update completed."
 
+            echo "Updating global setup..."
+
+            python update_setup.py global/global_setup.rsc
+            python update_setup.py global/tests/global_setup_tests.rsc
+
+            echo "Global setup update completed."
+
             echo "Staging changes..."
 
-            git add "*.txt"
+            git add "*.txt" "*.rsc"
 
             if git diff --cached --quiet; then
               echo "No changes to commit. Done."

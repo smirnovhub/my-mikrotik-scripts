@@ -19,8 +19,8 @@
 # YOU NEED TO RUN THIS SCRIPT AT SYSTEM START!
 # OR IF YOU CHANGED SOMETHING IN THIS FILE!
 #
-# Add script named global_setup and then add call to startup script:
-# /system script run global_setup
+# Add script named global_setup_tests and then add call to startup script:
+# /system script run global_setup_tests
 
 # Define the list of startup scripts
 :local startupScripts {

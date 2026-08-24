@@ -10,7 +10,7 @@ STARTUP_SCRIPTS_PATTERN = re.compile(
 
 
 def update_startup_scripts(target_file_path: Path) -> bool:
-    # Check if target file exists[cite: 1]
+    # Check if target file exists
     if not target_file_path.exists() or not target_file_path.is_file():
         print(f"Error: file not found at {target_file_path}")
         return False
@@ -28,10 +28,10 @@ def update_startup_scripts(target_file_path: Path) -> bool:
     rsc_files.sort()
 
     # Format the new list content
-    formatted_scripts = "\n".join([f'    "{script}";' for script in rsc_files])
+    formatted_scripts = ";\n".join([f'    "{script}"' for script in rsc_files])
     new_block_content = f"\n{formatted_scripts}\n"
 
-    # Read target file content[cite: 1]
+    # Read target file content
     with open(target_file_path, "r", encoding="utf-8") as f:
         content = f.read()
 
@@ -49,7 +49,7 @@ def update_startup_scripts(target_file_path: Path) -> bool:
         content,
     )
 
-    # Write back to the target file[cite: 1]
+    # Write back to the target file
     with open(target_file_path, "w", encoding="utf-8", newline="\n") as f:
         f.write(updated_content)
 
@@ -71,6 +71,6 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    # Execute and exit with code 1 if it fails[cite: 1]
+    # Execute and exit with code 1 if it fails
     if not update_startup_scripts(args.file_path):
         sys.exit(1)

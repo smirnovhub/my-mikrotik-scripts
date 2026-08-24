@@ -2,7 +2,7 @@
 # and install all of following scripts
 #
 # :global DownloadAndImportScriptsFromList
-# $DownloadAndImportScriptsFromList https://github.com/smirnovhub/my-mikrotik-scripts/raw/refs/heads/master/global/tests/list.txt true
+# $DownloadAndImportScriptsFromList https://github.com/smirnovhub/my-mikrotik-scripts/raw/refs/heads/master/global/tests/list.txt
 
 6d22115eb512a37d8bf289ecd2637e8e https://github.com/smirnovhub/my-mikrotik-scripts/raw/refs/heads/master/global/tests/global_functions_all_tests.rsc
 98ea71eae0085a74e22f42f3d5d408fc https://github.com/smirnovhub/my-mikrotik-scripts/raw/refs/heads/master/global/tests/global_functions_array_str_tests_1.rsc

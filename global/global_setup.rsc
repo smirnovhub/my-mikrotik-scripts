@@ -42,6 +42,7 @@
     :do {
         :if ([:len [/system script find name=$scriptName]] > 0) do={
             /system script run $scriptName
+            :log info "Script $scriptName runned successfully"
         } else={
             :log error "Script $scriptName not found"
         }

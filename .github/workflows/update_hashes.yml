@@ -55,18 +55,18 @@ jobs:
 
             echo "Local state reset."
 
-            echo "Updating hashes..."
-
-            python update_hashes.py --config hash_config.json
-
-            echo "Hash update completed."
-
             echo "Updating global setup..."
 
             python update_setup.py global/global_setup.rsc
             python update_setup.py global/tests/global_setup_tests.rsc
 
             echo "Global setup update completed."
+
+            echo "Updating hashes..."
+
+            python update_hashes.py --config hash_config.json
+
+            echo "Hash update completed."
 
             echo "Staging changes..."
 

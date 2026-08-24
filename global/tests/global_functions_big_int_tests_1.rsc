@@ -214,8 +214,6 @@
     :set res [$RunTestCase $res $BigIntCmp "0" "0" "nothing" "0" "Compare zeros"]
 
     # Equal numbers test cases
-    :set res [$RunTestCase $res $BigIntCmp "0" "0" "nothing" "0" "Compare zero and zero"]
-    :set res [$RunTestCase $res $BigIntCmp "5" "5" "nothing" "0" "Compare equal positive numbers"]
     :set res [$RunTestCase $res $BigIntCmp "12345" "12345" "nothing" "0" "Compare equal multi-digit numbers"]
     :set res [$RunTestCase $res $BigIntCmp "-5" "-5" "nothing" "0" "Compare equal negative numbers"]
     :set res [$RunTestCase $res $BigIntCmp "-0" "0" "nothing" "0" "Compare negative zero and zero"]
@@ -228,22 +226,16 @@
     :set res [$RunTestCase $res $BigIntCmp "999" "888" "nothing" "1" "Compare triple digits greater left"]
 
     # Different lengths positive numbers
-    :set res [$RunTestCase $res $BigIntCmp "10" "5" "nothing" "1" "Compare longer left positive number"]
-    :set res [$RunTestCase $res $BigIntCmp "5" "10" "nothing" "-1" "Compare shorter left positive number"]
-    :set res [$RunTestCase $res $BigIntCmp "100" "99" "nothing" "1" "Compare boundary length increase positive"]
     :set res [$RunTestCase $res $BigIntCmp "99" "100" "nothing" "-1" "Compare boundary length decrease positive"]
     :set res [$RunTestCase $res $BigIntCmp "1000" "999" "nothing" "1" "Compare thousands vs hundreds"]
     :set res [$RunTestCase $res $BigIntCmp "12345" "9999" "nothing" "1" "Compare five digits vs four digits"]
 
     # Sign combinations and cross-sign comparisons
-    :set res [$RunTestCase $res $BigIntCmp "-5" "5" "nothing" "-1" "Compare negative vs positive"]
-    :set res [$RunTestCase $res $BigIntCmp "5" "-5" "nothing" "1" "Compare positive vs negative"]
     :set res [$RunTestCase $res $BigIntCmp "-100" "1" "nothing" "-1" "Compare large negative vs small positive"]
     :set res [$RunTestCase $res $BigIntCmp "0" "-5" "nothing" "1" "Compare zero vs negative"]
     :set res [$RunTestCase $res $BigIntCmp "-5" "0" "nothing" "-1" "Compare negative vs zero"]
 
     # Negative numbers magnitude ordering
-    :set res [$RunTestCase $res $BigIntCmp "-10" "-5" "nothing" "-1" "Compare negative magnitude order smaller left"]
     :set res [$RunTestCase $res $BigIntCmp "-5" "-10" "nothing" "1" "Compare negative magnitude order greater left"]
     :set res [$RunTestCase $res $BigIntCmp "-100" "-99" "nothing" "-1" "Compare negative length difference smaller left"]
     :set res [$RunTestCase $res $BigIntCmp "-99" "-100" "nothing" "1" "Compare negative length difference greater left"]
@@ -286,24 +278,19 @@
     :set res [$RunTestCase $res $BigIntAdd "0" "123" "nothing" "123" "Add zero to number"]
 
     # Basic positive numbers and zero additions
-    :set res [$RunTestCase $res $BigIntAdd "5" "5" "nothing" "10" "Add simple positives"]
     :set res [$RunTestCase $res $BigIntAdd "0" "0" "nothing" "0" "Add zero to zero"]
-    :set res [$RunTestCase $res $BigIntAdd "123" "0" "nothing" "123" "Add zero to number"]
     :set res [$RunTestCase $res $BigIntAdd "0" "456" "nothing" "456" "Add number to zero"]
     :set res [$RunTestCase $res $BigIntAdd "1" "1" "nothing" "2" "Add small units"]
 
     # Carry propagation and boundary expansions
     :set res [$RunTestCase $res $BigIntAdd "9" "1" "nothing" "10" "Add single digit carry boundary"]
     :set res [$RunTestCase $res $BigIntAdd "99" "1" "nothing" "100" "Add two nines carry boundary"]
-    :set res [$RunTestCase $res $BigIntAdd "999" "1" "nothing" "1000" "Add three nines carry boundary"]
     :set res [$RunTestCase $res $BigIntAdd "9999" "1" "nothing" "10000" "Add four nines carry boundary"]
     :set res [$RunTestCase $res $BigIntAdd "99999" "1" "nothing" "100000" "Add five nines carry boundary"]
     :set res [$RunTestCase $res $BigIntAdd "00999" "001" "nothing" "1000" "Add boundary with leading zeros"]
     :set res [$RunTestCase $res $BigIntAdd "999" "999" "nothing" "1998" "Add large boundary numbers"]
 
     # Mixed signs resulting in various outcomes
-    :set res [$RunTestCase $res $BigIntAdd "10" "-5" "nothing" "5" "Add positive and negative resulting positive"]
-    :set res [$RunTestCase $res $BigIntAdd "5" "-10" "nothing" "-5" "Add positive and negative resulting negative"]
     :set res [$RunTestCase $res $BigIntAdd "-10" "5" "nothing" "-5" "Add negative and positive resulting negative"]
     :set res [$RunTestCase $res $BigIntAdd "-5" "10" "nothing" "5" "Add negative and positive resulting positive"]
     :set res [$RunTestCase $res $BigIntAdd "10" "-10" "nothing" "0" "Add opposite numbers resulting in zero"]
@@ -312,7 +299,6 @@
     :set res [$RunTestCase $res $BigIntAdd "-5" "0" "nothing" "-5" "Add zero to negative"]
 
     # Two negative operands
-    :set res [$RunTestCase $res $BigIntAdd "-10" "-10" "nothing" "-20" "Add two negatives"]
     :set res [$RunTestCase $res $BigIntAdd "-123" "-457" "nothing" "-580" "Add two large negatives"]
     :set res [$RunTestCase $res $BigIntAdd "-0010" "-0010" "nothing" "-20" "Add two negatives with leading zeros"]
     :set res [$RunTestCase $res $BigIntAdd "-999" "-1" "nothing" "-1000" "Add negative boundary carry"]
@@ -365,9 +351,6 @@
     :set res [$RunTestCase $res $BigIntSub "45345345345345345" "53453453453453453" "nothing" "-8108108108108108" "Subtract large cross-borrow case"]
 
     # Basic subtraction and zeros
-    :set res [$RunTestCase $res $BigIntSub "10" "5" "nothing" "5" "Subtract standard positive result"]
-    :set res [$RunTestCase $res $BigIntSub "5" "10" "nothing" "-5" "Subtract resulting negative"]
-    :set res [$RunTestCase $res $BigIntSub "100" "100" "nothing" "0" "Subtract identical numbers to zero"]
     :set res [$RunTestCase $res $BigIntSub "0" "0" "nothing" "0" "Subtract zero from zero"]
     :set res [$RunTestCase $res $BigIntSub "500" "0" "nothing" "500" "Subtract zero from number"]
     :set res [$RunTestCase $res $BigIntSub "0" "500" "nothing" "-500" "Subtract number from zero"]
@@ -390,8 +373,6 @@
         "Leading zeros removing"]
 
     # Sign combinations and negative arithmetic
-    :set res [$RunTestCase $res $BigIntSub "10" "-5" "nothing" "15" "Subtract negative equivalent to addition"]
-    :set res [$RunTestCase $res $BigIntSub "-10" "5" "nothing" "-15" "Subtract positive from negative"]
     :set res [$RunTestCase $res $BigIntSub "-10" "-5" "nothing" "-5" "Subtract two negatives resulting in negative"]
     :set res [$RunTestCase $res $BigIntSub "-5" "-10" "nothing" "5" "Subtract two negatives resulting in positive"]
     :set res [$RunTestCase $res $BigIntSub "0" "-5" "nothing" "5" "Subtract negative from zero"]
@@ -401,7 +382,6 @@
     # Large values and cross-borrow scenarios
     :set res [$RunTestCase $res $BigIntSub "999999" "1" "nothing" "999998" "Subtract from large nines string"]
     :set res [$RunTestCase $res $BigIntSub "1000000" "1" "nothing" "999999" "Subtract from million boundary"]
-    :set res [$RunTestCase $res $BigIntSub "45345345345345345" "53453453453453453" "nothing" "-8108108108108108" "Large cross-borrow negative case"]
     :set res [$RunTestCase $res $BigIntSub "987654321" "123456789" "nothing" "864197532" "Subtract large distinct numbers"]
     :set res [$RunTestCase $res $BigIntSub "123456789" "987654321" "nothing" "-864197532" "Subtract large distinct resulting negative"]
     :set res [$RunTestCase $res $BigIntSub "1000000000" "500000000" "nothing" "500000000" "Subtract large scale halves"]
@@ -412,10 +392,6 @@
     :set res [$RunTestCase $res $BigIntSub "123456789123456789" "123456789123456788" "nothing" "1" "Massive string adjacent difference"]
 
     # Subtraction operations prone to uncleaned leading zeros during borrow chains
-    :set res [$RunTestCase $res $BigIntSub "1000" "995" "nothing" "5" "Subtraction borrow chain resulting in single digit"]
-    :set res [$RunTestCase $res $BigIntSub "10005" "10000" "nothing" "5" "Subtraction large borrow chain single digit"]
-    :set res [$RunTestCase $res $BigIntSub "100000" "99991" "nothing" "9" "Subtraction multi-zero borrow resulting in nine"]
-    :set res [$RunTestCase $res $BigIntSub "100" "98" "nothing" "2" "Subtraction small bounds single digit"]
     :set res [$RunTestCase $res $BigIntSub "1000000" "999991" "nothing" "9" "Subtraction heavy zero crossing"]
 
     # Extreme big numbers

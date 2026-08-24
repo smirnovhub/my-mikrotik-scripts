@@ -43,7 +43,9 @@
 :global IsFullyConnected
 :global WaitFullyConnected
 
-# check if DNS is resolving
+# Purpose: Check if DNS is successfully resolving external domains.
+# Parameters: None
+# Returns: True if DNS resolution succeeds, false otherwise.
 :set DNSIsResolving do={
   :do {
     :resolve "dns.google"
@@ -53,7 +55,9 @@
   :return true
 }
 
-# wait for DNS to resolve
+# Purpose: Wait in a loop until DNS resolution becomes successful.
+# Parameters: None
+# Returns: Total time spent waiting for DNS to resolve.
 :set WaitDNSResolving do={
   :global DNSIsResolving
 
@@ -69,7 +73,9 @@
   :return ($attempts * $delay)
 }
 
-# default route is reachable
+# Purpose: Check if the default network route is active and reachable.
+# Parameters: None
+# Returns: True if an active default route exists, false otherwise.
 :set DefaultRouteIsReachable do={
   :if ([:len [/ip route find where dst-address=0.0.0.0/0 active !blackhole !routing-mark !unreachable gateway!=loopback]] > 0) do={
     :return true
@@ -77,7 +83,9 @@
   :return false
 }
 
-# wait for default route to be reachable
+# Purpose: Wait until the default network route becomes reachable.
+# Parameters: None
+# Returns: Total time spent waiting for the default route.
 :set WaitDefaultRouteReachable do={
   :global DefaultRouteIsReachable
 
@@ -93,7 +101,9 @@
   :return ($attempts * $delay)
 }
 
-# check if system time is sync
+# Purpose: Check if the system time is synchronized via NTP.
+# Parameters: None
+# Returns: True if NTP is synchronized, false or logs an error if not enabled.
 :set TimeIsSync do={
   :if ([/system ntp client get enabled] = true) do={
     :do {
@@ -117,7 +127,9 @@
   :return true
 }
 
-# wait for time to become synced
+# Purpose: Wait until the system time is successfully synchronized.
+# Parameters: None
+# Returns: Total time spent waiting for time synchronization.
 :set WaitTimeSync do={
   :global TimeIsSync
 
@@ -133,6 +145,9 @@
   :return ($attempts * $delay)
 }
 
+# Purpose: Check if the router has full connectivity (default route, DNS, and time sync).
+# Parameters: None
+# Returns: True if all connectivity checks pass, false otherwise.
 :set IsFullyConnected do={
     :global DNSIsResolving
     :global DefaultRouteIsReachable
@@ -143,7 +158,9 @@
              [$TimeIsSync] = true)
 }
 
-# wait to be fully connected (default route is reachable, time is sync, DNS resolves)
+# Purpose: Wait until the router is fully connected with route, DNS, and time sync.
+# Parameters: None
+# Returns: Total cumulative time spent waiting for all services to be ready.
 :set WaitFullyConnected do={
   :global WaitDefaultRouteReachable
   :global WaitDNSResolving

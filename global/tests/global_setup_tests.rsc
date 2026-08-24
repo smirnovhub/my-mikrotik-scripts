@@ -24,6 +24,21 @@
 
 # Define the list of startup scripts
 :local startupScripts {
+    "global_functions_all_tests";
+    "global_functions_array_str_tests_1";
+    "global_functions_array_str_tests_2";
+    "global_functions_array_str_tests_3";
+    "global_functions_auto_update_tests";
+    "global_functions_big_int_tests_1";
+    "global_functions_big_int_tests_2";
+    "global_functions_big_int_tests_3";
+    "global_functions_datetime_tests_1";
+    "global_functions_datetime_tests_2";
+    "global_functions_encoding_tests";
+    "global_functions_global_vars_tests";
+    "global_functions_hashes_tests_1";
+    "global_functions_hashes_tests_2";
+    "global_functions_utils_tests";
 }
 
 # Iterate through the array and run each script with error handling

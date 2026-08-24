@@ -538,8 +538,11 @@
 
         :local oldScriptHash ""
 
-        :if ($oldHash = ($item->"hash")) do={
+        # Check the existing local script when the stored
+        # hash is empty or matches the remote hash
+        :if ($oldHash = "" || $oldHash = ($item->"hash")) do={
             :local oldScriptId [/system script find name=$scriptName]
+
             :if ([:len $oldScriptId] > 0) do={
                 :local oldScriptText [/system script get $oldScriptId source]
 
@@ -558,16 +561,19 @@
                     }
                 }
             }
-        } else={
-            :set oldScriptHash $oldHash
         }
 
-        :if ($oldHash = ($item->"hash") && $oldHash = $oldScriptHash) do={
+        :if ($oldScriptHash = ($item->"hash")) do={
             :log info ("$prefix " . $scriptName . " is already up to date")
             :set ($result->"uptodate") (($result->"uptodate"), $scriptName)
             :set importedScripts ($importedScripts, $scriptName)
+
+            # Save the verified hash when it was previously empty.
+            :if ($oldHash = "") do={
+                $SetGlobalVar $hashVarName ($item->"hash")
+            }
         } else={
-            :if ($oldHash != $oldScriptHash) do={
+            :if ($oldHash != "" && $oldHash != $oldScriptHash) do={
                 :log warning ("$prefix " . $scriptName . " local script has changed and needs to be updated")
             }
 

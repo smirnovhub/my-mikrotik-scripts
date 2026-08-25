@@ -30,7 +30,6 @@
 :local waitTime [$WaitFullyConnected]
 :log info ("Wait for fully connected... done in " . $waitTime)
 
-:log info "Send startup message..."
+:log info "Sending startup message..."
 :local deviceName [/system identity get name]
-:local message "$largeGreenCircleEmoji $deviceName: The system is started up"
-$SendPrivateTelegramMessage $message
+$SendPrivateTelegramMessage ("$largeGreenCircleEmoji <b>$deviceName:</b> The system is started up")

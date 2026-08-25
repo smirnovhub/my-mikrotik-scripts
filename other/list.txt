@@ -1,6 +1,7 @@
 # Script list to automatically download
 # and install all of following scripts
 #
+# Example:
 # :global DownloadAndImportScriptsFromList
 # $DownloadAndImportScriptsFromList https://github.com/smirnovhub/my-mikrotik-scripts/raw/refs/heads/master/other/list.txt
 
@@ -12,5 +13,5 @@ b96d7fc72f5ec800f030dd7e3d06343a https://github.com/smirnovhub/my-mikrotik-scrip
 5445414cd043dc36c01f61a3ecfaafb0 https://github.com/smirnovhub/my-mikrotik-scripts/raw/refs/heads/master/other/my_netwatch/my_netwatch.rsc
 1494d8c689d2bd892bfc673dbcc3eab0 https://github.com/smirnovhub/my-mikrotik-scripts/raw/refs/heads/master/other/my_netwatch/my_netwatch_changes.rsc
 47c6ec124b26fc49f7c68ef308a63e71 https://github.com/smirnovhub/my-mikrotik-scripts/raw/refs/heads/master/other/my_netwatch/my_netwatch_status.rsc
-99606ceeba0145f6dde4d3ecac4bbfa8 https://github.com/smirnovhub/my-mikrotik-scripts/raw/refs/heads/master/other/on_startup.rsc
+153b8727faeafe7324be0576c2330486 https://github.com/smirnovhub/my-mikrotik-scripts/raw/refs/heads/master/other/on_startup.rsc
 97cd300373b68128b179fa55591025e3 https://github.com/smirnovhub/my-mikrotik-scripts/raw/refs/heads/master/other/reboot.rsc

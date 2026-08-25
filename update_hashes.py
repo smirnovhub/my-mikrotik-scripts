@@ -78,14 +78,26 @@ def process_task(task: dict) -> bool:
     target_files: List[Path] = []
 
     # Collect explicitly defined files or scan the directory based on configuration
-    if task.get(KEY_HASH_LIST_FILES):
-        for f_name in task.get(KEY_HASH_LIST_FILES):
+    if KEY_HASH_LIST_FILES in task:
+        files = task[KEY_HASH_LIST_FILES]
+
+        if not files:
+            print(f"Error: explicit file list is empty: {task}")
+            return False
+
+        for f_name in files:
             if not (repo_root /
                     f_name).exists() or not (repo_root / f_name).is_file() or (
                         repo_root / f_name).stat().st_size == 0:
                 print(f"Error: file missing or empty: {f_name}")
                 return False
             target_files.append(repo_root / f_name)
+
+        if not target_files:
+            print(
+                f"Error: no valid files found in the explicit list for task: {task}"
+            )
+            return False
     else:
         if not (repo_root / task.get(KEY_HASH_LIST_FILES_PATH, "")).exists(
         ) or not (repo_root / task.get(KEY_HASH_LIST_FILES_PATH, "")).is_dir():
@@ -102,7 +114,14 @@ def process_task(task: dict) -> bool:
 
         files = target_path.rglob(pattern) if task.get(
             KEY_RECURSIVE) else target_path.glob(pattern)
+
         target_files.extend(files)
+
+        if not target_files:
+            print(
+                f"Error: no files found for pattern '{pattern}' in path '{task.get(KEY_HASH_LIST_FILES_PATH)}'."
+            )
+            return False
 
     lines_to_keep = []
 

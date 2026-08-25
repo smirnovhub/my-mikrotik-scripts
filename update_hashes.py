@@ -8,6 +8,18 @@ import hashlib
 from typing import List
 from pathlib import Path
 
+KEY_CONFIG = "config"
+KEY_BASE_URL = "base_url"
+KEY_METHOD = "method"
+KEY_HASH_ALGORITHM = "hash_algorithm"
+KEY_HASH_LIST_FILE = "hash_list_file"
+KEY_HASH_LIST_FILES_PATH = "hash_list_files_path"
+KEY_HASH_LIST_FILES_PATTERN = "hash_list_files_pattern"
+KEY_HASH_LIST_EXCLUDE = "hash_list_exclude"
+KEY_HASH_LIST_FILES = "hash_list_files"
+KEY_RECURSIVE = "hash_list_recursive"
+KEY_SETUP_FILE = "setup_file"
+
 # Regular expression to find startup scripts array
 STARTUP_SCRIPTS_PATTERN = re.compile(
     r"(:local\s+startupScripts\s*\{)(.*?)(\})", re.DOTALL)
@@ -43,25 +55,31 @@ HASH_FUNCTIONS = {
 
 
 def process_task(task: dict) -> bool:
-    if not all(k in task for k in ("alg", "list", "base_url")):
+    if not all(
+            k in task
+            for k in (KEY_HASH_ALGORITHM, KEY_HASH_LIST_FILE, KEY_BASE_URL)):
         print(f"Error: missing required keys in task: {task}")
         return False
 
     # Ensure at least 'path' or 'files' is provided in the configuration
-    if "path" not in task and "files" not in task:
-        print(f"Error: task must contain either 'path' or 'files': {task}")
+    if KEY_HASH_LIST_FILES_PATH not in task and KEY_HASH_LIST_FILES not in task:
+        print(
+            f"Error: task must contain either '{KEY_HASH_LIST_FILES_PATH}' or '{KEY_HASH_LIST_FILES}': {task}"
+        )
         return False
 
-    if task.get("alg").lower() not in HASH_FUNCTIONS:
-        print(f"Error: unsupported hash algorithm '{task.get('alg')}'")
+    if task.get(KEY_HASH_ALGORITHM).lower() not in HASH_FUNCTIONS:
+        print(
+            f"Error: unsupported hash algorithm '{task.get(KEY_HASH_ALGORITHM)}'"
+        )
         return False
 
     repo_root = Path.cwd()
     target_files: List[Path] = []
 
     # Collect explicitly defined files or scan the directory based on configuration
-    if task.get("files"):
-        for f_name in task.get("files"):
+    if task.get(KEY_HASH_LIST_FILES):
+        for f_name in task.get(KEY_HASH_LIST_FILES):
             if not (repo_root /
                     f_name).exists() or not (repo_root / f_name).is_file() or (
                         repo_root / f_name).stat().st_size == 0:
@@ -69,31 +87,32 @@ def process_task(task: dict) -> bool:
                 return False
             target_files.append(repo_root / f_name)
     else:
-        if not (repo_root / task.get("path", "")).exists() or not (
-                repo_root / task.get("path", "")).is_dir():
+        if not (repo_root / task.get(KEY_HASH_LIST_FILES_PATH, "")).exists(
+        ) or not (repo_root / task.get(KEY_HASH_LIST_FILES_PATH, "")).is_dir():
             print(
-                f"Error: search path missing or not a directory: {task.get('path')}"
+                f"Error: search path missing or not a directory: {task.get(KEY_HASH_LIST_FILES_PATH)}"
             )
             return False
 
-        target_path = repo_root / task.get("path", "")
-        pattern = task.get("pattern", "")
+        target_path = repo_root / task.get(KEY_HASH_LIST_FILES_PATH, "")
+        pattern = task.get(KEY_HASH_LIST_FILES_PATTERN, "")
         if not pattern:
             print(f"Error: file pattern should be specified: {task}")
             return False
 
         files = target_path.rglob(pattern) if task.get(
-            "recursive") else target_path.glob(pattern)
+            KEY_RECURSIVE) else target_path.glob(pattern)
         target_files.extend(files)
 
     lines_to_keep = []
 
     # Extract existing comments from the list file before truncation
-    if not (repo_root / task.get("list")).exists():
-        print(f"Error: list file {task.get('list')} not found.")
+    if not (repo_root / task.get(KEY_HASH_LIST_FILE)).exists():
+        print(f"Error: list file {task.get(KEY_HASH_LIST_FILE)} not found.")
         return False
 
-    with open(repo_root / task.get("list"), "r", encoding="utf-8") as f:
+    with open(repo_root / task.get(KEY_HASH_LIST_FILE), "r",
+              encoding="utf-8") as f:
         all_lines = f.readlines()
 
     example_line_index = -1
@@ -105,13 +124,13 @@ def process_task(task: dict) -> bool:
             if line.strip().endswith("Example:"):
                 example_line_index = i
 
-    method = task.get("method")
+    method = task.get(KEY_METHOD)
     if method and example_line_index != -1:
         lines_to_keep = all_lines[:example_line_index + 1]
         if lines_to_keep and not lines_to_keep[-1].endswith("\n"):
             lines_to_keep[-1] += "\n"
-        list_rel_path = Path(task.get("list")).as_posix()
-        full_list_url = f"{task.get('base_url')}{list_rel_path}"
+        list_rel_path = Path(task.get(KEY_HASH_LIST_FILE)).as_posix()
+        full_list_url = f"{task.get(KEY_BASE_URL)}{list_rel_path}"
         lines_to_keep.append(f"# :global {method}\n")
         lines_to_keep.append(f"# ${method} {full_list_url}\n")
     elif last_comment_index != -1:
@@ -122,7 +141,7 @@ def process_task(task: dict) -> bool:
     # Ensure clean separation between comments and the newly generated payload
     lines_to_keep.append("\n")
 
-    setup_file = task.get("setup_file", "").strip()
+    setup_file = task.get(KEY_SETUP_FILE, "").strip()
     if setup_file:
         script_file_path = repo_root / setup_file
         if not update_startup_script(
@@ -134,22 +153,22 @@ def process_task(task: dict) -> bool:
             return False
 
     # Filter out excluded files by checking substring presence
-    if task.get("list_exclude"):
+    if task.get(KEY_HASH_LIST_EXCLUDE):
         target_files = [
             f_path for f_path in target_files
             if not any(ex_str in f_path.as_posix()
-                       for ex_str in task.get("list_exclude"))
+                       for ex_str in task.get(KEY_HASH_LIST_EXCLUDE))
         ]
 
     # Append fresh hash data for every localized file directly to the output buffer
     for f_path in sorted(target_files):
         lines_to_keep.append(
-            f"{HASH_FUNCTIONS[task.get('alg').lower()](f_path)} "
-            f"{task.get('base_url')}{f_path.relative_to(repo_root).as_posix()}\n"
+            f"{HASH_FUNCTIONS[task.get(KEY_HASH_ALGORITHM).lower()](f_path)} "
+            f"{task.get(KEY_BASE_URL)}{f_path.relative_to(repo_root).as_posix()}\n"
         )
 
     with open(
-            repo_root / task.get("list"),
+            repo_root / task.get(KEY_HASH_LIST_FILE),
             "w",
             encoding="utf-8",
             newline="\n",
@@ -157,7 +176,7 @@ def process_task(task: dict) -> bool:
         f.writelines(lines_to_keep)
 
     print(
-        f"Successfully updated {task.get('list')} with {len(target_files)} files."
+        f"Successfully updated {task.get(KEY_HASH_LIST_FILE)} with {len(target_files)} files."
     )
     return True
 
@@ -177,7 +196,7 @@ def update_startup_script(
 
     # Exclude the startup script itself
     filtered_rsc_files = [
-        script for script in rsc_files if script != script_file_path
+        script for script in sorted(rsc_files) if script != script_file_path
     ]
 
     # Format the new list content
@@ -226,19 +245,19 @@ def process_config(config_path: Path) -> bool:
         print(f"Error parsing JSON configuration file {config_path}: {e}")
         return False
 
-    if not isinstance(data,
-                      dict) or "config" not in data or "base_url" not in data:
+    if not isinstance(
+            data, dict) or KEY_CONFIG not in data or KEY_BASE_URL not in data:
         print(
-            "Error: JSON configuration must be an object containing 'base_url' and a 'config' list."
+            f"Error: JSON configuration must be an object containing '{KEY_BASE_URL}' and a '{KEY_CONFIG}' list."
         )
         return False
 
-    base_url = data.get("base_url")
-    method = data.get("method")
-    tasks = data.get("config")
+    base_url = data.get(KEY_BASE_URL)
+    method = data.get(KEY_METHOD)
+    tasks = data.get(KEY_CONFIG)
 
     if not isinstance(tasks, list):
-        print("Error: 'config' must be a list of objects.")
+        print(f"Error: '{KEY_CONFIG}' must be a list of objects.")
         return False
 
     for entry in tasks:
@@ -247,8 +266,8 @@ def process_config(config_path: Path) -> bool:
             return False
 
         # Inject base_url and method into the task dictionary
-        entry["base_url"] = base_url
-        entry["method"] = method
+        entry[KEY_BASE_URL] = base_url
+        entry[KEY_METHOD] = method
 
         if not process_task(entry):
             return False

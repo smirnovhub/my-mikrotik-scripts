@@ -6,6 +6,7 @@
       "alg": "md5",
       "list": "global/list.txt",
       "path": "global",
+      "pattern": "*.rsc",
       "exclude": [
         "global_config.rsc"
       ]
@@ -13,12 +14,14 @@
     {
       "alg": "md5",
       "list": "global/tests/list.txt",
-      "path": "global/tests"
+      "path": "global/tests",
+      "pattern": "*.rsc"
     },
     {
       "alg": "md5",
       "list": "other/list.txt",
       "path": "other",
+      "pattern": "*.rsc",
       "recursive": true
     },
     {

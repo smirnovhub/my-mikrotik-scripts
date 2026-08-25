@@ -69,9 +69,15 @@ def process_task(task: dict) -> bool:
             )
             return False
 
-        target_files.extend(
-            (repo_root / task.get("path", "")
-             ).glob("**/*.rsc" if task.get("recursive") else "*.rsc"))
+        target_path = repo_root / task.get("path", "")
+        pattern = task.get("pattern", "")
+        if not pattern:
+            print(f"Error: file pattern should be specified: {task}")
+            return False
+
+        files = target_path.rglob(pattern) if task.get(
+            "recursive") else target_path.glob(pattern)
+        target_files.extend(files)
 
     # Filter out excluded files by checking substring presence
     if task.get("exclude"):

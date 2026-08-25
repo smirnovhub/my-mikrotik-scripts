@@ -91,18 +91,30 @@ def process_task(task: dict) -> bool:
     with open(repo_root / task.get("list"), "r", encoding="utf-8") as f:
         all_lines = f.readlines()
 
+    example_line_index = -1
     last_comment_index = -1
+
     for i, line in enumerate(all_lines):
         if line.lstrip().startswith("#"):
             last_comment_index = i
+            if line.strip().endswith("Example:"):
+                example_line_index = i
 
-    if last_comment_index != -1:
+    method = task.get("method")
+    if method and example_line_index != -1:
+        lines_to_keep = all_lines[:example_line_index + 1]
+        if lines_to_keep and not lines_to_keep[-1].endswith("\n"):
+            lines_to_keep[-1] += "\n"
+        list_rel_path = Path(task.get("list")).as_posix()
+        full_list_url = f"{task.get('base_url')}{list_rel_path}"
+        lines_to_keep.append(f"# :global {method}\n")
+        lines_to_keep.append(f"# ${method} {full_list_url}\n")
+    elif last_comment_index != -1:
         lines_to_keep = all_lines[:last_comment_index + 1]
+        if lines_to_keep and not lines_to_keep[-1].endswith("\n"):
+            lines_to_keep[-1] += "\n"
 
     # Ensure clean separation between comments and the newly generated payload
-    if lines_to_keep and not lines_to_keep[-1].endswith("\n"):
-        lines_to_keep[-1] += "\n"
-
     lines_to_keep.append("\n")
 
     # Append fresh hash data for every localized file directly to the output buffer
@@ -148,6 +160,7 @@ def process_config(config_path: Path) -> bool:
         return False
 
     base_url = data.get("base_url")
+    method = data.get("method")
     tasks = data.get("config")
 
     if not isinstance(tasks, list):
@@ -159,8 +172,9 @@ def process_config(config_path: Path) -> bool:
             print(f"Error: invalid entry in configuration: {entry}")
             return False
 
-        # Inject base_url into the task dictionary to keep process_task completely unchanged
+        # Inject base_url and method into the task dictionary
         entry["base_url"] = base_url
+        entry["method"] = method
 
         if not process_task(entry):
             return False

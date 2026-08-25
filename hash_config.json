@@ -1,5 +1,6 @@
 {
   "base_url": "https://github.com/smirnovhub/my-mikrotik-scripts/raw/refs/heads/master/",
+  "method": "DownloadAndImportScriptsFromList",
   "config": [
     {
       "alg": "md5",

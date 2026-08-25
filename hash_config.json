@@ -7,15 +7,17 @@
       "list": "global/list.txt",
       "path": "global",
       "pattern": "*.rsc",
-      "exclude": [
+      "list_exclude": [
         "global_config.rsc"
-      ]
+      ],
+      "setup_file": "global/global_setup.rsc"
     },
     {
       "alg": "md5",
       "list": "global/tests/list.txt",
       "path": "global/tests",
-      "pattern": "*.rsc"
+      "pattern": "*.rsc",
+      "setup_file": "global/tests/global_setup_tests.rsc"
     },
     {
       "alg": "md5",

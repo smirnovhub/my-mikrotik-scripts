@@ -55,13 +55,12 @@ jobs:
 
             echo "Local state reset."
 
-            # Update global setup files
-            echo "Updating global setup..."
+            # Update hash files
+            echo "Updating hashes and setups..."
 
-            python update_setup.py global/global_setup.rsc
-            python update_setup.py global/tests/global_setup_tests.rsc
+            python update_hashes.py --config hash_config.json
 
-            echo "Global setup update completed."
+            echo "Hashes and setups update completed."
 
             # Stage and commit global setup changes if any
             git add "*.rsc"
@@ -71,13 +70,6 @@ jobs:
             else
               echo "No changes in global setup."
             fi
-
-            # Update hash files
-            echo "Updating hashes..."
-
-            python update_hashes.py --config hash_config.json
-
-            echo "Hash update completed."
 
             # Stage and commit hash changes if any
             git add "*.txt"

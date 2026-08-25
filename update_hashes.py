@@ -1,9 +1,16 @@
+import re
 import json
 import sys
 import zlib
 import argparse
 import hashlib
+
+from typing import List
 from pathlib import Path
+
+# Regular expression to find startup scripts array
+STARTUP_SCRIPTS_PATTERN = re.compile(
+    r"(:local\s+startupScripts\s*\{)(.*?)(\})", re.DOTALL)
 
 
 def calculate_crc32(filepath: Path) -> str:
@@ -50,7 +57,7 @@ def process_task(task: dict) -> bool:
         return False
 
     repo_root = Path.cwd()
-    target_files = []
+    target_files: List[Path] = []
 
     # Collect explicitly defined files or scan the directory based on configuration
     if task.get("files"):
@@ -78,14 +85,6 @@ def process_task(task: dict) -> bool:
         files = target_path.rglob(pattern) if task.get(
             "recursive") else target_path.glob(pattern)
         target_files.extend(files)
-
-    # Filter out excluded files by checking substring presence
-    if task.get("exclude"):
-        target_files = [
-            f_path for f_path in target_files
-            if not any(ex_str in f_path.as_posix()
-                       for ex_str in task.get("exclude"))
-        ]
 
     lines_to_keep = []
 
@@ -123,14 +122,31 @@ def process_task(task: dict) -> bool:
     # Ensure clean separation between comments and the newly generated payload
     lines_to_keep.append("\n")
 
+    setup_file = task.get("setup_file", "").strip()
+    if setup_file:
+        script_file_path = repo_root / setup_file
+        if not update_startup_script(
+                repo_root=repo_root,
+                script_file_path=script_file_path,
+                rsc_files=target_files,
+        ):
+            print(f"Error: failed to update startup script {setup_file}")
+            return False
+
+    # Filter out excluded files by checking substring presence
+    if task.get("list_exclude"):
+        target_files = [
+            f_path for f_path in target_files
+            if not any(ex_str in f_path.as_posix()
+                       for ex_str in task.get("list_exclude"))
+        ]
+
     # Append fresh hash data for every localized file directly to the output buffer
     for f_path in sorted(target_files):
         lines_to_keep.append(
             f"{HASH_FUNCTIONS[task.get('alg').lower()](f_path)} "
             f"{task.get('base_url')}{f_path.relative_to(repo_root).as_posix()}\n"
         )
-
-    (repo_root / task.get("list")).parent.mkdir(parents=True, exist_ok=True)
 
     with open(
             repo_root / task.get("list"),
@@ -142,6 +158,58 @@ def process_task(task: dict) -> bool:
 
     print(
         f"Successfully updated {task.get('list')} with {len(target_files)} files."
+    )
+    return True
+
+
+def update_startup_script(
+    repo_root: Path,
+    script_file_path: Path,
+    rsc_files: List[Path],
+) -> bool:
+    script_file_relative_path = script_file_path.relative_to(
+        repo_root).as_posix()
+
+    # Check if target file exists
+    if not script_file_path.exists() or not script_file_path.is_file():
+        print(f"Error: file not found at {script_file_relative_path}")
+        return False
+
+    # Exclude the startup script itself
+    filtered_rsc_files = [
+        script for script in rsc_files if script != script_file_path
+    ]
+
+    # Format the new list content
+    formatted_scripts = ";\n".join(f'    "{script.stem}"'
+                                   for script in filtered_rsc_files)
+
+    new_block_content = f"\n{formatted_scripts}\n"
+
+    # Read target file content
+    with open(script_file_path, "r", encoding="utf-8") as f:
+        content = f.read()
+
+    # Search for the variable using regex
+    match = STARTUP_SCRIPTS_PATTERN.search(content)
+    if not match:
+        print(
+            f"Error: ':local startupScripts' variable not found in {script_file_relative_path}"
+        )
+        return False
+
+    # Replace the old content inside the block with the new list
+    updated_content = STARTUP_SCRIPTS_PATTERN.sub(
+        rf"\1{new_block_content}\3",
+        content,
+    )
+
+    # Write back to the target file
+    with open(script_file_path, "w", encoding="utf-8", newline="\n") as f:
+        f.write(updated_content)
+
+    print(
+        f"Successfully updated startupScripts in {script_file_relative_path} with {len(filtered_rsc_files)} files."
     )
     return True
 

@@ -24,17 +24,17 @@
 
 # Define the list of startup scripts
 :local startupScripts {
-    "global_functions_global_vars";
-    "global_functions_array_str";
-    "global_functions_hashes";
-    "global_functions_utils";
-    "global_functions_auto_update";
-    "global_functions";
-    "global_functions_big_int";
-    "global_functions_encoding";
-    "global_functions_testing";
     "global_config";
-    "global_functions_datetime"
+    "global_functions";
+    "global_functions_array_str";
+    "global_functions_auto_update";
+    "global_functions_big_int";
+    "global_functions_datetime";
+    "global_functions_encoding";
+    "global_functions_global_vars";
+    "global_functions_hashes";
+    "global_functions_testing";
+    "global_functions_utils"
 }
 
 # Iterate through the array and run each script with error handling

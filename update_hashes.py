@@ -73,6 +73,14 @@ def process_task(task: dict) -> bool:
             (repo_root / task.get("path", "")
              ).glob("**/*.rsc" if task.get("recursive") else "*.rsc"))
 
+    # Filter out excluded files by checking substring presence
+    if task.get("exclude"):
+        target_files = [
+            f_path for f_path in target_files
+            if not any(ex_str in f_path.as_posix()
+                       for ex_str in task.get("exclude"))
+        ]
+
     lines_to_keep = []
 
     # Extract existing comments from the list file before truncation

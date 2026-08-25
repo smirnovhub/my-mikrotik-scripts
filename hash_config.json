@@ -4,7 +4,10 @@
     {
       "alg": "md5",
       "list": "global/list.txt",
-      "path": "global"
+      "path": "global",
+      "exclude": [
+        "global_config.rsc"
+      ]
     },
     {
       "alg": "md5",

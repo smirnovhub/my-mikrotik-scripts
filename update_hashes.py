@@ -1,44 +1,31 @@
 import json
-import re
 import sys
 import zlib
 import argparse
 import hashlib
-
 from pathlib import Path
-
-# Match everything after /refs/heads/<any_branch>/ as relative path
-URL_PATTERN = re.compile(r"^http.*/refs/heads/[^/]+/(?P<rel_path>.+)$")
 
 
 def calculate_crc32(filepath: Path) -> str:
-    # Read bytes and calculate CRC32 checksum
-    crc_val = zlib.crc32(filepath.read_bytes())
-    # Format as 8-character lowercase hex string
-    return f"{crc_val:08x}"
+    return f"{zlib.crc32(filepath.read_bytes()):08x}"
 
 
 def calculate_md5(filepath: Path) -> str:
-    # Read bytes and calculate MD5 checksum
     return hashlib.md5(filepath.read_bytes()).hexdigest()
 
 
 def calculate_sha1(filepath: Path) -> str:
-    # Read bytes and calculate SHA1 checksum
     return hashlib.sha1(filepath.read_bytes()).hexdigest()
 
 
 def calculate_sha256(filepath: Path) -> str:
-    # Read bytes and calculate SHA256 checksum
     return hashlib.sha256(filepath.read_bytes()).hexdigest()
 
 
 def calculate_sha512(filepath: Path) -> str:
-    # Read bytes and calculate SHA512 checksum
     return hashlib.sha512(filepath.read_bytes()).hexdigest()
 
 
-# Registry mapping algorithm names to their handler functions
 HASH_FUNCTIONS = {
     "crc32": calculate_crc32,
     "md5": calculate_md5,
@@ -48,89 +35,115 @@ HASH_FUNCTIONS = {
 }
 
 
-def process_list(list_file_path: Path, alg: str) -> bool:
-    if not list_file_path.exists():
-        print(f"Error: {list_file_path} not found.")
+def process_task(task: dict) -> bool:
+    if not all(k in task for k in ("alg", "list", "base_url")):
+        print(f"Error: missing required keys in task: {task}")
         return False
 
-    hash_func = HASH_FUNCTIONS.get(alg.lower())
-    if not hash_func:
-        print(
-            f"Error: unsupported hash algorithm '{alg}'. Supported: {', '.join(HASH_FUNCTIONS.keys())}"
-        )
+    # Ensure at least 'path' or 'files' is provided in the configuration
+    if "path" not in task and "files" not in task:
+        print(f"Error: task must contain either 'path' or 'files': {task}")
         return False
 
-    has_updates = False
-    updated_lines = []
+    if task.get("alg").lower() not in HASH_FUNCTIONS:
+        print(f"Error: unsupported hash algorithm '{task.get('alg')}'")
+        return False
+
     repo_root = Path.cwd()
+    target_files = []
 
-    print(f"Updating {alg.upper()} hashes for {list_file_path}...")
-
-    with open(list_file_path, "r", encoding="utf-8") as f:
-        lines = f.readlines()
-
-    for line in lines:
-        stripped = line.strip()
-
-        # Retain comments and empty lines without modification
-        if not stripped or stripped.startswith("#"):
-            updated_lines.append(line)
-            continue
-
-        # Extract target URL and existing hash from line
-        parts = stripped.split()
-        url = parts[-1]
-        existing_hash = parts[0] if len(parts) >= 2 else ""
-
-        match = URL_PATTERN.match(url)
-        if match:
-            rel_path_str = match.group("rel_path")
-
-            # Resolve file path relative to repository root
-            local_file = repo_root / rel_path_str
-
-            if local_file.exists() and local_file.is_file():
-                file_hash = hash_func(local_file)
-
-                # Compare new hash with existing one
-                if file_hash != existing_hash:
-                    has_updates = True
-                    print(f"{file_hash} {url}")
-                updated_lines.append(f"{file_hash} {url}\n")
-                continue
-            else:
-                print(f"Error: file missing at {local_file} for URL: {url}")
+    # Collect explicitly defined files or scan the directory based on configuration
+    if task.get("files"):
+        for f_name in task.get("files"):
+            if not (repo_root /
+                    f_name).exists() or not (repo_root / f_name).is_file() or (
+                        repo_root / f_name).stat().st_size == 0:
+                print(f"Error: file missing or empty: {f_name}")
                 return False
-
-        # Preserve line if pattern matching fails or target file is missing
-        updated_lines.append(stripped + "\n")
-
-    with open(list_file_path, "w", encoding="utf-8", newline="\n") as f:
-        f.writelines(updated_lines)
-
-    if has_updates:
-        print(f"Hashes in {list_file_path} updated successfully.\n")
+            target_files.append(repo_root / f_name)
     else:
-        print(f"Hashes in {list_file_path} are already up to date.\n")
+        if not (repo_root / task.get("path", "")).exists() or not (
+                repo_root / task.get("path", "")).is_dir():
+            print(
+                f"Error: search path missing or not a directory: {task.get('path')}"
+            )
+            return False
 
+        target_files.extend(
+            (repo_root / task.get("path", "")
+             ).glob("**/*.rsc" if task.get("recursive") else "*.rsc"))
+
+    lines_to_keep = []
+
+    # Extract existing comments from the list file before truncation
+    if not (repo_root / task.get("list")).exists():
+        print(f"Error: list file {task.get('list')} not found.")
+        return False
+
+    with open(repo_root / task.get("list"), "r", encoding="utf-8") as f:
+        all_lines = f.readlines()
+
+    last_comment_index = -1
+    for i, line in enumerate(all_lines):
+        if line.lstrip().startswith("#"):
+            last_comment_index = i
+
+    if last_comment_index != -1:
+        lines_to_keep = all_lines[:last_comment_index + 1]
+
+    # Ensure clean separation between comments and the newly generated payload
+    if lines_to_keep and not lines_to_keep[-1].endswith("\n"):
+        lines_to_keep[-1] += "\n"
+
+    lines_to_keep.append("\n")
+
+    # Append fresh hash data for every localized file directly to the output buffer
+    for f_path in sorted(target_files):
+        lines_to_keep.append(
+            f"{HASH_FUNCTIONS[task.get('alg').lower()](f_path)} "
+            f"{task.get('base_url')}{f_path.relative_to(repo_root).as_posix()}\n"
+        )
+
+    (repo_root / task.get("list")).parent.mkdir(parents=True, exist_ok=True)
+
+    with open(
+            repo_root / task.get("list"),
+            "w",
+            encoding="utf-8",
+            newline="\n",
+    ) as f:
+        f.writelines(lines_to_keep)
+
+    print(
+        f"Successfully updated {task.get('list')} with {len(target_files)} files."
+    )
     return True
 
 
 def process_config(config_path: Path) -> bool:
-    # Load and process multiple target configurations from a JSON file
     if not config_path.exists():
         print(f"Error: configuration file {config_path} not found.")
         return False
 
     try:
         with open(config_path, "r", encoding="utf-8") as f:
-            tasks = json.load(f)
+            data = json.load(f)
     except Exception as e:
         print(f"Error parsing JSON configuration file {config_path}: {e}")
         return False
 
+    if not isinstance(data,
+                      dict) or "config" not in data or "base_url" not in data:
+        print(
+            "Error: JSON configuration must be an object containing 'base_url' and a 'config' list."
+        )
+        return False
+
+    base_url = data.get("base_url")
+    tasks = data.get("config")
+
     if not isinstance(tasks, list):
-        print("Error: JSON configuration must contain a list of objects.")
+        print("Error: 'config' must be a list of objects.")
         return False
 
     for entry in tasks:
@@ -138,16 +151,10 @@ def process_config(config_path: Path) -> bool:
             print(f"Error: invalid entry in configuration: {entry}")
             return False
 
-        # Support flexible field names for algorithm and target file
-        alg = entry.get("alg")
-        file_path = entry.get("file")
+        # Inject base_url into the task dictionary to keep process_task completely unchanged
+        entry["base_url"] = base_url
 
-        if not alg or not file_path:
-            print(
-                f"Error: entry missing required 'algo' or 'file' key: {entry}")
-            return False
-
-        if not process_list(Path(file_path), alg):
+        if not process_task(entry):
             return False
 
     return True
@@ -155,40 +162,23 @@ def process_config(config_path: Path) -> bool:
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
-        description="Update file checksums in a reference list.",
+        description="Update file checksums based on JSON config.",
         formatter_class=lambda prog: argparse.HelpFormatter(
-            prog, max_help_position=50, width=100))
-
-    parser.add_argument(
-        "list_path",
-        nargs="?",
-        type=Path,
-        help="Path to the list file (required if --config is not used)",
-    )
-
-    parser.add_argument(
-        "-a",
-        type=str,
-        choices=list(HASH_FUNCTIONS.keys()),
-        help="Hash algorithm to use (required if --config is not used)",
+            prog,
+            max_help_position=50,
+            width=100,
+        ),
     )
 
     parser.add_argument(
         "-c",
         "--config",
+        required=True,
         type=Path,
         help="Path to JSON configuration file containing update targets",
     )
 
     args = parser.parse_args()
 
-    if args.config:
-        if not process_config(args.config):
-            sys.exit(1)
-    elif args.list_path and args.a:
-        if not process_list(args.list_path, args.a):
-            sys.exit(1)
-    else:
-        parser.error(
-            "Must provide either positional list_path with -a, or specify --config / -c."
-        )
+    if not process_config(args.config):
+        sys.exit(1)

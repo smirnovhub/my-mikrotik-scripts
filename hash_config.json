@@ -1,38 +1,73 @@
-[
-  {
-    "alg": "md5",
-    "file": "global/list.txt"
-  },
-  {
-    "alg": "md5",
-    "file": "global/tests/list.txt"
-  },
-  {
-    "alg": "md5",
-    "file": "other/list.txt"
-  },
-  {
-    "alg": "crc32",
-    "file": "global/tests/test_data/test_list_crc32.txt"
-  },
-  {
-    "alg": "md5",
-    "file": "global/tests/test_data/test_list_md5.txt"
-  },
-  {
-    "alg": "sha1",
-    "file": "global/tests/test_data/test_list_sha1.txt"
-  },
-  {
-    "alg": "sha256",
-    "file": "global/tests/test_data/test_list_sha256.txt"
-  },
-  {
-    "alg": "sha512",
-    "file": "global/tests/test_data/test_list_sha512.txt"
-  },
-  {
-    "alg": "md5",
-    "file": "global/tests/test_data/auto_update_test_list.txt"
-  }
-]
+{
+  "base_url": "https://github.com/smirnovhub/my-mikrotik-scripts/raw/refs/heads/master/",
+  "config": [
+    {
+      "alg": "md5",
+      "list": "global/list.txt",
+      "path": "global"
+    },
+    {
+      "alg": "md5",
+      "list": "global/tests/list.txt",
+      "path": "global/tests"
+    },
+    {
+      "alg": "md5",
+      "list": "other/list.txt",
+      "path": "other",
+      "recursive": true
+    },
+    {
+      "alg": "crc32",
+      "list": "global/tests/test_data/test_list_crc32.txt",
+      "files": [
+        "global/tests/test_data/test_string1.txt",
+        "global/tests/test_data/test_string2.txt",
+        "global/tests/test_data/test_string3.txt"
+      ]
+    },
+    {
+      "alg": "md5",
+      "list": "global/tests/test_data/test_list_md5.txt",
+      "files": [
+        "global/tests/test_data/test_string1.txt",
+        "global/tests/test_data/test_string2.txt",
+        "global/tests/test_data/test_string3.txt"
+      ]
+    },
+    {
+      "alg": "sha1",
+      "list": "global/tests/test_data/test_list_sha1.txt",
+      "files": [
+        "global/tests/test_data/test_string1.txt",
+        "global/tests/test_data/test_string2.txt",
+        "global/tests/test_data/test_string3.txt"
+      ]
+    },
+    {
+      "alg": "sha256",
+      "list": "global/tests/test_data/test_list_sha256.txt",
+      "files": [
+        "global/tests/test_data/test_string1.txt",
+        "global/tests/test_data/test_string2.txt",
+        "global/tests/test_data/test_string3.txt"
+      ]
+    },
+    {
+      "alg": "sha512",
+      "list": "global/tests/test_data/test_list_sha512.txt",
+      "files": [
+        "global/tests/test_data/test_string1.txt",
+        "global/tests/test_data/test_string2.txt",
+        "global/tests/test_data/test_string3.txt"
+      ]
+    },
+    {
+      "alg": "md5",
+      "list": "global/tests/test_data/auto_update_test_list.txt",
+      "files": [
+        "global/tests/test_data/auto_update_test_script.rsc"
+      ]
+    }
+  ]
+}

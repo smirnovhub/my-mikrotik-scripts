@@ -71,11 +71,11 @@ jobs:
               echo "No changes in global setup."
             fi
 
-            # Stage and commit hash changes if any
+            # Stage and commit script hash changes if any
             git add "*.txt"
             if ! git diff --cached --quiet; then
-              echo "Creating commit for hashes..."
-              git commit -m "update hashes"
+              echo "Creating commit for script hashes..."
+              git commit -m "update script hashes"
             else
               echo "No changes in hashes."
             fi

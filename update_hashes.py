@@ -115,6 +115,27 @@ def process_task(task: dict) -> bool:
             )
             return False
 
+    seen_names = {}
+    duplicate_paths = set()
+
+    # Track files by their base name to catch duplicates across different directories
+    for f_path in target_files:
+        file_name = f_path.name
+        if file_name in seen_names:
+            duplicate_paths.add(f_path)
+            # Add the original file that claimed this name to clarify the conflict
+            duplicate_paths.add(seen_names[file_name])
+        else:
+            seen_names[file_name] = f_path
+
+    # Trigger error and halt if duplicate names exist
+    if duplicate_paths:
+        formatted_dupes = "\n".join(p.as_posix() for p in duplicate_paths)
+        print(
+            f"Error: duplicate file names detected across paths:\n{formatted_dupes}"
+        )
+        return False
+
     lines_to_keep = []
 
     # Extract existing comments from the list file before truncation

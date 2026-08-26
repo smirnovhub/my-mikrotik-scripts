@@ -4,13 +4,13 @@ import sys
 import zlib
 import argparse
 import hashlib
+import subprocess
 
 from typing import List
 from pathlib import Path
 
 KEY_CONFIG = "config"
 KEY_BASE_URL = "base_url"
-KEY_METHOD = "method"
 KEY_HASH_ALGORITHM = "hash_algorithm"
 KEY_HASH_LIST_FILE = "hash_list_file"
 KEY_HASH_LIST_FILES_PATH = "hash_list_files_path"
@@ -19,6 +19,8 @@ KEY_HASH_LIST_EXCLUDE = "hash_list_exclude"
 KEY_HASH_LIST_FILES = "hash_list_files"
 KEY_HASH_LIST_RECURSIVE = "hash_list_recursive"
 KEY_SETUP_FILE = "setup_file"
+KEY_EXAMPLE_URL = "example_url"
+KEY_EXAMPLE_METHOD = "example_method"
 
 # Regular expression to find startup scripts array
 STARTUP_SCRIPTS_PATTERN = re.compile(
@@ -156,13 +158,13 @@ def process_task(task: dict) -> bool:
             if line.strip().endswith("Example:"):
                 example_line_index = i
 
-    method = task.get(KEY_METHOD)
+    method = task.get(KEY_EXAMPLE_METHOD)
     if method and example_line_index != -1:
         lines_to_keep = all_lines[:example_line_index + 1]
         if lines_to_keep and not lines_to_keep[-1].endswith("\n"):
             lines_to_keep[-1] += "\n"
         list_rel_path = Path(task.get(KEY_HASH_LIST_FILE)).as_posix()
-        full_list_url = f"{task.get(KEY_BASE_URL)}{list_rel_path}"
+        full_list_url = f"{task.get(KEY_EXAMPLE_URL)}{list_rel_path}"
         lines_to_keep.append(f"# :global {method}\n")
         lines_to_keep.append(f"# ${method} {full_list_url}\n")
     elif last_comment_index != -1:
@@ -203,10 +205,16 @@ def process_task(task: dict) -> bool:
 
     # Append fresh hash data for every localized file directly to the output buffer
     for f_path in sorted(target_files):
-        lines_to_keep.append(
-            f"{HASH_FUNCTIONS[task.get(KEY_HASH_ALGORITHM).lower()](f_path)} "
-            f"{task.get(KEY_BASE_URL)}{f_path.relative_to(repo_root).as_posix()}\n"
-        )
+        algorithm = task.get(KEY_HASH_ALGORITHM).lower()
+        hash_value = HASH_FUNCTIONS[algorithm](f_path)
+
+        base_url = task.get(KEY_BASE_URL)
+        file_url = f"{base_url}{f_path.relative_to(repo_root).as_posix()}"
+
+        last_commit_hash = get_last_commit_hash(f_path)
+        file_url = file_url.replace("!COMMIT_HASH!", last_commit_hash)
+
+        lines_to_keep.append(f"{hash_value} {file_url}\n")
 
     with open(
             repo_root / task.get(KEY_HASH_LIST_FILE),
@@ -220,6 +228,25 @@ def process_task(task: dict) -> bool:
         f"Successfully updated {task.get(KEY_HASH_LIST_FILE)} with {len(target_files)} files."
     )
     return True
+
+
+def get_last_commit_hash(file_path: Path) -> str:
+    result = subprocess.run(
+        [
+            "git",
+            "-C",
+            str(file_path.parent),
+            "log",
+            "-1",
+            "--format=%H",
+            "--",
+            file_path.name,
+        ],
+        check=True,
+        capture_output=True,
+        text=True,
+    )
+    return result.stdout.strip()
 
 
 def update_startup_script(
@@ -294,7 +321,8 @@ def process_config(config_path: Path) -> bool:
         return False
 
     base_url = data.get(KEY_BASE_URL)
-    method = data.get(KEY_METHOD)
+    example_method = data.get(KEY_EXAMPLE_METHOD)
+    example_url = data.get(KEY_EXAMPLE_URL)
     tasks = data.get(KEY_CONFIG)
 
     if not isinstance(tasks, list):
@@ -308,7 +336,8 @@ def process_config(config_path: Path) -> bool:
 
         # Inject base_url and method into the task dictionary
         entry[KEY_BASE_URL] = base_url
-        entry[KEY_METHOD] = method
+        entry[KEY_EXAMPLE_URL] = example_url
+        entry[KEY_EXAMPLE_METHOD] = example_method
 
         if not process_task(entry):
             return False

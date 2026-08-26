@@ -86,6 +86,22 @@ jobs:
               exit 0
             fi
 
+            # Update last commit hashes
+            echo "Updating last commit hashes..."
+
+            python update_hashes.py --config hash_config.json
+
+            echo "Last commit hashes update completed."
+
+            # Stage and commit hash changes if any
+            git add "*.txt"
+            if ! git diff --cached --quiet; then
+              echo "Creating commit for last commit hashes..."
+              git commit -m "update last commit hashes"
+            else
+              echo "No changes in last commit hashes."
+            fi
+
             echo "Pushing changes..."
             if git push origin HEAD:"$BRANCH"; then
               echo "Successfully pushed updates."

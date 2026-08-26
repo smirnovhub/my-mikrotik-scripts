@@ -1,6 +1,5 @@
 {
-  "base_url": "https://github.com/smirnovhub/my-mikrotik-scripts/raw/refs/heads/master/",
-  "method": "DownloadAndImportScriptsFromList",
+  "base_url": "https://github.com/smirnovhub/my-mikrotik-scripts/raw/!COMMIT_HASH!/",
   "config": [
     {
       "hash_algorithm": "md5",
@@ -78,5 +77,7 @@
         "global/tests/test_data/auto_update_test_script.rsc"
       ]
     }
-  ]
+  ],
+  "example_url": "https://github.com/smirnovhub/my-mikrotik-scripts/raw/refs/heads/master/",
+  "example_method": "DownloadAndImportScriptsFromList"
 }

@@ -4,53 +4,36 @@ import sys
 import zlib
 import argparse
 import hashlib
+import subprocess
 
 from typing import List
 from pathlib import Path
 
 KEY_CONFIG = "config"
 KEY_BASE_URL = "base_url"
-KEY_METHOD = "method"
 KEY_HASH_ALGORITHM = "hash_algorithm"
 KEY_HASH_LIST_FILE = "hash_list_file"
 KEY_HASH_LIST_FILES_PATH = "hash_list_files_path"
 KEY_HASH_LIST_FILES_PATTERN = "hash_list_files_pattern"
 KEY_HASH_LIST_EXCLUDE = "hash_list_exclude"
 KEY_HASH_LIST_FILES = "hash_list_files"
-KEY_RECURSIVE = "hash_list_recursive"
+KEY_HASH_LIST_RECURSIVE = "hash_list_recursive"
 KEY_SETUP_FILE = "setup_file"
+KEY_EXAMPLE_URL = "example_url"
+KEY_EXAMPLE_METHOD = "example_method"
 
 # Regular expression to find startup scripts array
 STARTUP_SCRIPTS_PATTERN = re.compile(
     r"(:local\s+startupScripts\s*\{)(.*?)(\})", re.DOTALL)
 
-
-def calculate_crc32(filepath: Path) -> str:
-    return f"{zlib.crc32(filepath.read_bytes()):08x}"
-
-
-def calculate_md5(filepath: Path) -> str:
-    return hashlib.md5(filepath.read_bytes()).hexdigest()
-
-
-def calculate_sha1(filepath: Path) -> str:
-    return hashlib.sha1(filepath.read_bytes()).hexdigest()
-
-
-def calculate_sha256(filepath: Path) -> str:
-    return hashlib.sha256(filepath.read_bytes()).hexdigest()
-
-
-def calculate_sha512(filepath: Path) -> str:
-    return hashlib.sha512(filepath.read_bytes()).hexdigest()
-
-
 HASH_FUNCTIONS = {
-    "crc32": calculate_crc32,
-    "md5": calculate_md5,
-    "sha1": calculate_sha1,
-    "sha256": calculate_sha256,
-    "sha512": calculate_sha512,
+    "crc32": lambda filepath: f"{zlib.crc32(filepath.read_bytes()):08x}",
+    "md5": lambda filepath: hashlib.md5(filepath.read_bytes()).hexdigest(),
+    "sha1": lambda filepath: hashlib.sha1(filepath.read_bytes()).hexdigest(),
+    "sha256":
+    lambda filepath: hashlib.sha256(filepath.read_bytes()).hexdigest(),
+    "sha512":
+    lambda filepath: hashlib.sha512(filepath.read_bytes()).hexdigest(),
 }
 
 
@@ -78,14 +61,30 @@ def process_task(task: dict) -> bool:
     target_files: List[Path] = []
 
     # Collect explicitly defined files or scan the directory based on configuration
-    if task.get(KEY_HASH_LIST_FILES):
-        for f_name in task.get(KEY_HASH_LIST_FILES):
+    if KEY_HASH_LIST_FILES in task:
+        files = task[KEY_HASH_LIST_FILES]
+
+        if not isinstance(files, list):
+            print(f"Error: '{KEY_HASH_LIST_FILES}' must be a list: {task}")
+            return False
+
+        if not files:
+            print(f"Error: '{KEY_HASH_LIST_FILES}' is empty: {task}")
+            return False
+
+        for f_name in files:
             if not (repo_root /
                     f_name).exists() or not (repo_root / f_name).is_file() or (
                         repo_root / f_name).stat().st_size == 0:
                 print(f"Error: file missing or empty: {f_name}")
                 return False
             target_files.append(repo_root / f_name)
+
+        if not target_files:
+            print(
+                f"Error: no valid files found in the explicit list for task: {task}"
+            )
+            return False
     else:
         if not (repo_root / task.get(KEY_HASH_LIST_FILES_PATH, "")).exists(
         ) or not (repo_root / task.get(KEY_HASH_LIST_FILES_PATH, "")).is_dir():
@@ -100,9 +99,44 @@ def process_task(task: dict) -> bool:
             print(f"Error: file pattern should be specified: {task}")
             return False
 
-        files = target_path.rglob(pattern) if task.get(
-            KEY_RECURSIVE) else target_path.glob(pattern)
+        is_recursive = task.get(KEY_HASH_LIST_RECURSIVE, False)
+
+        if not isinstance(is_recursive, bool):
+            print(f"Error: '{KEY_HASH_LIST_RECURSIVE}' must be a bool, "
+                  f"got {type(is_recursive).__name__}")
+            return False
+
+        files = target_path.rglob(
+            pattern) if is_recursive else target_path.glob(pattern)
+
         target_files.extend(files)
+
+        if not target_files:
+            print(
+                f"Error: no files found for pattern '{pattern}' in path '{task.get(KEY_HASH_LIST_FILES_PATH)}'."
+            )
+            return False
+
+    seen_names = {}
+    duplicate_paths = set()
+
+    # Track files by their base name to catch duplicates across different directories
+    for f_path in target_files:
+        file_name = f_path.name
+        if file_name in seen_names:
+            duplicate_paths.add(f_path)
+            # Add the original file that claimed this name to clarify the conflict
+            duplicate_paths.add(seen_names[file_name])
+        else:
+            seen_names[file_name] = f_path
+
+    # Trigger error and halt if duplicate names exist
+    if duplicate_paths:
+        formatted_dupes = "\n".join(p.as_posix() for p in duplicate_paths)
+        print(
+            f"Error: duplicate file names detected across paths:\n{formatted_dupes}"
+        )
+        return False
 
     lines_to_keep = []
 
@@ -124,13 +158,13 @@ def process_task(task: dict) -> bool:
             if line.strip().endswith("Example:"):
                 example_line_index = i
 
-    method = task.get(KEY_METHOD)
+    method = task.get(KEY_EXAMPLE_METHOD)
     if method and example_line_index != -1:
         lines_to_keep = all_lines[:example_line_index + 1]
         if lines_to_keep and not lines_to_keep[-1].endswith("\n"):
             lines_to_keep[-1] += "\n"
         list_rel_path = Path(task.get(KEY_HASH_LIST_FILE)).as_posix()
-        full_list_url = f"{task.get(KEY_BASE_URL)}{list_rel_path}"
+        full_list_url = f"{task.get(KEY_EXAMPLE_URL)}{list_rel_path}"
         lines_to_keep.append(f"# :global {method}\n")
         lines_to_keep.append(f"# ${method} {full_list_url}\n")
     elif last_comment_index != -1:
@@ -153,19 +187,34 @@ def process_task(task: dict) -> bool:
             return False
 
     # Filter out excluded files by checking substring presence
-    if task.get(KEY_HASH_LIST_EXCLUDE):
+    if KEY_HASH_LIST_EXCLUDE in task:
+        exclude_list = task[KEY_HASH_LIST_EXCLUDE]
+
+        if not isinstance(exclude_list, list):
+            print(f"Error: '{KEY_HASH_LIST_EXCLUDE}' must be a list: {task}")
+            return False
+
+        if not exclude_list:
+            print(f"Error: '{KEY_HASH_LIST_EXCLUDE}' is empty: {task}")
+            return False
+
         target_files = [
             f_path for f_path in target_files
-            if not any(ex_str in f_path.as_posix()
-                       for ex_str in task.get(KEY_HASH_LIST_EXCLUDE))
+            if not any(ex_str in f_path.as_posix() for ex_str in exclude_list)
         ]
 
     # Append fresh hash data for every localized file directly to the output buffer
     for f_path in sorted(target_files):
-        lines_to_keep.append(
-            f"{HASH_FUNCTIONS[task.get(KEY_HASH_ALGORITHM).lower()](f_path)} "
-            f"{task.get(KEY_BASE_URL)}{f_path.relative_to(repo_root).as_posix()}\n"
-        )
+        algorithm = task.get(KEY_HASH_ALGORITHM).lower()
+        hash_value = HASH_FUNCTIONS[algorithm](f_path)
+
+        base_url = task.get(KEY_BASE_URL)
+        file_url = f"{base_url}{f_path.relative_to(repo_root).as_posix()}"
+
+        last_commit_hash = get_last_commit_hash(f_path)
+        file_url = file_url.replace("!COMMIT_HASH!", last_commit_hash)
+
+        lines_to_keep.append(f"{hash_value} {file_url}\n")
 
     with open(
             repo_root / task.get(KEY_HASH_LIST_FILE),
@@ -179,6 +228,25 @@ def process_task(task: dict) -> bool:
         f"Successfully updated {task.get(KEY_HASH_LIST_FILE)} with {len(target_files)} files."
     )
     return True
+
+
+def get_last_commit_hash(file_path: Path) -> str:
+    result = subprocess.run(
+        [
+            "git",
+            "-C",
+            str(file_path.parent),
+            "log",
+            "-1",
+            "--format=%H",
+            "--",
+            file_path.name,
+        ],
+        check=True,
+        capture_output=True,
+        text=True,
+    )
+    return result.stdout.strip()
 
 
 def update_startup_script(
@@ -219,7 +287,7 @@ def update_startup_script(
 
     # Replace the old content inside the block with the new list
     updated_content = STARTUP_SCRIPTS_PATTERN.sub(
-        rf"\1{new_block_content}\3",
+        lambda match: f"{match.group(1)}{new_block_content}{match.group(3)}",
         content,
     )
 
@@ -253,7 +321,8 @@ def process_config(config_path: Path) -> bool:
         return False
 
     base_url = data.get(KEY_BASE_URL)
-    method = data.get(KEY_METHOD)
+    example_method = data.get(KEY_EXAMPLE_METHOD)
+    example_url = data.get(KEY_EXAMPLE_URL)
     tasks = data.get(KEY_CONFIG)
 
     if not isinstance(tasks, list):
@@ -267,7 +336,8 @@ def process_config(config_path: Path) -> bool:
 
         # Inject base_url and method into the task dictionary
         entry[KEY_BASE_URL] = base_url
-        entry[KEY_METHOD] = method
+        entry[KEY_EXAMPLE_URL] = example_url
+        entry[KEY_EXAMPLE_METHOD] = example_method
 
         if not process_task(entry):
             return False

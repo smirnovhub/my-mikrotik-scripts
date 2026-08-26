@@ -17,40 +17,21 @@ KEY_HASH_LIST_FILES_PATH = "hash_list_files_path"
 KEY_HASH_LIST_FILES_PATTERN = "hash_list_files_pattern"
 KEY_HASH_LIST_EXCLUDE = "hash_list_exclude"
 KEY_HASH_LIST_FILES = "hash_list_files"
-KEY_RECURSIVE = "hash_list_recursive"
+KEY_HASH_LIST_RECURSIVE = "hash_list_recursive"
 KEY_SETUP_FILE = "setup_file"
 
 # Regular expression to find startup scripts array
 STARTUP_SCRIPTS_PATTERN = re.compile(
     r"(:local\s+startupScripts\s*\{)(.*?)(\})", re.DOTALL)
 
-
-def calculate_crc32(filepath: Path) -> str:
-    return f"{zlib.crc32(filepath.read_bytes()):08x}"
-
-
-def calculate_md5(filepath: Path) -> str:
-    return hashlib.md5(filepath.read_bytes()).hexdigest()
-
-
-def calculate_sha1(filepath: Path) -> str:
-    return hashlib.sha1(filepath.read_bytes()).hexdigest()
-
-
-def calculate_sha256(filepath: Path) -> str:
-    return hashlib.sha256(filepath.read_bytes()).hexdigest()
-
-
-def calculate_sha512(filepath: Path) -> str:
-    return hashlib.sha512(filepath.read_bytes()).hexdigest()
-
-
 HASH_FUNCTIONS = {
-    "crc32": calculate_crc32,
-    "md5": calculate_md5,
-    "sha1": calculate_sha1,
-    "sha256": calculate_sha256,
-    "sha512": calculate_sha512,
+    "crc32": lambda filepath: f"{zlib.crc32(filepath.read_bytes()):08x}",
+    "md5": lambda filepath: hashlib.md5(filepath.read_bytes()).hexdigest(),
+    "sha1": lambda filepath: hashlib.sha1(filepath.read_bytes()).hexdigest(),
+    "sha256":
+    lambda filepath: hashlib.sha256(filepath.read_bytes()).hexdigest(),
+    "sha512":
+    lambda filepath: hashlib.sha512(filepath.read_bytes()).hexdigest(),
 }
 
 
@@ -81,8 +62,12 @@ def process_task(task: dict) -> bool:
     if KEY_HASH_LIST_FILES in task:
         files = task[KEY_HASH_LIST_FILES]
 
+        if not isinstance(files, list):
+            print(f"Error: '{KEY_HASH_LIST_FILES}' must be a list: {task}")
+            return False
+
         if not files:
-            print(f"Error: explicit file list is empty: {task}")
+            print(f"Error: '{KEY_HASH_LIST_FILES}' is empty: {task}")
             return False
 
         for f_name in files:
@@ -112,8 +97,15 @@ def process_task(task: dict) -> bool:
             print(f"Error: file pattern should be specified: {task}")
             return False
 
-        files = target_path.rglob(pattern) if task.get(
-            KEY_RECURSIVE) else target_path.glob(pattern)
+        is_recursive = task.get(KEY_HASH_LIST_RECURSIVE, False)
+
+        if not isinstance(is_recursive, bool):
+            print(f"Error: '{KEY_HASH_LIST_RECURSIVE}' must be a bool, "
+                  f"got {type(is_recursive).__name__}")
+            return False
+
+        files = target_path.rglob(
+            pattern) if is_recursive else target_path.glob(pattern)
 
         target_files.extend(files)
 
@@ -172,11 +164,20 @@ def process_task(task: dict) -> bool:
             return False
 
     # Filter out excluded files by checking substring presence
-    if task.get(KEY_HASH_LIST_EXCLUDE):
+    if KEY_HASH_LIST_EXCLUDE in task:
+        exclude_list = task[KEY_HASH_LIST_EXCLUDE]
+
+        if not isinstance(exclude_list, list):
+            print(f"Error: '{KEY_HASH_LIST_EXCLUDE}' must be a list: {task}")
+            return False
+
+        if not exclude_list:
+            print(f"Error: '{KEY_HASH_LIST_EXCLUDE}' is empty: {task}")
+            return False
+
         target_files = [
             f_path for f_path in target_files
-            if not any(ex_str in f_path.as_posix()
-                       for ex_str in task.get(KEY_HASH_LIST_EXCLUDE))
+            if not any(ex_str in f_path.as_posix() for ex_str in exclude_list)
         ]
 
     # Append fresh hash data for every localized file directly to the output buffer
@@ -238,7 +239,7 @@ def update_startup_script(
 
     # Replace the old content inside the block with the new list
     updated_content = STARTUP_SCRIPTS_PATTERN.sub(
-        rf"\1{new_block_content}\3",
+        lambda match: f"{match.group(1)}{new_block_content}{match.group(3)}",
         content,
     )
 

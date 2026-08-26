@@ -21,7 +21,7 @@
 #
 # Add script named global_functions_encoding and then add call to startup script:
 # /system script run global_functions_encoding
-#
+
 # global functions
 :global Base64Encode
 :global Base64Decode

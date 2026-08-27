@@ -205,7 +205,7 @@ These are the primary, user-friendly methods. They accept standard strings as in
 ### Auto-Update & Remote Fetching Utilities
 
 - **DownloadAndImportScript**: Fetches an individual `.rsc` script file from a URL, validates its integrity against a provided expected hash (supporting 8-character CRC32 or 32-character MD5 checksums), and creates or updates the entry in `/system script`.
-- **DownloadAndImportScriptsFromList**: Fetches and parses a remote text file (`.txt`) containing space-separated checksums and script URLs line-by-line (ignoring comments and empty lines). Automatically downloads, validates, and imports each script, tracks performance execution time, and optionally executes all updated scripts sequentially. See list.txt files in this repo for example.
+- **DownloadAndImportScriptsFromList**: Fetches and parses a remote text file (`.txt`) containing space-separated checksums and script URLs line-by-line (ignoring comments and empty lines). Automatically downloads, validates, and imports each script, tracks performance execution time. See list.txt files in this repo for example.
 - **FetchWithRedirect**: Downloads content from a specified URL using `/tool fetch` with full support for HTTP 3xx redirects across both RouterOS v6 and v7 environments. Captures errors via temporary output logs and returns the downloaded content directly in memory without writing the final payload to disk.
 - **FetchWithRedirectAndRetry**: Downloads content from a specified URL with support for HTTP 3xx redirects and built-in retry logic, making multiple attempts with configurable delays to ensure reliable retrieval during temporary network failures, returning the downloaded content directly in memory.
 
@@ -261,15 +261,8 @@ You can perform simple updates using plain file manifests or utilize GitHub-awar
 ```routeros
 # Download and import from remote list manifest
 :global DownloadAndImportScriptsFromList
-$DownloadAndImportScriptsFromList https://github.com/smirnovhub/my-mikrotik-scripts/raw/refs/heads/master/global/list.txt true
+$DownloadAndImportScriptsFromList https://github.com/smirnovhub/my-mikrotik-scripts/raw/refs/heads/master/global/list.txt
 ```
-
-#### Parameters & Behavior
-
-Both update functions accept a boolean parameter (`true` or `false`) following the manifest URL:
-
-- **`true` (Import & Execute)**: Downloads, imports the scripts into the system script store, and **automatically executes** them immediately after loading to populate the global environment.
-- **`false` (Import only)**: Downloads and imports the scripts into the system script store without executing them.
 
 ## Function Usage Examples
 
@@ -651,13 +644,6 @@ You can perform simple updates using plain file manifests or utilize GitHub-awar
 :global DownloadAndImportScriptsFromList
 $DownloadAndImportScriptsFromList https://github.com/smirnovhub/my-mikrotik-scripts/raw/refs/heads/master/global/tests/list.txt true
 ```
-
-#### Parameters & Behavior
-
-Both update functions accept a boolean parameter (`true` or `false`) following the manifest URL:
-
-- **`true` (Import & Execute)**: Downloads, imports the scripts into the system script store, and **automatically executes** them immediately after loading to populate the global environment.
-- **`false` (Import only)**: Downloads and imports the scripts into the system script store without executing them.
 
 ## Test Execution Examples
 

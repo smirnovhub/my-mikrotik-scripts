@@ -21,13 +21,6 @@
 #
 # Add script named global_functions_utils and then add call to startup script:
 # /system script run global_functions_utils
-#
-# Sources and original authors:
-# https://github.com/eworm-de/routeros-scripts.git
-# https://github.com/osamahfarhan/mikrotik.git
-# https://forum.mikrotik.com/
-# and many others...
-#
 
 # global functions
 :global LogAndExit

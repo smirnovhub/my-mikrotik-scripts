@@ -51,8 +51,7 @@
     :local GenerateTestResults do={
         :local hashFunc $1
         :local hashType $2
-        :local prefixUrl $3
-        :local stringsArray $4
+        :local stringsArray $3
 
         :local result [:toarray ""]
 
@@ -62,12 +61,35 @@
                 "hash"=$currentHash;
                 "hashtype"=$hashType;
                 "listname"=("test_data/test_list_" . $hashType . ".txt");
-                "scriptname"=$scriptName;
-                "url"=($prefixUrl . "/" . $scriptName . ".txt")
+                "scriptname"=$scriptName
             }
         }
 
         :return $result
+    }
+
+    :local CompareTestResults do={
+        :local expected $1
+        :local actual $2
+
+        :foreach key,expectedItem in=$expected do={
+            :local actualItem ($actual->$key)
+
+            # Return false if key is missing in actual array
+            :if ([:typeof $actualItem] = "nil") do={
+                :return false
+            }
+
+            # Compare specific properties
+            :if (($expectedItem->"hash" != $actualItem->"hash") \
+                || ($expectedItem->"hashtype" != $actualItem->"hashtype") \
+                || ($expectedItem->"listname" != $actualItem->"listname") \
+                || ($expectedItem->"scriptname" != $actualItem->"scriptname")) do={
+                :return false
+            }
+        }
+
+        :return true
     }
 
     :local prefixUrl "https://github.com/smirnovhub/my-mikrotik-scripts/raw/refs/heads/master/global/tests/test_data"
@@ -76,35 +98,35 @@
         ("$prefixUrl/test_string1.txt") \
         "nothing" "nothing" $testString1 "File fetching"]
 
-    :set res [$RunTestCase $res $ParseScriptsListFromUrl \
-        ("$prefixUrl/test_list_crc32.txt") \
-        "nothing" "nothing" \
-        [$GenerateTestResults $GetCrc32Sum "crc32" $prefixUrl $testData] \
-        "List with CRC32 hashes"]
+    :set res [$RunTestCase $res $CompareTestResults \
+        [$GenerateTestResults $GetCrc32Sum "crc32" $testData] \
+        [$ParseScriptsListFromUrl ("$prefixUrl/test_list_crc32.txt")] \
+        "nothing" true \
+        "Check CRC32 hashes"]
 
-    :set res [$RunTestCase $res $ParseScriptsListFromUrl \
-        ("$prefixUrl/test_list_md5.txt") \
-        "nothing" "nothing" \
-        [$GenerateTestResults $GetMd5Sum "md5" $prefixUrl $testData] \
-        "List with MD5 hashes"]
+    :set res [$RunTestCase $res $CompareTestResults \
+        [$GenerateTestResults $GetMd5Sum "md5" $testData] \
+        [$ParseScriptsListFromUrl ("$prefixUrl/test_list_md5.txt")] \
+        "nothing" true \
+        "Check MD5 hashes"]
 
-    :set res [$RunTestCase $res $ParseScriptsListFromUrl \
-        ("$prefixUrl/test_list_sha1.txt") \
-        "nothing" "nothing" \
-        [$GenerateTestResults $GetSha1Sum "sha1" $prefixUrl $testData] \
-        "List with SHA1 hashes"]
+    :set res [$RunTestCase $res $CompareTestResults \
+        [$GenerateTestResults $GetSha1Sum "sha1" $testData] \
+        [$ParseScriptsListFromUrl ("$prefixUrl/test_list_sha1.txt")] \
+        "nothing" true \
+        "Check SHA1 hashes"]
 
-    :set res [$RunTestCase $res $ParseScriptsListFromUrl \
-        ("$prefixUrl/test_list_sha256.txt") \
-        "nothing" "nothing" \
-        [$GenerateTestResults $GetSha256Sum "sha256" $prefixUrl $testData] \
-        "List with SHA256 hashes"]
+    :set res [$RunTestCase $res $CompareTestResults \
+        [$GenerateTestResults $GetSha256Sum "sha256" $testData] \
+        [$ParseScriptsListFromUrl ("$prefixUrl/test_list_sha256.txt")] \
+        "nothing" true \
+        "Check SHA256 hashes"]
 
-    :set res [$RunTestCase $res $ParseScriptsListFromUrl \
-        ("$prefixUrl/test_list_sha512.txt") \
-        "nothing" "nothing" \
-        [$GenerateTestResults $GetSha512Sum "sha512" $prefixUrl $testData] \
-        "List with SHA512 hashes"]
+    :set res [$RunTestCase $res $CompareTestResults \
+        [$GenerateTestResults $GetSha512Sum "sha512" $testData] \
+        [$ParseScriptsListFromUrl ("$prefixUrl/test_list_sha512.txt")] \
+        "nothing" true \
+        "Check SHA512 hashes"]
 
     :local testGlobalVarName "test-global-var"
     :local hashGlobalVarName "auto-update-test-script-hash"

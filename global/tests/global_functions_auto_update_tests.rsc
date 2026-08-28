@@ -151,31 +151,31 @@
         [$GenerateTestResults $GetCrc32Sum "crc32" $testData] \
         [$ParseScriptsListFromUrl ("$prefixUrl/test_list_crc32.txt")] \
         "nothing" true \
-        "Check CRC32 hashes"]
+        "Parse URL with CRC32 hashes"]
 
     :set res [$RunTestCase $res $CompareTestResults \
         [$GenerateTestResults $GetMd5Sum "md5" $testData] \
         [$ParseScriptsListFromUrl ("$prefixUrl/test_list_md5.txt")] \
         "nothing" true \
-        "Check MD5 hashes"]
+        "Parse URL with MD5 hashes"]
 
     :set res [$RunTestCase $res $CompareTestResults \
         [$GenerateTestResults $GetSha1Sum "sha1" $testData] \
         [$ParseScriptsListFromUrl ("$prefixUrl/test_list_sha1.txt")] \
         "nothing" true \
-        "Check SHA1 hashes"]
+        "Parse URL with SHA1 hashes"]
 
     :set res [$RunTestCase $res $CompareTestResults \
         [$GenerateTestResults $GetSha256Sum "sha256" $testData] \
         [$ParseScriptsListFromUrl ("$prefixUrl/test_list_sha256.txt")] \
         "nothing" true \
-        "Check SHA256 hashes"]
+        "Parse URL with SHA256 hashes"]
 
     :set res [$RunTestCase $res $CompareTestResults \
         [$GenerateTestResults $GetSha512Sum "sha512" $testData] \
         [$ParseScriptsListFromUrl ("$prefixUrl/test_list_sha512.txt")] \
         "nothing" true \
-        "Check SHA512 hashes"]
+        "Parse URL with SHA512 hashes"]
 
     :local testGlobalVarName "test-global-var"
     :local hashGlobalVarName "auto-update-test-script-hash"

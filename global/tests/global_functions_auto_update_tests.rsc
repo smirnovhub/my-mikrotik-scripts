@@ -189,6 +189,7 @@
     # Generate an unknown hash type by removing one character from a valid hash
     :local GetUnknownHash do={
         :global GetMd5Sum
+        :local hash [$GetMd5Sum $1]
         :return [:pick $hash 0 ([:len $hash] - 1)]
     }
 

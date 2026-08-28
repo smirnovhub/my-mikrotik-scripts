@@ -24,6 +24,7 @@
     :global GetGlobalVar
     :global SetGlobalVar
     :global FetchWithRedirect
+    :global ParseScriptsListFromString
     :global ParseScriptsListFromUrl
     :global DownloadAndImportScriptsFromList
     :global GetCrc32Sum
@@ -45,6 +46,24 @@
         "test_string1"=$testString1;
         "test_string2"=$testString2;
         "test_string3"=$testString3
+    }
+
+    # Helper function to generate raw text string for testing
+    :local GenerateTestInputString do={
+        :global JoinArray
+
+        :local hashFunc $1
+        :local stringsArray $2
+
+        :local linesArray [:toarray ""]
+
+        :foreach scriptName,testString in=$stringsArray do={
+            :local currentHash [$hashFunc $testString]
+            :local line ($currentHash . " https://example.com/fake-path/" . $scriptName)
+            :set linesArray ($linesArray, $line)
+        }
+
+        :return [$JoinArray $linesArray ("\n")]
     }
 
     # Helper function to generate test results array
@@ -91,6 +110,36 @@
 
         :return true
     }
+
+    :set res [$RunTestCase $res $CompareTestResults \
+        [$GenerateTestResults $GetCrc32Sum "crc32" $testData] \
+        [$ParseScriptsListFromString [$GenerateTestInputString $GetCrc32Sum $testData] "test_data/test_list_crc32.txt"] \
+        "nothing" true \
+        "Parse string with CRC32 hashes"]
+
+    :set res [$RunTestCase $res $CompareTestResults \
+        [$GenerateTestResults $GetMd5Sum "md5" $testData] \
+        [$ParseScriptsListFromString [$GenerateTestInputString $GetMd5Sum $testData] "test_data/test_list_md5.txt"] \
+        "nothing" true \
+        "Parse string with MD5 hashes"]
+
+    :set res [$RunTestCase $res $CompareTestResults \
+        [$GenerateTestResults $GetSha1Sum "sha1" $testData] \
+        [$ParseScriptsListFromString [$GenerateTestInputString $GetSha1Sum $testData] "test_data/test_list_sha1.txt"] \
+        "nothing" true \
+        "Parse string with SHA1 hashes"]
+
+    :set res [$RunTestCase $res $CompareTestResults \
+        [$GenerateTestResults $GetSha256Sum "sha256" $testData] \
+        [$ParseScriptsListFromString [$GenerateTestInputString $GetSha256Sum $testData] "test_data/test_list_sha256.txt"] \
+        "nothing" true \
+        "Parse string with SHA256 hashes"]
+
+    :set res [$RunTestCase $res $CompareTestResults \
+        [$GenerateTestResults $GetSha512Sum "sha512" $testData] \
+        [$ParseScriptsListFromString [$GenerateTestInputString $GetSha512Sum $testData] "test_data/test_list_sha512.txt"] \
+        "nothing" true \
+        "Parse string with SHA512 hashes"]
 
     :local prefixUrl "https://github.com/smirnovhub/my-mikrotik-scripts/raw/refs/heads/master/global/tests/test_data"
 

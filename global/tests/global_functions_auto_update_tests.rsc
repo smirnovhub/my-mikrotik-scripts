@@ -177,6 +177,35 @@
         "nothing" true \
         "Parse URL with SHA512 hashes"]
 
+    # Define test data for a single line
+    :local singleLineTestData {"test_string1"=$testString1}
+
+    :set res [$RunTestCase $res $CompareTestResults \
+        [$GenerateTestResults $GetMd5Sum "md5" $singleLineTestData] \
+        [$ParseScriptsListFromString [$GenerateTestInputString $GetMd5Sum $singleLineTestData] "test_data/test_list_md5.txt"] \
+        "nothing" true \
+        "Parse string with a single line"]
+
+    # Generate an unknown hash type by removing one character from a valid hash
+    :local GetUnknownHash do={
+        :global GetMd5Sum
+        :return [:pick $hash 0 ([:len $hash] - 1)]
+    }
+
+    # Tests of unknown hashes
+    :set res [$RunTestCase $res $CompareTestResults \
+        [$GenerateTestResults $GetUnknownHash "unknown" $singleLineTestData] \
+        [$ParseScriptsListFromString [$GenerateTestInputString $GetUnknownHash $singleLineTestData] "test_data/test_list_unknown.txt"] \
+        "nothing" true \
+        "Parse string with an unknown hash type"]
+
+    # We can also test the unknown hash type with multiple lines
+    :set res [$RunTestCase $res $CompareTestResults \
+        [$GenerateTestResults $GetUnknownHash "unknown" $testData] \
+        [$ParseScriptsListFromString [$GenerateTestInputString $GetUnknownHash $testData] "test_data/test_list_unknown.txt"] \
+        "nothing" true \
+        "Parse string with unknown hash types on multiple lines"]
+
     :local testGlobalVarName "test-global-var"
     :local hashGlobalVarName "auto-update-test-script-hash"
     :local testScriptName "auto_update_test_script"

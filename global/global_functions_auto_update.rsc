@@ -614,7 +614,7 @@
                 $SetGlobalVar $hashVarName ($item->"hash")
             }
         } else={
-            :if ($oldHash != "" && $oldHash != $oldScriptHash) do={
+            :if ($oldHash != "" && $oldScriptHash != "" && $oldHash != $oldScriptHash) do={
                 :log warning ("$prefix " . $scriptName . " local script has changed and needs to be updated")
             }
 

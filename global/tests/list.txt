@@ -9,7 +9,7 @@
 98ea71eae0085a74e22f42f3d5d408fc https://github.com/smirnovhub/my-mikrotik-scripts/raw/3b8fcba8c623ba157f059640796272d39a8db8af/global/tests/global_functions_array_str_tests_1.rsc
 8c962484f00b83fca8498035e2d49614 https://github.com/smirnovhub/my-mikrotik-scripts/raw/f8d8b9eb212da34832b27baca06be808236a67fc/global/tests/global_functions_array_str_tests_2.rsc
 4e3f50303f1294e7bbcd2fe3fc612268 https://github.com/smirnovhub/my-mikrotik-scripts/raw/58cb4f643fa156029a003d5a780a3493181597ed/global/tests/global_functions_array_str_tests_3.rsc
-4501c8786d3db8bdf5f7b01fc08b7ebc https://github.com/smirnovhub/my-mikrotik-scripts/raw/be1c1306a8293bcee7a38c1e065999f4a2212dee/global/tests/global_functions_auto_update_tests.rsc
+9f490e658b3da237eb173c38c167247e https://github.com/smirnovhub/my-mikrotik-scripts/raw/7e7cce88926b2153d2801bf7d452ba7b712d90af/global/tests/global_functions_auto_update_tests.rsc
 320b24c15659ebf2055293a9aa375e57 https://github.com/smirnovhub/my-mikrotik-scripts/raw/faadf578b6e9fc0b37e9b15871109dd71ef09715/global/tests/global_functions_big_int_tests_1.rsc
 981d40a0ed46f9de88d1a2dc9461f98e https://github.com/smirnovhub/my-mikrotik-scripts/raw/3238ea7393b5174a18a9e18e9697763a6f16e357/global/tests/global_functions_big_int_tests_2.rsc
 282e2421a3b0500527f4b99f9ad02d88 https://github.com/smirnovhub/my-mikrotik-scripts/raw/3238ea7393b5174a18a9e18e9697763a6f16e357/global/tests/global_functions_big_int_tests_3.rsc

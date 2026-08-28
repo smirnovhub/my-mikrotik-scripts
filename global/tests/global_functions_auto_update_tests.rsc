@@ -24,6 +24,7 @@
     :global GetGlobalVar
     :global SetGlobalVar
     :global FetchWithRedirect
+    :global ParseScriptsListFromString
     :global ParseScriptsListFromUrl
     :global DownloadAndImportScriptsFromList
     :global GetCrc32Sum
@@ -45,6 +46,24 @@
         "test_string1"=$testString1;
         "test_string2"=$testString2;
         "test_string3"=$testString3
+    }
+
+    # Helper function to generate raw text string for testing
+    :local GenerateTestInputString do={
+        :global JoinArray
+
+        :local hashFunc $1
+        :local stringsArray $2
+
+        :local linesArray [:toarray ""]
+
+        :foreach scriptName,testString in=$stringsArray do={
+            :local currentHash [$hashFunc $testString]
+            :local line ($currentHash . " https://example.com/fake-path/" . $scriptName)
+            :set linesArray ($linesArray, $line)
+        }
+
+        :return [$JoinArray $linesArray ("\n")]
     }
 
     # Helper function to generate test results array
@@ -92,6 +111,36 @@
         :return true
     }
 
+    :set res [$RunTestCase $res $CompareTestResults \
+        [$GenerateTestResults $GetCrc32Sum "crc32" $testData] \
+        [$ParseScriptsListFromString [$GenerateTestInputString $GetCrc32Sum $testData] "test_data/test_list_crc32.txt"] \
+        "nothing" true \
+        "Parse string with CRC32 hashes"]
+
+    :set res [$RunTestCase $res $CompareTestResults \
+        [$GenerateTestResults $GetMd5Sum "md5" $testData] \
+        [$ParseScriptsListFromString [$GenerateTestInputString $GetMd5Sum $testData] "test_data/test_list_md5.txt"] \
+        "nothing" true \
+        "Parse string with MD5 hashes"]
+
+    :set res [$RunTestCase $res $CompareTestResults \
+        [$GenerateTestResults $GetSha1Sum "sha1" $testData] \
+        [$ParseScriptsListFromString [$GenerateTestInputString $GetSha1Sum $testData] "test_data/test_list_sha1.txt"] \
+        "nothing" true \
+        "Parse string with SHA1 hashes"]
+
+    :set res [$RunTestCase $res $CompareTestResults \
+        [$GenerateTestResults $GetSha256Sum "sha256" $testData] \
+        [$ParseScriptsListFromString [$GenerateTestInputString $GetSha256Sum $testData] "test_data/test_list_sha256.txt"] \
+        "nothing" true \
+        "Parse string with SHA256 hashes"]
+
+    :set res [$RunTestCase $res $CompareTestResults \
+        [$GenerateTestResults $GetSha512Sum "sha512" $testData] \
+        [$ParseScriptsListFromString [$GenerateTestInputString $GetSha512Sum $testData] "test_data/test_list_sha512.txt"] \
+        "nothing" true \
+        "Parse string with SHA512 hashes"]
+
     :local prefixUrl "https://github.com/smirnovhub/my-mikrotik-scripts/raw/refs/heads/master/global/tests/test_data"
 
     :set res [$RunTestCase $res $FetchWithRedirect \
@@ -102,31 +151,61 @@
         [$GenerateTestResults $GetCrc32Sum "crc32" $testData] \
         [$ParseScriptsListFromUrl ("$prefixUrl/test_list_crc32.txt")] \
         "nothing" true \
-        "Check CRC32 hashes"]
+        "Parse URL with CRC32 hashes"]
 
     :set res [$RunTestCase $res $CompareTestResults \
         [$GenerateTestResults $GetMd5Sum "md5" $testData] \
         [$ParseScriptsListFromUrl ("$prefixUrl/test_list_md5.txt")] \
         "nothing" true \
-        "Check MD5 hashes"]
+        "Parse URL with MD5 hashes"]
 
     :set res [$RunTestCase $res $CompareTestResults \
         [$GenerateTestResults $GetSha1Sum "sha1" $testData] \
         [$ParseScriptsListFromUrl ("$prefixUrl/test_list_sha1.txt")] \
         "nothing" true \
-        "Check SHA1 hashes"]
+        "Parse URL with SHA1 hashes"]
 
     :set res [$RunTestCase $res $CompareTestResults \
         [$GenerateTestResults $GetSha256Sum "sha256" $testData] \
         [$ParseScriptsListFromUrl ("$prefixUrl/test_list_sha256.txt")] \
         "nothing" true \
-        "Check SHA256 hashes"]
+        "Parse URL with SHA256 hashes"]
 
     :set res [$RunTestCase $res $CompareTestResults \
         [$GenerateTestResults $GetSha512Sum "sha512" $testData] \
         [$ParseScriptsListFromUrl ("$prefixUrl/test_list_sha512.txt")] \
         "nothing" true \
-        "Check SHA512 hashes"]
+        "Parse URL with SHA512 hashes"]
+
+    # Define test data for a single line
+    :local singleLineTestData {"test_string1"=$testString1}
+
+    :set res [$RunTestCase $res $CompareTestResults \
+        [$GenerateTestResults $GetMd5Sum "md5" $singleLineTestData] \
+        [$ParseScriptsListFromString [$GenerateTestInputString $GetMd5Sum $singleLineTestData] "test_data/test_list_md5.txt"] \
+        "nothing" true \
+        "Parse string with a single line"]
+
+    # Generate an unknown hash type by removing one character from a valid hash
+    :local GetUnknownHash do={
+        :global GetMd5Sum
+        :local hash [$GetMd5Sum $1]
+        :return [:pick $hash 0 ([:len $hash] - 1)]
+    }
+
+    # Tests of unknown hashes
+    :set res [$RunTestCase $res $CompareTestResults \
+        [$GenerateTestResults $GetUnknownHash "unknown" $singleLineTestData] \
+        [$ParseScriptsListFromString [$GenerateTestInputString $GetUnknownHash $singleLineTestData] "test_data/test_list_unknown.txt"] \
+        "nothing" true \
+        "Parse string with an unknown hash type"]
+
+    # We can also test the unknown hash type with multiple lines
+    :set res [$RunTestCase $res $CompareTestResults \
+        [$GenerateTestResults $GetUnknownHash "unknown" $testData] \
+        [$ParseScriptsListFromString [$GenerateTestInputString $GetUnknownHash $testData] "test_data/test_list_unknown.txt"] \
+        "nothing" true \
+        "Parse string with unknown hash types on multiple lines"]
 
     :local testGlobalVarName "test-global-var"
     :local hashGlobalVarName "auto-update-test-script-hash"

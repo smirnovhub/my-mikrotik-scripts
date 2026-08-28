@@ -25,6 +25,7 @@
 # global functions
 :global FetchWithRedirect
 :global FetchWithRedirectAndRetry
+:global ParseScriptsListFromString
 :global ParseScriptsListFromUrl
 :global DownloadAndImportScript
 :global DownloadAndImportScriptsFromList
@@ -242,24 +243,23 @@
     :return $content
 }
 
-# Purpose: Download and parse a text file containing script URLs and hashes.
-#          Includes retry logic, ignores comments or empty lines, and constructs
-#          an associative array with script details.
+# Purpose: Parse a raw text string containing script URLs and hashes.
+#          Ignores comments or empty lines, and constructs an associative array
+#          with script details.
 # Parameters:
-#   $1 - Target URL of the .txt list file to fetch and parse
+#   $1 - Raw text string content containing the list of hashes and URLs
+#   $2 - Identifier of the source list (listname)
 # Returns: Associative array keyed by script name, where each item contains:
 #          - url: Cleaned URL for downloading the script
 #          - hash: Hash sum provided in the list
-#          - hashtype: Auto-detected hash algorithm (md5, sha1, sha256, sha512, unknown)
+#          - hashtype: Auto-detected hash algorithm (crc32, md5, sha1, sha256, sha512, unknown)
 #          - scriptname: Extracted file name from the URL
-#          - listname: Identifier of the source list (last two URL segments)
-# Example: :put [$ParseScriptsListFromUrl "https://github.com/smirnovhub/my-mikrotik-scripts/raw/refs/heads/master/global/list.txt"]
-:set ParseScriptsListFromUrl do={
+#          - listname: Identifier of the source list (passed via $2)
+# Example: :put [$ParseScriptsListFromString "e59ff979 https://example.com/script.rsc" "custom-string-list"]
+:set ParseScriptsListFromString do={
     :global SplitStr
     :global TrimStr
-    :global EndsWithStr
     :global ExtractFileName
-    :global FetchWithRedirectAndRetry
 
     :local result [:toarray ""]
 
@@ -268,35 +268,13 @@
         :return $result
     }
 
-    :local prefix "ParseScriptsListFromUrl:"
-
-    :local listUrl [:tostr $1]
-
-    :if ([:len $listUrl] = 0) do={
-        :log error "$prefix List URL parameter is missing."
-        :return $result
-    }
-
-    :if ([$EndsWithStr $listUrl ".txt"] = false) do={
-        :log error "$prefix File name should end with .txt"
-        :return $result
-    }
-
-    :local content [$FetchWithRedirectAndRetry $listUrl]
+    :local prefix "ParseScriptsListFromString:"
+    :local content [:tostr $1]
+    :local listName [:tostr $2]
 
     :if ([:len $content] = 0) do={
-        :log error ("$prefix Failed to download URL list or it content is empty " . $listUrl)
+        :log error "$prefix String to parse is missing or empty."
         :return $result
-    }
-
-    # Extract listname by taking the last two parts of the URL
-    :local listParts [$SplitStr $listUrl "/"]
-    :local listPartsLen [:len $listParts]
-    :local listName ""
-    :if ($listPartsLen >= 2) do={
-        :set listName (($listParts->($listPartsLen - 2)) . "/" . ($listParts->($listPartsLen - 1)))
-    } else={
-        :set listName $listUrl
     }
 
     :local lines [$SplitStr $content ("\n")]
@@ -326,9 +304,7 @@
                 :if ($hashLen = 128) do={ :set hashType "sha512" }
 
                 # Build associative array and append to result
-                :local parsedItem { "url"=$cleanUrl; "hash"=$hash; "hashtype"=$hashType; "scriptname"=$scriptName; "listname"=$listName }
-
-                :set ($result->$scriptName) $parsedItem
+                :set ($result->$scriptName) { "url"=$cleanUrl; "hash"=$hash; "hashtype"=$hashType; "scriptname"=$scriptName; "listname"=$listName }
             } else={
                 :log error ("$prefix Hash sum or URL not found in line " . $cleanLine)
             }
@@ -336,6 +312,65 @@
     }
 
     :return $result
+}
+
+# Purpose: Download and parse a text file containing script URLs and hashes.
+#          Includes retry logic, ignores comments or empty lines, and constructs
+#          an associative array with script details.
+# Parameters:
+#   $1 - Target URL of the .txt list file to fetch and parse
+# Returns: Associative array keyed by script name, where each item contains:
+#          - url: Cleaned URL for downloading the script
+#          - hash: Hash sum provided in the list
+#          - hashtype: Auto-detected hash algorithm (md5, sha1, sha256, sha512, unknown)
+#          - scriptname: Extracted file name from the URL
+#          - listname: Identifier of the source list (last two URL segments)
+# Example: :put [$ParseScriptsListFromUrl "https://github.com/smirnovhub/my-mikrotik-scripts/raw/refs/heads/master/global/list.txt"]
+:set ParseScriptsListFromUrl do={
+    :global SplitStr
+    :global EndsWithStr
+    :global FetchWithRedirectAndRetry
+    :global ParseScriptsListFromString
+
+    :local result [:toarray ""]
+
+    # Workaround for the MikroTik RouterOS interpreter bug
+    :if ([:len $0] = 0) do={
+        :return $result
+    }
+
+    :local prefix "ParseScriptsListFromUrl:"
+
+    :local listUrl [:tostr $1]
+
+    :if ([:len $listUrl] = 0) do={
+        :log error "$prefix List URL parameter is missing."
+        :return $result
+    }
+
+    :if ([$EndsWithStr $listUrl ".txt"] = false) do={
+        :log error "$prefix File name should end with .txt"
+        :return $result
+    }
+
+    :local content [$FetchWithRedirectAndRetry $listUrl]
+
+    :if ([:len $content] = 0) do={
+        :log error ("$prefix Failed to download URL list or its content is empty " . $listUrl)
+        :return $result
+    }
+
+    # Extract listname by taking the last two parts of the URL
+    :local listParts [$SplitStr $listUrl "/"]
+    :local listPartsLen [:len $listParts]
+    
+    :local listName $listUrl
+    :if ($listPartsLen >= 2) do={
+        :set listName (($listParts->($listPartsLen - 2)) . "/" . ($listParts->($listPartsLen - 1)))
+    }
+
+    # Pass the downloaded content and the list name to the parsing function
+    :return [$ParseScriptsListFromString $content $listName]
 }
 
 # Purpose: Download a .rsc script from a URL, update or create it in RouterOS 
@@ -445,6 +480,7 @@
 #   - "failedtoupdate": Array of script names that failed to download or import
 # Example: $DownloadAndImportScriptsFromList "https://example.com/scripts/list.txt" true
 :set DownloadAndImportScriptsFromList do={
+    :global StartsWithStr
     :global EndsWithStr
     :global ReplaceStr
     :global GetUnixTimestamp
@@ -458,6 +494,7 @@
     :global RecursiveMergeSortStr
     :global SendPrivateTelegramMessage
     :global ParseScriptsListFromUrl
+    :global ParseScriptsListFromString
 
     :global largeGreenCircleEmoji
     :global largeRedCircleEmoji
@@ -480,20 +517,27 @@
     :local successEmoji $largeGreenCircleEmoji
     :local failEmoji $largeRedCircleEmoji
 
-    :local listUrl [:tostr $1]
+    :local inputData [:tostr $1]
 
-    :if ([:len $listUrl] = 0) do={
+    :if ([:len $inputData] = 0) do={
         :set ($result->"error") true
-        :log error "$prefix List URL parameter is missing."
-        $SendPrivateTelegramMessage ("$failEmoji <b>$deviceName:</b> List URL parameter is missing")
+        :log error "$prefix Input parameter is missing."
+        $SendPrivateTelegramMessage ("$failEmoji <b>$deviceName:</b> Input parameter is missing")
         :return $result
     }
 
-    :if ([$EndsWithStr $listUrl ".txt"] = false) do={
-        :set ($result->"error") true
-        :log error "$prefix File name should end with .txt"
-        $SendPrivateTelegramMessage ("$failEmoji <b>$deviceName:</b> File name should end with .txt")
-        :return $result
+    :local isUrl ([$StartsWithStr $inputData "http://"] || [$StartsWithStr $inputData "https://"])
+    :local sourceName "Direct string input"
+
+    # Validate URL constraints only if the input is actually a URL
+    :if ($isUrl) do={
+        :if ([$EndsWithStr $inputData ".txt"] = false) do={
+            :set ($result->"error") true
+            :log error "$prefix File name should end with .txt"
+            $SendPrivateTelegramMessage ("$failEmoji <b>$deviceName:</b> File name should end with .txt")
+            :return $result
+        }
+        :set sourceName $inputData
     }
 
     :local sendMessage true
@@ -502,14 +546,21 @@
     }
 
     :local startTs [$GetUnixTimestamp]
-    :log info "$prefix Start importing from $listUrl"
+    :log info "$prefix Start importing from $sourceName"
 
-    :local parsedList [$ParseScriptsListFromUrl $listUrl]
+    :local parsedList [:toarray ""]
+
+    # Branch parsing logic based on whether input is a URL or direct string
+    :if ($isUrl) do={
+        :set parsedList [$ParseScriptsListFromUrl $inputData]
+    } else={
+        :set parsedList [$ParseScriptsListFromString $inputData]
+    }
 
     :if ([:len $parsedList] = 0) do={
         :set ($result->"error") true
-        :log error ("$prefix Failed to download URL list or its content is empty " . $listUrl)
-        $SendPrivateTelegramMessage ("$failEmoji <b>$deviceName:</b> Failed to download URL list or its content is empty " . $listUrl)
+        :log error ("$prefix Failed to process list or its content is empty: " . $sourceName)
+        $SendPrivateTelegramMessage ("$failEmoji <b>$deviceName:</b> Failed to process list or its content is empty: " . $sourceName)
         :return $result
     }
 
@@ -563,7 +614,7 @@
                 $SetGlobalVar $hashVarName ($item->"hash")
             }
         } else={
-            :if ($oldHash != "" && $oldHash != $oldScriptHash) do={
+            :if ($oldHash != "" && $oldScriptHash != "" && $oldHash != $oldScriptHash) do={
                 :log warning ("$prefix " . $scriptName . " local script has changed and needs to be updated")
             }
 
@@ -605,7 +656,7 @@
     :log info ("$prefix Finished in " . [$FormatSecondsLong $duration])
 
     :if ($result->"error") do={
-        $SendPrivateTelegramMessage ("$largeRedCircleEmoji <b>$deviceName:</b> Failed to update scripts from $listUrl")
+        $SendPrivateTelegramMessage ("$largeRedCircleEmoji <b>$deviceName:</b> Failed to update scripts from $sourceName")
         :return $result
     }
 
@@ -644,7 +695,7 @@
         :set msg ($msg . "$failEmoji <b>Failed to update:</b>%0A" . [$FormatList ($result->"failedtoupdate")] . "%0A")
     }
 
-    :set msg ($msg . "<i>Source: $listUrl</i>")
+    :set msg ($msg . "<i>Source: $sourceName</i>")
 
     :if ($sendMessage) do={
         $SendPrivateTelegramMessage $msg

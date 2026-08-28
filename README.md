@@ -266,6 +266,8 @@ You can perform simple updates using plain file manifests or utilize GitHub-awar
 $DownloadAndImportScriptsFromList https://github.com/smirnovhub/my-mikrotik-scripts/raw/refs/heads/master/global/list.txt
 
 # Download and import from direct string input
+# Note: This is just an example. The imported files below may be outdated;
+# for the latest versions, use the list from the master branch instead.
 :global DownloadAndImportScriptsFromList
 $DownloadAndImportScriptsFromList ("
     f83aef627be8e5f1a1406cf04390c4ad https://github.com/smirnovhub/my-mikrotik-scripts/raw/e2c3ebbdb2327efa1e069c81cd2aa03313d64d4b/global/global_functions.rsc

@@ -75,6 +75,7 @@ The following global settings are required to configure Telegram integration. Th
 - **CleanStr**: Filter a string to keep only allowed characters.
 - **CompareStr**: Compare two strings lexicographically using ASCII character codes.
 - **ContainsStr**: Check if a substring exists within a string.
+- **DumpStr**: Convert an input string into a formatted hexadecimal dump representation with line breaks based on a specified byte limit.
 - **EllipsisStrCenter, EllipsisStrLeft, EllipsisStrRight**: Truncate strings to fit a maximum length by inserting an ellipsis in the center, prepending it to the left, or appending it to the right.
 - **ExtractFileName**: Extract and return the file name from a path (with optional extension retention).
 - **IsPrintableStr**: Check whether a string contains only printable characters.
@@ -104,6 +105,8 @@ The following global settings are required to configure Telegram integration. Th
 
 ### Sorting
 
+- **QuickSort**: Perform an iterative quick sort on an array of comparable items using a custom call stack.
+- **QuickSortStr**: Sort an array of strings in ascending lexicographical order using an iterative quick sort algorithm.
 - **RecursiveMergeSort**: Perform merge sort on an array of comparable items.
 - **RecursiveMergeSortStr**: Perform merge sort on an array of strings in ascending lexicographical order.
 
@@ -166,13 +169,22 @@ Methods with the `*Arr` suffix operate directly on the internal chunked array re
 - **BigIntAddArr**: Add two BigInt chunked array objects.
 - **BigIntCleanArr**: Normalize a BigInt chunked array object by removing trailing zero chunks.
 - **BigIntCmpArr**: Compare two BigInt chunked array objects (-1 if left < right, 0 if equal, 1 if left > right).
+- **BigIntDiv2Arr**: Divide a BigInt chunked array object by 2.
 - **BigIntDivArr**: Divide one BigInt chunked array object by another (integer quotient).
 - **BigIntGcdArr**: Calculate the Greatest Common Divisor (GCD) of two BigInt chunked array objects.
+- **BigIntIsOneArr**: Check if a BigInt chunked array object is equal to one.
+- **BigIntIsZeroArr**: Check if a BigInt chunked array object is equal to zero.
 - **BigIntModArr**: Calculate the remainder (modulo) of division of two BigInt chunked array objects.
 - **BigIntModInverseArr**: Calculate the modular multiplicative inverse of a BigInt chunked array object.
+- **BigIntMontDecodeArr**: Transform a Montgomery domain value back to standard BigInt representation.
+- **BigIntMontEncodeArr**: Transform a standard BigInt value into the Montgomery domain representation.
+- **BigIntMontInitArr**: Initialize the Montgomery context containing precomputed values for reduction and multiplication.
+- **BigIntMontInvRadixArr**: Compute the negative modular inverse of the radix chunk for Montgomery arithmetic.
+- **BigIntMontMulArr**: Multiply two BigInt chunked array objects in the Montgomery domain.
 - **BigIntMulArr**: Multiply two BigInt chunked array objects.
 - **BigIntPowArr**: Raise a BigInt chunked array object to a specified power.
 - **BigIntPowModArr**: Perform modular exponentiation (`(base ^ exp) % mod`) using BigInt chunked array objects.
+- **BigIntPowModMontArr**: Perform modular exponentiation using the Montgomery ladder algorithm.
 - **BigIntSubArr**: Subtract one BigInt chunked array object from another.
 
 #### Standard String Operations

@@ -183,7 +183,7 @@ Methods with the `*Arr` suffix operate directly on the internal chunked array re
 - **BigIntMontMulArr**: Multiply two BigInt chunked array objects in the Montgomery domain.
 - **BigIntMulArr**: Multiply two BigInt chunked array objects.
 - **BigIntPowArr**: Raise a BigInt chunked array object to a specified power.
-- **BigIntPowModArr**: Perform modular exponentiation (`(base ^ exp) % mod`) using BigInt chunked array objects.
+- **BigIntPowModArr**: Perform modular exponentiation (`(base ^ exp) % mod`) using BigInt chunked array objects, automatically delegating to Montgomery exponentiation (`BigIntPowModMontArr`) when the modulus is coprime with the radix $10^9$ (lowest digit chunk is not divisible by 2 or 5).
 - **BigIntPowModMontArr**: Perform modular exponentiation using the Montgomery ladder algorithm.
 - **BigIntSubArr**: Subtract one BigInt chunked array object from another.
 

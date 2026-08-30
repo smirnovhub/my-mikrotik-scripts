@@ -704,7 +704,7 @@ Aggregate results across multiple test suites into a single execution pass. This
 :put [$RunAllTestSuites]
 
 # Output:
-# ArrayStr1=error=false;failed=0;passed=237;ArrayStr2=error=false;failed=0;passed=135;ArrayStr3=error=false;failed=0;passed=141;DateTime1=error=false;failed=0;passed=393;DateTime2=error=false;failed=0;passed=52;Encoding=error=false;failed=0;passed=189;GlobalVar=error=false;failed=0;passed=48;Hashes=error=false;failed=0;passed=243;Utils=error=false;failed=0;passed=57
+# ArrayStr1=error=false;failed=0;passed=237;ArrayStr2=error=false;failed=0;passed=176;ArrayStr3=error=false;failed=0;passed=151;AutoUpdate=error=false;failed=0;passed=28;BigInt1=error=false;failed=0;passed=420;BigInt2=error=false;failed=0;passed=278;BigInt3=error=false;failed=0;passed=141;DateTime1=error=false;failed=0;passed=199;DateTime2=error=false;failed=0;passed=293;Encoding=error=false;failed=0;passed=189;GlobalVar=error=false;failed=0;passed=48;Hashes1=error=false;failed=0;passed=243;Hashes2=error=false;failed=0;passed=146;Utils=error=false;failed=0;passed=57
 ```
 
 ## Disclaimer

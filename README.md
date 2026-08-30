@@ -19,6 +19,7 @@ The code features comprehensive test coverage, ensuring reliable, stable operati
 * [`global_functions_hashes.rsc`](global/global_functions_hashes.rsc)
 * [`global_functions_testing.rsc`](global/global_functions_testing.rsc)
 * [`global_functions_utils.rsc`](global/global_functions_utils.rsc)
+* [`global_setup.rsc`](global/global_setup.rsc)
 
 ## Overview
 
@@ -234,24 +235,17 @@ To optimize performance, the scripts automatically generate several lookup table
 `global_functions`,
 `global_functions_array_str`,
 `global_functions_auto_update`,
+`global_functions_big_int`,
 `global_functions_datetime`,
 `global_functions_encoding`,
 `global_functions_global_vars`,
 `global_functions_hashes`,
 `global_functions_testing`,
 `global_functions_utils`).
-2. Add the following execution commands to your startup script to load all global functions at system boot:
+`global_setup`).
+2. Add the following execution command to your startup script to load all global functions at system boot:
 ```routeros
-/system script run global_config
-/system script run global_functions
-/system script run global_functions_array_str
-/system script run global_functions_auto_update
-/system script run global_functions_datetime
-/system script run global_functions_encoding
-/system script run global_functions_global_vars
-/system script run global_functions_hashes
-/system script run global_functions_testing
-/system script run global_functions_utils
+/system script run global_setup
 ```
 
 ## Automatic Script Updates
@@ -533,6 +527,7 @@ Convert timestamps, format duration strings, or parse RouterOS/ISO date-time for
 * [`global_functions_auto_update_tests.rsc`](global/tests/global_functions_auto_update_tests.rsc)
 * [`global_functions_big_int_tests_1.rsc`](global/tests/global_functions_big_int_tests_1.rsc)
 * [`global_functions_big_int_tests_2.rsc`](global/tests/global_functions_big_int_tests_2.rsc)
+* [`global_functions_big_int_tests_3.rsc`](global/tests/global_functions_big_int_tests_3.rsc)
 * [`global_functions_datetime_tests_1.rsc`](global/tests/global_functions_datetime_tests_1.rsc)
 * [`global_functions_datetime_tests_2.rsc`](global/tests/global_functions_datetime_tests_2.rsc)
 * [`global_functions_encoding_tests.rsc`](global/tests/global_functions_encoding_tests.rsc)
@@ -540,6 +535,7 @@ Convert timestamps, format duration strings, or parse RouterOS/ISO date-time for
 * [`global_functions_hashes_tests_1.rsc`](global/tests/global_functions_hashes_tests_1.rsc)
 * [`global_functions_hashes_tests_2.rsc`](global/tests/global_functions_hashes_tests_2.rsc)
 * [`global_functions_utils_tests.rsc`](global/tests/global_functions_utils_tests.rsc)
+* [`global_setup_tests.rsc`](global/tests/global_setup_tests.rsc)
 
 ### Run All Test Suites
 
@@ -623,28 +619,27 @@ Convert timestamps, format duration strings, or parse RouterOS/ISO date-time for
 ## Installation
 
 1. Save the scripts into your RouterOS environment using their respective module names (
+`global_functions_all_tests`,
 `global_functions_array_str_tests_1`,
 `global_functions_array_str_tests_2`,
 `global_functions_array_str_tests_3`,
+`global_functions_auto_update_tests`,
+`global_functions_big_int_tests_1`,
+`global_functions_big_int_tests_2`,
+`global_functions_big_int_tests_3`,
 `global_functions_datetime_tests_1`,
 `global_functions_datetime_tests_2`,
 `global_functions_encoding_tests`,
 `global_functions_global_vars_tests`,
-`global_functions_hashes_tests`,
-`global_functions_utils_tests`).
-2. Add the following execution commands to your startup script to load all test suites at system boot:
+`global_functions_hashes_tests_1`,
+`global_functions_hashes_tests_2`,
+`global_functions_utils_tests`,
+`global_setup_tests`).
+2. Add the following execution command to your startup script to load all test suites at system boot:
 ```routeros
-/system script run global_functions_all_tests
-/system script run global_functions_array_str_tests_1
-/system script run global_functions_array_str_tests_2
-/system script run global_functions_array_str_tests_3
-/system script run global_functions_datetime_tests_1
-/system script run global_functions_datetime_tests_2
-/system script run global_functions_encoding_tests
-/system script run global_functions_global_vars_tests
-/system script run global_functions_hashes_tests
-/system script run global_functions_utils_tests
+/system script run global_setup_tests
 ```
+
 ## Automatic Test Suite Updates
 
 The framework provides built-in mechanisms for automatically downloading, importing, and updating test suites directly from remote repositories. 

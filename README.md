@@ -1,6 +1,6 @@
 # My **Mikrotik** Scripts
 
-My huge collection of **Mikrotik** scripts. All global scripts are completely tested on **RouterOS 6.49.17** and **RouterOS 7.21.5**.
+My huge library of **Mikrotik** scripts. All global scripts are completely tested on **RouterOS 6.49.17** and **RouterOS 7.21.5**.
 
 The code features comprehensive test coverage, ensuring reliable, stable operation and preventing runtime errors across execution environments.
 
@@ -23,7 +23,7 @@ The code features comprehensive test coverage, ensuring reliable, stable operati
 
 ## Overview
 
-These scripts are a comprehensive collection of global functions and utilities for RouterOS. They provide reusable functions for string manipulation, date-time conversion, networking checks, random number generation, external script auto-updates, and more.  
+These scripts are a comprehensive library of global functions and utilities for RouterOS. They provide reusable functions for string manipulation, date-time conversion, networking checks, random number generation, external script auto-updates, and more.  
 The scripts are intended to be run at system startup or whenever modifications are made.
 
 ### Global Settings

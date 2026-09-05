@@ -1,6 +1,6 @@
 # My **Mikrotik** Scripts
 
-My huge collection of **Mikrotik** scripts. All global scripts are completely tested on **RouterOS 6.49.17** and **RouterOS 7.21.5**.
+My huge library of **Mikrotik** scripts. All global scripts are completely tested on **RouterOS 6.49.17** and **RouterOS 7.21.5**.
 
 The code features comprehensive test coverage, ensuring reliable, stable operation and preventing runtime errors across execution environments.
 
@@ -19,10 +19,11 @@ The code features comprehensive test coverage, ensuring reliable, stable operati
 * [`global_functions_hashes.rsc`](global/global_functions_hashes.rsc)
 * [`global_functions_testing.rsc`](global/global_functions_testing.rsc)
 * [`global_functions_utils.rsc`](global/global_functions_utils.rsc)
+* [`global_setup.rsc`](global/global_setup.rsc)
 
 ## Overview
 
-These scripts are a comprehensive collection of global functions and utilities for RouterOS. They provide reusable functions for string manipulation, date-time conversion, networking checks, random number generation, external script auto-updates, and more.  
+These scripts are a comprehensive library of global functions and utilities for RouterOS. They provide reusable functions for string manipulation, date-time conversion, networking checks, random number generation, external script auto-updates, and more.  
 The scripts are intended to be run at system startup or whenever modifications are made.
 
 ### Global Settings
@@ -74,6 +75,7 @@ The following global settings are required to configure Telegram integration. Th
 - **CleanStr**: Filter a string to keep only allowed characters.
 - **CompareStr**: Compare two strings lexicographically using ASCII character codes.
 - **ContainsStr**: Check if a substring exists within a string.
+- **DumpStr**: Convert an input string into a formatted hexadecimal dump representation with line breaks based on a specified byte limit.
 - **EllipsisStrCenter, EllipsisStrLeft, EllipsisStrRight**: Truncate strings to fit a maximum length by inserting an ellipsis in the center, prepending it to the left, or appending it to the right.
 - **ExtractFileName**: Extract and return the file name from a path (with optional extension retention).
 - **IsPrintableStr**: Check whether a string contains only printable characters.
@@ -103,6 +105,8 @@ The following global settings are required to configure Telegram integration. Th
 
 ### Sorting
 
+- **QuickSort**: Perform an iterative quick sort on an array of comparable items using a custom call stack.
+- **QuickSortStr**: Sort an array of strings in ascending lexicographical order using an iterative quick sort algorithm.
 - **RecursiveMergeSort**: Perform merge sort on an array of comparable items.
 - **RecursiveMergeSortStr**: Perform merge sort on an array of strings in ascending lexicographical order.
 
@@ -165,13 +169,22 @@ Methods with the `*Arr` suffix operate directly on the internal chunked array re
 - **BigIntAddArr**: Add two BigInt chunked array objects.
 - **BigIntCleanArr**: Normalize a BigInt chunked array object by removing trailing zero chunks.
 - **BigIntCmpArr**: Compare two BigInt chunked array objects (-1 if left < right, 0 if equal, 1 if left > right).
+- **BigIntDiv2Arr**: Divide a BigInt chunked array object by 2.
 - **BigIntDivArr**: Divide one BigInt chunked array object by another (integer quotient).
 - **BigIntGcdArr**: Calculate the Greatest Common Divisor (GCD) of two BigInt chunked array objects.
+- **BigIntIsOneArr**: Check if a BigInt chunked array object is equal to one.
+- **BigIntIsZeroArr**: Check if a BigInt chunked array object is equal to zero.
 - **BigIntModArr**: Calculate the remainder (modulo) of division of two BigInt chunked array objects.
 - **BigIntModInverseArr**: Calculate the modular multiplicative inverse of a BigInt chunked array object.
+- **BigIntMontDecodeArr**: Transform a Montgomery domain value back to standard BigInt representation.
+- **BigIntMontEncodeArr**: Transform a standard BigInt value into the Montgomery domain representation.
+- **BigIntMontInitArr**: Initialize the Montgomery context containing precomputed values for reduction and multiplication.
+- **BigIntMontInvRadixArr**: Compute the negative modular inverse of the radix chunk for Montgomery arithmetic.
+- **BigIntMontMulArr**: Multiply two BigInt chunked array objects in the Montgomery domain.
 - **BigIntMulArr**: Multiply two BigInt chunked array objects.
 - **BigIntPowArr**: Raise a BigInt chunked array object to a specified power.
-- **BigIntPowModArr**: Perform modular exponentiation (`(base ^ exp) % mod`) using BigInt chunked array objects.
+- **BigIntPowModArr**: Perform modular exponentiation (`(base ^ exp) % mod`) using BigInt chunked array objects, automatically delegating to Montgomery exponentiation (`BigIntPowModMontArr`) when the modulus is coprime with the radix $10^9$ (lowest digit chunk is not divisible by 2 or 5).
+- **BigIntPowModMontArr**: Perform modular exponentiation using the Montgomery ladder algorithm.
 - **BigIntSubArr**: Subtract one BigInt chunked array object from another.
 
 #### Standard String Operations
@@ -234,24 +247,17 @@ To optimize performance, the scripts automatically generate several lookup table
 `global_functions`,
 `global_functions_array_str`,
 `global_functions_auto_update`,
+`global_functions_big_int`,
 `global_functions_datetime`,
 `global_functions_encoding`,
 `global_functions_global_vars`,
 `global_functions_hashes`,
 `global_functions_testing`,
 `global_functions_utils`).
-2. Add the following execution commands to your startup script to load all global functions at system boot:
+`global_setup`).
+2. Add the following execution command to your startup script to load all global functions at system boot:
 ```routeros
-/system script run global_config
-/system script run global_functions
-/system script run global_functions_array_str
-/system script run global_functions_auto_update
-/system script run global_functions_datetime
-/system script run global_functions_encoding
-/system script run global_functions_global_vars
-/system script run global_functions_hashes
-/system script run global_functions_testing
-/system script run global_functions_utils
+/system script run global_setup
 ```
 
 ## Automatic Script Updates
@@ -533,6 +539,7 @@ Convert timestamps, format duration strings, or parse RouterOS/ISO date-time for
 * [`global_functions_auto_update_tests.rsc`](global/tests/global_functions_auto_update_tests.rsc)
 * [`global_functions_big_int_tests_1.rsc`](global/tests/global_functions_big_int_tests_1.rsc)
 * [`global_functions_big_int_tests_2.rsc`](global/tests/global_functions_big_int_tests_2.rsc)
+* [`global_functions_big_int_tests_3.rsc`](global/tests/global_functions_big_int_tests_3.rsc)
 * [`global_functions_datetime_tests_1.rsc`](global/tests/global_functions_datetime_tests_1.rsc)
 * [`global_functions_datetime_tests_2.rsc`](global/tests/global_functions_datetime_tests_2.rsc)
 * [`global_functions_encoding_tests.rsc`](global/tests/global_functions_encoding_tests.rsc)
@@ -540,6 +547,7 @@ Convert timestamps, format duration strings, or parse RouterOS/ISO date-time for
 * [`global_functions_hashes_tests_1.rsc`](global/tests/global_functions_hashes_tests_1.rsc)
 * [`global_functions_hashes_tests_2.rsc`](global/tests/global_functions_hashes_tests_2.rsc)
 * [`global_functions_utils_tests.rsc`](global/tests/global_functions_utils_tests.rsc)
+* [`global_setup_tests.rsc`](global/tests/global_setup_tests.rsc)
 
 ### Run All Test Suites
 
@@ -623,28 +631,27 @@ Convert timestamps, format duration strings, or parse RouterOS/ISO date-time for
 ## Installation
 
 1. Save the scripts into your RouterOS environment using their respective module names (
+`global_functions_all_tests`,
 `global_functions_array_str_tests_1`,
 `global_functions_array_str_tests_2`,
 `global_functions_array_str_tests_3`,
+`global_functions_auto_update_tests`,
+`global_functions_big_int_tests_1`,
+`global_functions_big_int_tests_2`,
+`global_functions_big_int_tests_3`,
 `global_functions_datetime_tests_1`,
 `global_functions_datetime_tests_2`,
 `global_functions_encoding_tests`,
 `global_functions_global_vars_tests`,
-`global_functions_hashes_tests`,
-`global_functions_utils_tests`).
-2. Add the following execution commands to your startup script to load all test suites at system boot:
+`global_functions_hashes_tests_1`,
+`global_functions_hashes_tests_2`,
+`global_functions_utils_tests`,
+`global_setup_tests`).
+2. Add the following execution command to your startup script to load all test suites at system boot:
 ```routeros
-/system script run global_functions_all_tests
-/system script run global_functions_array_str_tests_1
-/system script run global_functions_array_str_tests_2
-/system script run global_functions_array_str_tests_3
-/system script run global_functions_datetime_tests_1
-/system script run global_functions_datetime_tests_2
-/system script run global_functions_encoding_tests
-/system script run global_functions_global_vars_tests
-/system script run global_functions_hashes_tests
-/system script run global_functions_utils_tests
+/system script run global_setup_tests
 ```
+
 ## Automatic Test Suite Updates
 
 The framework provides built-in mechanisms for automatically downloading, importing, and updating test suites directly from remote repositories. 
@@ -709,7 +716,7 @@ Aggregate results across multiple test suites into a single execution pass. This
 :put [$RunAllTestSuites]
 
 # Output:
-# ArrayStr1=error=false;failed=0;passed=237;ArrayStr2=error=false;failed=0;passed=135;ArrayStr3=error=false;failed=0;passed=141;DateTime1=error=false;failed=0;passed=393;DateTime2=error=false;failed=0;passed=52;Encoding=error=false;failed=0;passed=189;GlobalVar=error=false;failed=0;passed=48;Hashes=error=false;failed=0;passed=243;Utils=error=false;failed=0;passed=57
+# ArrayStr1=error=false;failed=0;passed=237;ArrayStr2=error=false;failed=0;passed=176;ArrayStr3=error=false;failed=0;passed=151;AutoUpdate=error=false;failed=0;passed=28;BigInt1=error=false;failed=0;passed=420;BigInt2=error=false;failed=0;passed=278;BigInt3=error=false;failed=0;passed=141;DateTime1=error=false;failed=0;passed=199;DateTime2=error=false;failed=0;passed=293;Encoding=error=false;failed=0;passed=189;GlobalVar=error=false;failed=0;passed=48;Hashes1=error=false;failed=0;passed=243;Hashes2=error=false;failed=0;passed=146;Utils=error=false;failed=0;passed=57
 ```
 
 ## Disclaimer

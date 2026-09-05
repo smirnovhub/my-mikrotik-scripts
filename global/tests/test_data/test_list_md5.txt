@@ -1,4 +1,4 @@
-# This is test list. Do not change
+# This is a test list. Do not use and do not change
 
 bf9e4f9eb4deaef4aa9ce189cedb83e8 https://github.com/smirnovhub/my-mikrotik-scripts/raw/f77c61fb0d24367a979bcd213ba7a83235239f8c/global/tests/test_data/test_string1.txt
 9e64c3492e931c30c16550dd80c7138b https://github.com/smirnovhub/my-mikrotik-scripts/raw/f77c61fb0d24367a979bcd213ba7a83235239f8c/global/tests/test_data/test_string2.txt

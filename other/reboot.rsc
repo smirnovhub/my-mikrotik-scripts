@@ -4,9 +4,8 @@
 :global warningSignEmoji
 
 :local deviceName [/system identity get name]
-:local message "$warningSignEmoji $deviceName: The system is going down for reboot now"
-$SendPrivateTelegramMessage $message
+$SendPrivateTelegramMessage ("$warningSignEmoji <b>$deviceName:</b> The system is going down for reboot now")
 
-delay 3s
+delay 1s
 
 /system reboot

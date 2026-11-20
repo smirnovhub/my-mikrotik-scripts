@@ -29,6 +29,7 @@
 :global ParseScriptsListFromUrl
 :global DownloadAndImportScript
 :global DownloadAndImportScriptsFromList
+:global NormalizeGitHubUrl
 
 # Purpose: Download content from a URL with support for HTTP 3xx redirects
 #          and error logging, storing payload directly in memory via as-value.
@@ -39,6 +40,7 @@
 :set FetchWithRedirect do={
     :global TrimStr
     :global GetRandom20CharHex
+    :global NormalizeGitHubUrl
 
     # Workaround for the MikroTik RouterOS interpreter bug (phantom execution)
     :if ([:len $0] = 0) do={
@@ -52,6 +54,8 @@
         :log error "$prefix URL parameter is missing."
         :return ""
     }
+
+    :set currentUrl [$NormalizeGitHubUrl $currentUrl]
 
     # Redirect markers for different RouterOS versions:
     # " <30" for RouterOS 6
@@ -699,6 +703,54 @@
 
     :if ($sendMessage) do={
         $SendPrivateTelegramMessage $msg
+    }
+
+    :return $result
+}
+
+# Purpose: Normalize a GitHub web URL (https://github.com/<owner>/<repo>/raw/<path>)
+#          into a direct raw.githubusercontent.com URL to bypass large response headers.
+# Parameters:
+#   $1 - Input URL string to normalize
+# Returns: Normalized raw.githubusercontent.com URL string, or original URL if not matched
+# Example: :put [$NormalizeGitHubUrl "https://github.com/smirnovhub/my-mikrotik-scripts/raw/refs/heads/master/global/list.txt"]
+:set NormalizeGitHubUrl do={
+    :global StartsWithStr
+    :global EndsWithStr
+    :global SplitStr
+    :global JoinArray
+
+    :local url [:tostr $1]
+    :local prefix "https://github.com/"
+    :local targetHost "https://raw.githubusercontent.com/"
+
+    :if (![$StartsWithStr $url $prefix]) do={
+        :return $url
+    }
+
+    :local prefixLen [:len $prefix]
+    :local remainder [:pick $url $prefixLen [:len $url]]
+    :local parts [$SplitStr $remainder "/"]
+    :local partsLen [:len $parts]
+
+    # Expect at least owner, repo, "raw", and one path segment
+    :if ($partsLen < 4 || ($parts->2) != "raw") do={
+        :return $url
+    }
+
+    :local owner ($parts->0)
+    :local repo ($parts->1)
+    :local restParts [:toarray ""]
+
+    :for i from=3 to=($partsLen - 1) do={
+        :set restParts ($restParts, ($parts->$i))
+    }
+
+    :local restPath [$JoinArray $restParts "/"]
+    :local result ($targetHost . $owner . "/" . $repo . "/" . $restPath)
+
+    :if ([$EndsWithStr $url "/"]) do={
+        :set result ($result . "/")
     }
 
     :return $result

@@ -1,9 +1,11 @@
 :global RunAllAutoUpdateTests
 :global FetchWithRedirectTest
+:global NormalizeGitHubUrlTest
 
 :set RunAllAutoUpdateTests do={
     :global InitTestCaseState
     :global FetchWithRedirectTest
+    :global NormalizeGitHubUrlTest
 
     :put "\1B[35m=== STARTING ALL AUTO UPDATE TESTS ===\1B[0m"
 
@@ -11,6 +13,7 @@
 
     # Execute all test suites sequentially, passing and updating the same accumulator array
     :set res [$FetchWithRedirectTest $res]
+    :set res [$NormalizeGitHubUrlTest $res]
 
     :put "\1B[35m=== ALL AUTO UPDATE TESTS COMPLETED ===\1B[0m"
 
@@ -273,5 +276,105 @@
     :set res [$RunTestCase $res [:len [/system script find name=$testScriptName]] "nothing" "nothing" "nothing" 0 "Check if test script doesn't exist"]
 
     :put "Testing completed."
+    :return $res
+}
+
+:set NormalizeGitHubUrlTest do={
+    :global InitTestCaseState
+    :global RunTestCase
+    :global NormalizeGitHubUrl
+
+    :local res [$InitTestCaseState $1]
+
+    :put "Starting NormalizeGitHubUrl tests..."
+
+    :local expectedRawUrl "https://raw.githubusercontent.com/smirnovhub/my-mikrotik-scripts/refs/heads/master/global/list.txt"
+
+    :set res [$RunTestCase $res $NormalizeGitHubUrl \
+        "https://github.com/smirnovhub/my-mikrotik-scripts/raw/refs/heads/master/global/list.txt" \
+        "nothing" "nothing" \
+        $expectedRawUrl \
+        "Normalize GitHub raw URL with refs/heads path"]
+
+    :set res [$RunTestCase $res $NormalizeGitHubUrl \
+        "https://github.com/smirnovhub/my-mikrotik-scripts/raw/master/global/list.txt" \
+        "nothing" "nothing" \
+        "https://raw.githubusercontent.com/smirnovhub/my-mikrotik-scripts/master/global/list.txt" \
+        "Normalize GitHub raw URL with branch name"]
+
+    :set res [$RunTestCase $res $NormalizeGitHubUrl \
+        "https://github.com/smirnovhub/my-mikrotik-scripts/raw/master/file.txt" \
+        "nothing" "nothing" \
+        "https://raw.githubusercontent.com/smirnovhub/my-mikrotik-scripts/master/file.txt" \
+        "Normalize GitHub raw URL with file in repo root"]
+
+    :set res [$RunTestCase $res $NormalizeGitHubUrl \
+        "https://raw.githubusercontent.com/smirnovhub/my-mikrotik-scripts/refs/heads/master/global/list.txt" \
+        "nothing" "nothing" \
+        $expectedRawUrl \
+        "Keep already normalized raw.githubusercontent.com URL unchanged"]
+
+    :set res [$RunTestCase $res $NormalizeGitHubUrl \
+        "https://github.com/smirnovhub/my-mikrotik-scripts/blob/master/global/list.txt" \
+        "nothing" "nothing" \
+        "https://github.com/smirnovhub/my-mikrotik-scripts/blob/master/global/list.txt" \
+        "Keep non-raw GitHub blob URL unchanged"]
+
+    :set res [$RunTestCase $res $NormalizeGitHubUrl \
+        "https://github.com/smirnovhub/my-mikrotik-scripts/raw" \
+        "nothing" "nothing" \
+        "https://github.com/smirnovhub/my-mikrotik-scripts/raw" \
+        "Keep incomplete GitHub raw URL without path unchanged"]
+
+    :set res [$RunTestCase $res $NormalizeGitHubUrl \
+        "https://example.com/smirnovhub/my-mikrotik-scripts/raw/master/global/list.txt" \
+        "nothing" "nothing" \
+        "https://example.com/smirnovhub/my-mikrotik-scripts/raw/master/global/list.txt" \
+        "Keep non-GitHub URL unchanged"]
+
+    :set res [$RunTestCase $res $NormalizeGitHubUrl \
+        "" \
+        "nothing" "nothing" \
+        "" \
+        "Handle empty string input"]
+
+    # Verify URL containing a full commit hash instead of a branch or ref
+    :set res [$RunTestCase $res $NormalizeGitHubUrl \
+        "https://github.com/smirnovhub/my-mikrotik-scripts/raw/f77c61fb0d24367a979bcd213ba7a83235239f8c/global/tests/test_data/test_string2.txt" \
+        "nothing" "nothing" \
+        "https://raw.githubusercontent.com/smirnovhub/my-mikrotik-scripts/f77c61fb0d24367a979bcd213ba7a83235239f8c/global/tests/test_data/test_string2.txt" \
+        "Normalize GitHub raw URL with commit SHA"]
+
+    :set res [$RunTestCase $res $NormalizeGitHubUrl \
+        "https://github.com/owner/repo/raw/master/a/b/c/file.txt" \
+        "nothing" "nothing" \
+        "https://raw.githubusercontent.com/owner/repo/master/a/b/c/file.txt" \
+        "Normalize GitHub raw URL with deeply nested path"]
+
+    :set res [$RunTestCase $res $NormalizeGitHubUrl \
+        "https://github.com/owner/repo/raw/master" \
+        "nothing" "nothing" \
+        "https://raw.githubusercontent.com/owner/repo/master" \
+        "Normalize GitHub raw URL without file path"]
+
+    :set res [$RunTestCase $res $NormalizeGitHubUrl \
+        "https://github.com/owner/repo/raw/master/" \
+        "nothing" "nothing" \
+        "https://raw.githubusercontent.com/owner/repo/master/" \
+        "Preserve trailing slash"]
+
+    :set res [$RunTestCase $res $NormalizeGitHubUrl \
+        "https://github.com/owner/repo/raw/master/file.txt?token=123" \
+        "nothing" "nothing" \
+        "https://raw.githubusercontent.com/owner/repo/master/file.txt?token=123" \
+        "Preserve query parameters"]
+
+    :set res [$RunTestCase $res $NormalizeGitHubUrl \
+        "https://github.com.evil.com/owner/repo/raw/master/file.txt" \
+        "nothing" "nothing" \
+        "https://github.com.evil.com/owner/repo/raw/master/file.txt" \
+        "Keep URL with similar but different domain unchanged"]
+
+    :put "NormalizeGitHubUrl testing completed."
     :return $res
 }

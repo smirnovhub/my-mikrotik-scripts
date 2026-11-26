@@ -6,16 +6,15 @@
 #       "888 88888P Y88888   888       888    888    888 888    888 
 # Y88b  d88P 8888P   Y8888   888       888    Y88b  d88P 888    888 
 #  "Y8888P"  888P     Y888 8888888     888     "Y8888P"  888    888 
-                                                              
-:global GetDhcpClientAddress
-:global SendPrivateTelegramMessage
+
 :global GetGlobalVar
 :global SetGlobalVar
-:global ReplaceStr
 :global ToLowerCase
 :global ParseKeyValueStore
 :global GetArgOrExit
 :global GetArgOrDefault
+:global GetDhcpClientAddress
+:global SendPrivateTelegramMessage
 
 :global largeGreenCircleEmoji
 :global largeRedCircleEmoji
@@ -41,6 +40,7 @@
 :local stateVarName ($isp1NameStr . "-provider-state")
 :local deviceName [/system identity get name]
 :local currentState [$GetGlobalVar $stateVarName "empty"]
+:local isEmpty ($currentState = "empty")
 
 # Perform initial probe
 :local initialPing [/ping $hostToPing count=1]
@@ -77,8 +77,11 @@
 
             $SetGlobalVar $stateVarName "down"
 
-            :local downMessage "$largeRedCircleEmoji $deviceName: Internet from <b>$isp1Name</b> is down. Switched to <b>$isp2Name</b>"
-            $SendPrivateTelegramMessage $downMessage
+            :if ($isEmpty) do={
+                $SendPrivateTelegramMessage ("$largeRedCircleEmoji $deviceName: Initial state is <b>DOWN</b> for <b>$isp1Name</b>. Active ISP: <b>$isp2Name</b>")
+            } else={
+                $SendPrivateTelegramMessage ("$largeRedCircleEmoji $deviceName: Internet from <b>$isp1Name</b> is down. Switched to <b>$isp2Name</b>")
+            }
         } else={
             :if ($okPings > 0) do={
                 :log warning "$scriptName: not all confirmation pings failed ($okPings/$confirmPingCount), keeping state '$currentState'"
@@ -123,8 +126,11 @@
 
             $SetGlobalVar $stateVarName "up"
 
-            :local upMessage "$largeGreenCircleEmoji $deviceName: Internet from <b>$isp1Name</b> is alive. Switched back to <b>$isp1Name</b>"
-            $SendPrivateTelegramMessage $upMessage
+            :if ($isEmpty) do={
+                $SendPrivateTelegramMessage ("$largeGreenCircleEmoji $deviceName: Initial state is <b>UP</b> for <b>$isp1Name</b>. Active ISP: <b>$isp1Name</b>")
+            } else={
+                $SendPrivateTelegramMessage ("$largeGreenCircleEmoji $deviceName: Internet from <b>$isp1Name</b> is alive. Switched back to <b>$isp1Name</b>")
+            }
         } else={
             :log warning "$scriptName: not all confirmation pings succeeded ($okPings/$confirmPingCount), keeping state '$currentState'"
         }

@@ -57,8 +57,8 @@
             :log warning "$scriptName: all $confirmPingCount confirmation pings failed. Switching to $isp2Name..."
 
             /ip dhcp-client set $isp1Interface add-default-route=no
-            /ip dhcp-client set $isp1Interface use-peer-dns=no
             /ip dhcp-client set $isp2Interface use-peer-dns=yes
+            /ip dhcp-client set $isp1Interface use-peer-dns=no
 
             :log warning "$scriptName: removing connections for $isp1Name IP $isp1Ip..."
 

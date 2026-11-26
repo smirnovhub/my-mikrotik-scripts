@@ -50,6 +50,7 @@
 #       :global ToLowerCase
 #       :global ReplaceStr
 #       :global SplitStr
+#       :global StartsWithStr
 #   global_functions_datetime:
 #       :global GetCurrentDateTime
 
@@ -457,6 +458,7 @@
 #   empty string if no DHCP client exists on the interface or if it is not in "bound" state.
 :set GetDhcpClientAddress do={
     :global SplitStr
+    :global StartsWithStr
 
     :local iface [:tostr $1]
     :local dhcpId ""
@@ -473,8 +475,10 @@
     # Check DHCP state
     :local status [/ip dhcp-client get $dhcpId status]
     :if ($status != "bound") do={
-        :log warning ("DHCP client not bound on " . $iface . ", status=" . $status)
-        :return ""
+        :if (![$StartsWithStr $status "renewing"]) do={
+            :log warning ("DHCP client not bound on " . $iface . ", status=" . $status)
+            :return ""
+        }
     }
 
     # Safe to read parameters
@@ -496,6 +500,8 @@
 #   Gateway IPv4 address provided by DHCP if the client is in "bound" state;
 #   empty string if no DHCP client exists on the interface or if it is not bound.
 :set GetDhcpClientGateway do={
+    :global StartsWithStr
+
     :local iface [:tostr $1]
     :local dhcpId ""
 
@@ -511,8 +517,10 @@
     # Check DHCP state
     :local status [/ip dhcp-client get $dhcpId status]
     :if ($status != "bound") do={
-        :log warning ("DHCP client not bound on " . $iface . ", status=" . $status)
-        :return ""
+        :if (![$StartsWithStr $status "renewing"]) do={
+            :log warning ("DHCP client not bound on " . $iface . ", status=" . $status)
+            :return ""
+        }
     }
 
     # Safe to read parameters

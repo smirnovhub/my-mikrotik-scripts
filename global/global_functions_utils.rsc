@@ -475,7 +475,7 @@
     # Check DHCP state
     :local status [/ip dhcp-client get $dhcpId status]
     :if ($status != "bound") do={
-        :if (![$StartsWithStr $status "renewing"]) do={
+        :if (![$StartsWithStr $status "renewing"] && ![$StartsWithStr $status "rebinding"]) do={
             :log warning ("DHCP client not bound on " . $iface . ", status=" . $status)
             :return ""
         }
@@ -517,7 +517,7 @@
     # Check DHCP state
     :local status [/ip dhcp-client get $dhcpId status]
     :if ($status != "bound") do={
-        :if (![$StartsWithStr $status "renewing"]) do={
+        :if (![$StartsWithStr $status "renewing"] && ![$StartsWithStr $status "rebinding"]) do={
             :log warning ("DHCP client not bound on " . $iface . ", status=" . $status)
             :return ""
         }

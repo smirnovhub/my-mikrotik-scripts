@@ -12,6 +12,7 @@
 :global GetGlobalVar
 :global SetGlobalVar
 :global ReplaceStr
+:global ToLowerCase
 :global ParseKeyValueStore
 :global GetArgOrExit
 :global GetArgOrDefault
@@ -36,8 +37,8 @@
 :local confirmPingCount [$GetArgOrDefault $args "confirmPingCount" 5]
 :local confirmPingInterval [$GetArgOrDefault $args "confirmPingInterval" 1s]
 
-:local hostStr [$ReplaceStr $hostToPing "." "-"]
-:local stateVarName ($hostStr . "-switch-state")
+:local isp1NameStr [$ToLowerCase $isp1Name]
+:local stateVarName ($isp1NameStr . "-provider-state")
 :local deviceName [/system identity get name]
 :local currentState [$GetGlobalVar $stateVarName "empty"]
 

@@ -15,3 +15,4 @@ b96d7fc72f5ec800f030dd7e3d06343a https://github.com/smirnovhub/my-mikrotik-scrip
 47c6ec124b26fc49f7c68ef308a63e71 https://github.com/smirnovhub/my-mikrotik-scripts/raw/74f336a106bcd1a94da505119e30fb271ff9b0a4/other/my_netwatch/my_netwatch_status.rsc
 153b8727faeafe7324be0576c2330486 https://github.com/smirnovhub/my-mikrotik-scripts/raw/a36a3f80a1ed73d59dbe4b91fcbef4999f3c2815/other/on_startup.rsc
 8bd141ca317a9671c3e9a0a8ac60f607 https://github.com/smirnovhub/my-mikrotik-scripts/raw/553ee09155da4255a51d21a55f9351be85f16ad4/other/reboot.rsc
+11111111111111111111111111111111 https://github.com/smirnovhub/my-mikrotik-scripts/raw/1111111111111111111111111111111111111111/other/two_providers_switching.rsc
